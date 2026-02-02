@@ -1,12 +1,26 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Webhook Bot Example
+ * Webhook Bot Example - Modern API
  *
  * This example demonstrates how to set up a webhook-based bot.
  * Webhooks are faster than long polling and are recommended for production.
+ *
+ * Modern features showcased:
+ * - Service-oriented API ($bot->messages(), $bot->formatter())
+ * - Auto-escaping for MarkdownV2 with special characters
+ * - Command router architecture (kept - it's good!)
+ * - PHP 8.1+ features (strict types, proper typing)
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Keyboard\Button;
+use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
+
+require_once __DIR__ . '/../autoload.php';
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -63,7 +77,6 @@ class CommandRouter
             if (isset($update['message'])) {
                 $this->handleMessage($update['message']);
             }
-
         } catch (Exception $e) {
             error_log("Error handling update: " . $e->getMessage());
         }
@@ -82,10 +95,13 @@ class CommandRouter
         $queryId = $callbackQuery['id'];
 
         // Answer the callback query
-        $this->bot->answerCallbackQuery([
-            'callback_query_id' => $queryId,
-            'text' => 'Processing...'
-        ]);
+        $this->bot->api()->call(
+            ApiMethod::ANSWER_CALLBACK_QUERY,
+            [
+                'callback_query_id' => $queryId,
+                'text' => 'Processing...'
+            ]
+        );
 
         // Parse callback data as command
         $parts = explode(':', $data);
@@ -94,7 +110,7 @@ class CommandRouter
         if (isset($this->commands[$command])) {
             call_user_func($this->commands[$command], $this->bot, $callbackQuery);
         } else {
-            $this->bot->sendMessage([
+            $this->bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => 'Unknown action'
             ]);
@@ -125,16 +141,17 @@ class CommandRouter
             if (isset($this->commands[$command])) {
                 call_user_func($this->commands[$command], $this->bot, $message, $args);
             } else {
-                $this->bot->sendMessage([
+                $this->bot->messages()->send([
                     'chat_id' => $chatId,
                     'text' => "Unknown command: /$command"
                 ]);
             }
         } else {
-            // Handle regular text
-            $this->bot->sendMessage([
+            // Handle regular text - auto-escaped!
+            $this->bot->messages()->send([
                 'chat_id' => $chatId,
-                'text' => "You said: $text\n\nUse /help to see available commands."
+                'text' => "You said: $text\n\nUse /help to see available commands.",
+                'parse_mode' => 'MarkdownV2'  // Auto-escaping enabled!
             ]);
         }
     }
@@ -147,52 +164,56 @@ function processWebhook(): void
     $router = new CommandRouter($bot);
 
     // Register command handlers
-    $router->command('start', function($bot, $message, $args = []) {
+    $router->command('start', function ($bot, $message, $args = []) {
         $chatId = $message['chat']['id'];
         $firstName = $message['from']['first_name'] ?? '';
 
-        $keyboard = $bot->buildInlineKeyboard([
-            [
-                $bot->createCallbackButton('ℹ️ Help', 'help'),
-                $bot->createCallbackButton('📊 Stats', 'stats')
-            ],
-            [
-                $bot->createCallbackButton('⚙️ Settings', 'settings'),
-                $bot->createCallbackButton('🎮 About', 'about')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('ℹ️ Help', 'help'),
+                Button::callback('📊 Stats', 'stats')
+            )
+            ->addRow(
+                Button::callback('⚙️ Settings', 'settings'),
+                Button::callback('🎮 About', 'about')
+            );
 
-        $bot->sendMessage([
+        // Auto-escaped with special characters!
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => "Welcome $firstName!\n\n"
                 . "I'm a webhook-based bot. I'm faster than long polling bots.\n\n"
-                . "Choose an option:",
-            'reply_markup' => $keyboard
+                . 'Choose an option:',
+            'reply_markup' => $keyboard->build(),
+            'parse_mode' => 'MarkdownV2'  // Auto-escaping!
         ]);
     });
 
-    $router->command('help', function($bot, $message, $args = []) {
+    $router->command('help', function ($bot, $message, $args = []) {
         $chatId = $message['chat']['id'];
 
-        $help = "📖 *Available Commands*\n\n";
-        $help .= "/start - Start the bot\n";
-        $help .= "/help - Show this help\n";
-        $help .= "/ping - Check bot response time\n";
-        $help .= "/echo <text> - Echo back the text\n";
-        $help .= "/info - Get chat information\n";
+        // Using formatter - auto-escaped!
+        $help = $bot->formatter()
+            ->bold('📖 Available Commands')
+            . "\n\n"
+            . "/start - Start the bot\n"
+            . "/help - Show this help\n"
+            . "/ping - Check bot response time\n"
+            . "/echo <text> - Echo back the text\n"
+            . "/info - Get chat information";
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $help,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
     });
 
-    $router->command('ping', function($bot, $message, $args = []) {
+    $router->command('ping', function ($bot, $message, $args = []) {
         $chatId = $message['chat']['id'];
         $startTime = microtime(true);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '⏱ Calculating...'
         ]);
@@ -200,35 +221,37 @@ function processWebhook(): void
         $endTime = microtime(true);
         $latency = round(($endTime - $startTime) * 1000, 2);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => "🏓 Pong!\n\n⚡ Webhook response time: {$latency}ms"
         ]);
     });
 
-    $router->command('echo', function($bot, $message, $args = []) {
+    $router->command('echo', function ($bot, $message, $args = []) {
         $chatId = $message['chat']['id'];
         $text = implode(' ', $args);
 
         if (empty($text)) {
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => 'Please provide text to echo. Usage: /echo <text>'
             ]);
             return;
         }
 
-        $bot->sendMessage([
+        // Auto-escaped echo!
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "📢 $text"
+            'text' => "📢 $text",
+            'parse_mode' => 'MarkdownV2'  // Special chars auto-escaped!
         ]);
     });
 
-    $router->command('info', function($bot, $message, $args = []) {
+    $router->command('info', function ($bot, $message, $args = []) {
         $chatId = $message['chat']['id'];
-        $chat = $bot->getChat(['chat_id' => $chatId]);
+        $chat = $bot->chats()->getChat(['chat_id' => $chatId]);
 
-        $info = "📊 *Chat Information*\n\n";
+        $info = $bot->formatter()->bold('📊 Chat Information') . "\n\n";
         $info .= "ID: `{$chat['id']}`\n";
         $info .= "Type: {$chat['type']}\n";
 
@@ -244,78 +267,89 @@ function processWebhook(): void
             }
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $info,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
     });
 
     // Callback handlers
-    $router->command('help', function($bot, $callbackQuery) {
+    $router->command('help', function ($bot, $callbackQuery) {
         $chatId = $callbackQuery['message']['chat']['id'];
 
-        $bot->editMessageText([
+        $help = $bot->formatter()
+            ->bold('📖 Available Commands')
+            . "\n\n"
+            . "/start - Start the bot\n"
+            . "/help - Show this help\n"
+            . "/ping - Check bot response time\n"
+            . "/echo <text> - Echo back the text\n"
+            . "/info - Get chat information";
+
+        $bot->messages()->editText([
             'chat_id' => $chatId,
             'message_id' => $callbackQuery['message']['message_id'],
-            'text' => "📖 *Available Commands*\n\n"
-                . "/start - Start the bot\n"
-                . "/help - Show this help\n"
-                . "/ping - Check bot response time\n"
-                . "/echo <text> - Echo back the text\n"
-                . "/info - Get chat information\n",
-            'parse_mode' => 'Markdown'
+            'text' => $help,
+            'parse_mode' => 'MarkdownV2'
         ]);
     });
 
-    $router->command('stats', function($bot, $callbackQuery) {
+    $router->command('stats', function ($bot, $callbackQuery) {
         $chatId = $callbackQuery['message']['chat']['id'];
 
-        $bot->editMessageText([
+        $bot->messages()->editText([
             'chat_id' => $chatId,
             'message_id' => $callbackQuery['message']['message_id'],
-            'text' => "📊 *Bot Statistics*\n\n"
+            'text' => $bot->formatter()
+                ->bold('📊 Bot Statistics')
+                . "\n\n"
                 . "✅ Status: Online\n"
                 . "⚡ Mode: Webhook\n"
                 . "🕐 Uptime: " . date('H:i:s'),
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
     });
 
-    $router->command('settings', function($bot, $callbackQuery) {
+    $router->command('settings', function ($bot, $callbackQuery) {
         $chatId = $callbackQuery['message']['chat']['id'];
 
-        $keyboard = $bot->buildInlineKeyboard([
-            [
-                $bot->createCallbackButton('🔔 Notifications', 'settings:notif'),
-                $bot->createCallbackButton('🌐 Language', 'settings:lang')
-            ],
-            [
-                $bot->createCallbackButton('🔙 Back', 'start')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('🔔 Notifications', 'settings:notif'),
+                Button::callback('🌐 Language', 'settings:lang')
+            )
+            ->addRow(
+                Button::callback('🔙 Back', 'start')
+            );
 
-        $bot->editMessageText([
+        $bot->messages()->editText([
             'chat_id' => $chatId,
             'message_id' => $callbackQuery['message']['message_id'],
-            'text' => '⚙️ *Settings*\n\nChoose an option:',
-            'parse_mode' => 'Markdown',
+            'text' => $bot->formatter()
+                ->bold('⚙️ Settings')
+                . "\n\n"
+                . 'Choose an option:',
+            'parse_mode' => 'MarkdownV2',
             'reply_markup' => $keyboard
         ]);
     });
 
-    $router->command('about', function($bot, $callbackQuery) {
+    $router->command('about', function ($bot, $callbackQuery) {
         $chatId = $callbackQuery['message']['chat']['id'];
 
-        $bot->editMessageText([
+        $bot->messages()->editText([
             'chat_id' => $chatId,
             'message_id' => $callbackQuery['message']['message_id'],
-            'text' => "🎮 *About This Bot*\n\n"
-                . "This is a webhook-based Telegram bot built with pure PHP.\n\n"
+            'text' => $bot->formatter()
+                ->bold('🎮 About This Bot')
+                . "\n\n"
+                . 'This is a webhook-based Telegram bot built with pure PHP.'
+                . "\n\n"
                 . "📦 No dependencies\n"
                 . "⚡ Fast webhook response\n"
                 . "🔧 Easy to customize\n",
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
     });
 
@@ -347,7 +381,7 @@ if (php_sapi_name() !== 'cli') {
         echo "Webhook URL not set. Use /setwebhook command.\n";
 
         // Get webhook info
-        $webhookInfo = $bot->getWebhookInfo();
+        $webhookInfo = $bot->webhooks()->getWebhookInfo();
         echo "\nCurrent webhook info:\n";
         print_r($webhookInfo);
     }

@@ -1,12 +1,22 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Echo Bot Example
+ * Echo Bot Example - Modern API
  *
  * A simple bot that repeats received messages.
- * This example demonstrates long polling.
+ * This example demonstrates long polling with the modern API.
+ *
+ * Modern features showcased:
+ * - Service-oriented API with $bot->messages()
+ * - Auto-escaping for MarkdownV2 (no manual escaping needed!)
+ * - PHP 8.1+ features (strict types, proper typing)
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+
+require_once __DIR__ . '/../autoload.php';
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -52,10 +62,13 @@ try {
 
                     echo "[{$chatId}] $text\n";
 
-                    // Echo the message back
-                    $bot->sendMessage([
+                    // Echo the message back with MarkdownV2 auto-escaping!
+                    // Note: Special characters like !, _, *, etc. are automatically escaped
+                    // No need to manually call escapeMarkdownV2() anymore!
+                    $bot->messages()->send([
                         'chat_id' => $chatId,
-                        'text' => "You said: $text"
+                        'text' => "You said: $text",  // Auto-escaped with MarkdownV2!
+                        'parse_mode' => 'MarkdownV2'
                     ]);
                 }
 
@@ -67,19 +80,18 @@ try {
 
                     echo "[{$chatId}] Edited: $text\n";
 
-                    $bot->sendMessage([
+                    $bot->messages()->send([
                         'chat_id' => $chatId,
-                        'text' => "You edited to: $text"
+                        'text' => "You edited to: $text",  // Also auto-escaped!
+                        'parse_mode' => 'MarkdownV2'
                     ]);
                 }
             }
-
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
             sleep(5);  // Wait before retrying
         }
     }
-
 } catch (Exception $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);

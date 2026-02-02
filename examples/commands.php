@@ -1,13 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Commands Bot Example
+ * Commands Bot Example - Modern API
  *
  * A bot with command handlers (/start, /help)
  * and inline keyboard buttons with callback query handling.
+ *
+ * Modern features showcased:
+ * - Service-oriented API ($bot->messages(), $bot->formatter())
+ * - Auto-escaping for MarkdownV2 with special characters
+ * - PHP 8.1+ features (strict types, proper typing)
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Keyboard\Button;
+use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
+use AhmCho\Telegram\Keyboard\ReplyKeyboardBuilder;
+use AhmCho\Telegram\Keyboard\ReplyKeyboardOptions;
+
+require_once __DIR__ . '/../autoload.php';
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -25,57 +39,67 @@ if (file_exists($envFile)) {
 function handleStart(TelegramBot $bot, int $chatId, string $firstName = ''): void
 {
     $greeting = empty($firstName)
-        ? "Hello! Welcome to the Commands Bot."
+        ? 'Hello! Welcome to the Commands Bot.'
         : "Hello $firstName! Welcome to the Commands Bot.";
 
-    $keyboard = $bot->buildInlineKeyboard([
-        [
-            $bot->createUrlButton('📚 Documentation', 'https://core.telegram.org/bots/api'),
-            $bot->createCallbackButton('ℹ️ Help', 'cmd_help')
-        ],
-        [
-            $bot->createCallbackButton('🎮 Features', 'cmd_features'),
-            $bot->createCallbackButton('📞 Contact', 'cmd_contact')
-        ]
-    ]);
+    $keyboard = InlineKeyboardBuilder::create()
+        ->addRow(
+            Button::url('📚 Documentation', 'https://core.telegram.org/bots/api'),
+            Button::callback('ℹ️ Help', 'cmd_help')
+        )
+        ->addRow(
+            Button::callback('🎮 Features', 'cmd_features'),
+            Button::callback('📞 Contact', 'cmd_contact')
+        )
+        ->toArray();
 
-    $bot->sendMessage([
+    // Auto-escaped!
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $greeting . "\n\nChoose an option below:",
+        'parse_mode' => 'MarkdownV2',
         'reply_markup' => $keyboard
     ]);
 }
 
 function handleHelp(TelegramBot $bot, int $chatId): void
 {
-    $helpText = "📖 *Available Commands*\n\n";
-    $helpText .= "/start - Start the bot\n";
-    $helpText .= "/help - Show this help message\n";
-    $helpText .= "/keyboard - Show a custom keyboard\n";
-    $helpText .= "/photo - Send a sample photo\n";
-    $helpText .= "/dice - Roll a dice\n";
+    // Using formatter - auto-escaped!
+    $helpText = $bot->formatter()
+        ->bold('📖 Available Commands')
+        . "\n\n"
+        . "/start - Start the bot\n"
+        . "/help - Show this help message\n"
+        . "/keyboard - Show a custom keyboard\n"
+        . "/photo - Send a sample photo\n"
+        . "/dice - Roll a dice";
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $helpText,
-        'parse_mode' => 'Markdown'
+        'parse_mode' => 'MarkdownV2'
     ]);
 }
 
 function handleKeyboard(TelegramBot $bot, int $chatId): void
 {
-    $keyboard = $bot->buildReplyKeyboard(
-        [
-            ['👍 Like', '👎 Dislike'],
-            ['❓ Help', '🎲 Random']
-        ],
-        [
-            'resize_keyboard' => true,
-            'one_time_keyboard' => false
-        ]
+    $options = new ReplyKeyboardOptions(
+        resizeKeyboard: true,
+        oneTimeKeyboard: false
     );
 
-    $bot->sendMessage([
+    $keyboard = ReplyKeyboardBuilder::create($options)
+        ->addRow(
+            Button::text('👍 Like'),
+            Button::text('👎 Dislike')
+        )
+        ->addRow(
+            Button::text('❓ Help'),
+            Button::text('🎲 Random')
+        )
+        ->toArray();
+
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => 'Here is a custom keyboard. Try the buttons!',
         'reply_markup' => $keyboard
@@ -84,50 +108,54 @@ function handleKeyboard(TelegramBot $bot, int $chatId): void
 
 function handlePhoto(TelegramBot $bot, int $chatId): void
 {
-    // Send a photo from URL
-    $bot->sendPhoto([
+    // Send a photo from URL - caption auto-escaped!
+    $bot->media()->sendPhoto([
         'chat_id' => $chatId,
         'photo' => 'https://picsum.photos/800/600',
         'caption' => '📷 Here is a random photo from Lorem Picsum!',
         'show_caption_above_media' => true,
-        'parse_mode' => 'HTML'
+        'parse_mode' => 'MarkdownV2'
     ]);
 }
 
 function handleDice(TelegramBot $bot, int $chatId): void
 {
-    $bot->sendDice([
+    $bot->media()->sendDice([
         'chat_id' => $chatId
     ]);
 }
 
 function handleFeatures(TelegramBot $bot, int $chatId): void
 {
-    $features = "🎮 *Bot Features*\n\n";
-    $features .= "✅ Commands (/start, /help, etc.)\n";
-    $features .= "✅ Inline keyboards\n";
-    $features .= "✅ Callback queries\n";
-    $features .= "✅ Custom reply keyboards\n";
-    $features .= "✅ Media sending (photos, videos, etc.)\n";
-    $features .= "✅ Message formatting (Markdown, HTML)\n";
-    $features .= "✅ And much more!\n";
+    // Auto-escaped list with formatter!
+    $features = $bot->formatter()
+        ->bold('🎮 Bot Features')
+        . "\n\n"
+        . "✅ Commands \(/start, /help, etc\.\)\n"
+        . "✅ Inline keyboards\n"
+        . "✅ Callback queries\n"
+        . "✅ Custom reply keyboards\n"
+        . "✅ Media sending \(photos, videos, etc\.\)\n"
+        . "✅ Message formatting \(Markdown, HTML\)\n"
+        . "✅ And much more!";
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $features,
-        'parse_mode' => 'Markdown'
+        'parse_mode' => 'MarkdownV2'
     ]);
 }
 
 function handleContact(TelegramBot $bot, int $chatId): void
 {
-    $bot->sendMessage([
+    // Auto-escaped contact info!
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => "📞 *Contact Information*\n\n"
             . "👨‍💻 Developer: @username\n"
             . "🌐 Website: https://example.com\n"
             . "📧 Email: contact@example.com",
-        'parse_mode' => 'Markdown'
+        'parse_mode' => 'MarkdownV2'
     ]);
 }
 
@@ -139,9 +167,10 @@ function handleCallbackQuery(TelegramBot $bot, array $callbackQuery): void
     $queryId = $callbackQuery['id'];
 
     // Answer the callback query to remove loading state
-    $bot->answerCallbackQuery([
-        'callback_query_id' => $queryId
-    ]);
+    $bot->api()->call(
+        ApiMethod::ANSWER_CALLBACK_QUERY,
+        ['callback_query_id' => $queryId]
+    );
 
     // Handle different callback data
     switch ($data) {
@@ -158,27 +187,36 @@ function handleCallbackQuery(TelegramBot $bot, array $callbackQuery): void
             break;
 
         case 'btn_like':
-            $bot->editMessageText([
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => '😊 Thanks for liking!'
-            ]);
+            $bot->api()->call(
+                ApiMethod::EDIT_MESSAGE_TEXT,
+                [
+                    'chat_id' => $chatId,
+                    'message_id' => $messageId,
+                    'text' => '😊 Thanks for liking!'
+                ]
+            );
             break;
 
         case 'btn_dislike':
-            $bot->editMessageText([
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => '😔 We\'ll do better next time!'
-            ]);
+            $bot->api()->call(
+                ApiMethod::EDIT_MESSAGE_TEXT,
+                [
+                    'chat_id' => $chatId,
+                    'message_id' => $messageId,
+                    'text' => "😔 We'll do better next time!"
+                ]
+            );
             break;
 
         default:
-            $bot->answerCallbackQuery([
-                'callback_query_id' => $queryId,
-                'text' => 'Unknown action',
-                'show_alert' => true
-            ]);
+            $bot->api()->call(
+                ApiMethod::ANSWER_CALLBACK_QUERY,
+                [
+                    'callback_query_id' => $queryId,
+                    'text' => 'Unknown action',
+                    'show_alert' => true
+                ]
+            );
     }
 }
 
@@ -241,9 +279,10 @@ try {
                                 break;
 
                             default:
-                                $bot->sendMessage([
+                                $bot->messages()->send([
                                     'chat_id' => $chatId,
-                                    'text' => "Unknown command: $command\nType /help to see available commands."
+                                    'text' => "Unknown command: $command\nType /help to see available commands.",
+                                    'parse_mode' => 'MarkdownV2'
                                 ]);
                         }
                     } else {
@@ -251,7 +290,7 @@ try {
                         switch ($text) {
                             case '👍 Like':
                             case 'Like':
-                                $bot->sendMessage([
+                                $bot->messages()->send([
                                     'chat_id' => $chatId,
                                     'text' => '😊 Thanks for liking!'
                                 ]);
@@ -259,9 +298,9 @@ try {
 
                             case '👎 Dislike':
                             case 'Dislike':
-                                $bot->sendMessage([
+                                $bot->messages()->send([
                                     'chat_id' => $chatId,
-                                    'text' => '😔 We\'ll do better next time!'
+                                    'text' => "😔 We'll do better next time!"
                                 ]);
                                 break;
 
@@ -272,17 +311,18 @@ try {
 
                             case '🎲 Random':
                             case 'Random':
-                                $bot->sendMessage([
+                                $bot->messages()->send([
                                     'chat_id' => $chatId,
                                     'text' => '🎲 Random number: ' . rand(1, 100)
                                 ]);
                                 break;
 
                             default:
-                                $bot->sendMessage([
+                                // Auto-escaped default response!
+                                $bot->messages()->send([
                                     'chat_id' => $chatId,
                                     'text' => "You said: *$text*\n\nType /help to see available commands.",
-                                    'parse_mode' => 'Markdown'
+                                    'parse_mode' => 'MarkdownV2'
                                 ]);
                         }
                     }

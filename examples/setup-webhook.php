@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Webhook Setup Script
  *
@@ -10,7 +11,9 @@
  * php examples/setup-webhook.php info
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use AhmCho\Telegram\Bot\TelegramBot;
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -43,6 +46,7 @@ try {
     $bot = new TelegramBot();
 
     // Check command line arguments
+    global $argc, $argv;
     if ($argc < 2) {
         showUsage();
         exit(1);
@@ -77,13 +81,13 @@ try {
                 $params['secret_token'] = $secretToken;
             }
 
-            $result = $bot->setWebhook($params);
+            $result = $bot->webhooks()->set($params);
 
             if ($result) {
                 echo "✅ Webhook set successfully!\n\n";
 
                 // Verify webhook
-                $info = $bot->getWebhookInfo();
+                $info = $bot->webhooks()->getInfo();
                 echo "Current webhook info:\n";
                 echo "  URL: " . ($info['url'] ?: 'Not set') . "\n";
                 echo "  Has custom certificate: " . ($info['has_custom_certificate'] ? 'Yes' : 'No') . "\n";
@@ -95,7 +99,6 @@ try {
                 }
             } else {
                 echo "❌ Failed to set webhook.\n";
-                echo "Error: " . $bot->getLastError() . "\n";
                 exit(1);
             }
 
@@ -104,7 +107,7 @@ try {
         case 'delete':
             echo "Deleting webhook...\n\n";
 
-            $result = $bot->deleteWebhook([
+            $result = $bot->webhooks()->delete([
                 'drop_pending_updates' => true
             ]);
 
@@ -113,7 +116,6 @@ try {
                 echo "Your bot is now back to long polling mode.\n";
             } else {
                 echo "❌ Failed to delete webhook.\n";
-                echo "Error: " . $bot->getLastError() . "\n";
                 exit(1);
             }
 
@@ -122,7 +124,7 @@ try {
         case 'info':
             echo "Getting webhook info...\n\n";
 
-            $info = $bot->getWebhookInfo();
+            $info = $bot->webhooks()->getInfo();
 
             echo "Webhook Information:\n";
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
@@ -153,8 +155,7 @@ try {
             showUsage();
             exit(1);
     }
-
-} catch (Exception $e) {
+} catch (\Exception $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);
 }

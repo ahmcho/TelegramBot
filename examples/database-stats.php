@@ -18,14 +18,14 @@
  * - Export user data
  */
 
-// Load .env file if it exists
-require_once __DIR__ . '/../src/dotenv.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../src/TelegramBot.php';
-require_once __DIR__ . '/../src/Database.php';
+use AhmCho\Telegram\Database\SqliteUserRepository;
+use AhmCho\Telegram\Database\UserFilters;
 
 // Initialize
-$database = new Database(__DIR__ . '/../data/bot.db');
+$userRepo = new SqliteUserRepository(__DIR__ . '/../data/bot.db');
+$pdo = $userRepo->getPdo();
 
 echo "Telegram Bot Database Statistics\n";
 echo "=================================\n\n";
@@ -49,31 +49,31 @@ while (true) {
 
     switch ($option) {
         case '1':
-            showOverallStats($database);
+            showOverallStats($userRepo, $pdo);
             break;
         case '2':
-            showUserGrowth($database);
+            showUserGrowth($pdo);
             break;
         case '3':
-            showActiveUsers($database);
+            showActiveUsers($userRepo);
             break;
         case '4':
-            showPremiumReport($database);
+            showPremiumReport($userRepo);
             break;
         case '5':
-            searchByUsername($database);
+            searchByUsername($userRepo);
             break;
         case '6':
-            searchByTelegramId($database);
+            searchByTelegramId($userRepo);
             break;
         case '7':
-            showTopActiveUsers($database);
+            showTopActiveUsers($userRepo);
             break;
         case '8':
-            showRecentUsers($database);
+            showRecentUsers($userRepo);
             break;
         case '9':
-            exportUserData($database);
+            exportUserData($pdo);
             break;
         case '0':
             echo "Exiting...\n";
@@ -90,11 +90,11 @@ while (true) {
 /**
  * Show overall statistics
  */
-function showOverallStats(Database $database): void
+function showOverallStats(SqliteUserRepository $userRepo, PDO $pdo): void
 {
     echo "\n=== OVERALL STATISTICS ===\n\n";
 
-    $stats = $database->getStats();
+    $stats = $userRepo->getStats();
 
     echo "📊 User Counts:\n";
     echo "  Total Users: {$stats['total']}\n";
@@ -104,9 +104,6 @@ function showOverallStats(Database $database): void
     echo "  With Username: {$stats['with_username']} (" . round($stats['with_username'] / max($stats['total'], 1) * 100, 1) . "%)\n";
     echo "  Bots: {$stats['bots']}\n";
     echo "  New Today: {$stats['new_today']}\n";
-
-    // Get additional stats using raw PDO
-    $pdo = $database->getPdo();
 
     // Users by language
     $stmt = $pdo->query("SELECT language_code, COUNT(*) as count FROM users WHERE language_code IS NOT NULL GROUP BY language_code ORDER BY count DESC LIMIT 10");
@@ -121,11 +118,9 @@ function showOverallStats(Database $database): void
 /**
  * Show user growth over time
  */
-function showUserGrowth(Database $database): void
+function showUserGrowth(PDO $pdo): void
 {
     echo "\n=== USER GROWTH (LAST 30 DAYS) ===\n\n";
-
-    $pdo = $database->getPdo();
 
     $sql = "SELECT
         date(created_at) as date,
@@ -162,11 +157,9 @@ function showUserGrowth(Database $database): void
 /**
  * Show active users breakdown
  */
-function showActiveUsers(Database $database): void
+function showActiveUsers(SqliteUserRepository $userRepo): void
 {
     echo "\n=== ACTIVE USERS BREAKDOWN ===\n\n";
-
-    $pdo = $database->getPdo();
 
     $periods = [
         '1 day' => 1,
@@ -178,26 +171,28 @@ function showActiveUsers(Database $database): void
     echo "Period    | Active Users | % of Total\n";
     echo "----------|--------------|-----------\n";
 
-    $totalUsers = $database->getStats()['total'];
+    $totalUsers = $userRepo->getStats()['total'];
 
     foreach ($periods as $label => $days) {
-        $sql = "SELECT COUNT(*) as count FROM users WHERE last_active >= datetime('now', '-$days days')";
-        $stmt = $pdo->query($sql);
-        $result = $stmt->fetch();
-        $percentage = round($result['count'] / max($totalUsers, 1) * 100, 1);
+        $filters = UserFilters::create()
+            ->withActiveSince(date('Y-m-d H:i:s', strtotime("-$days days")));
 
-        printf("%-9s | %-12d | %s%%\n", $label, $result['count'], $percentage);
+        $chatIds = $userRepo->getAllChatIds($filters);
+        $count = count($chatIds);
+        $percentage = round($count / max($totalUsers, 1) * 100, 1);
+
+        printf("%-9s | %-12d | %s%%\n", $label, $count, $percentage);
     }
 }
 
 /**
  * Show premium users report
  */
-function showPremiumReport(Database $database): void
+function showPremiumReport(SqliteUserRepository $userRepo): void
 {
     echo "\n=== PREMIUM USERS REPORT ===\n\n";
 
-    $stats = $database->getStats();
+    $stats = $userRepo->getStats();
 
     echo "Total Premium Users: {$stats['premium']}\n";
     echo "Total Non-Premium: " . ($stats['total'] - $stats['premium'] - $stats['bots']) . "\n";
@@ -206,7 +201,8 @@ function showPremiumReport(Database $database): void
     // Get premium users with pagination
     echo "Listing premium users (first 20):\n\n";
 
-    $users = $database->getAllUsers(['is_premium' => true], 20, 0);
+    $filters = UserFilters::create()->withIsPremium(true);
+    $users = $userRepo->findAll($filters, 20, 0);
 
     if (empty($users)) {
         echo "No premium users found.\n";
@@ -214,13 +210,13 @@ function showPremiumReport(Database $database): void
     }
 
     foreach ($users as $user) {
-        $name = trim($user['first_name'] . ' ' . $user['last_name']);
-        $username = $user['username'] ? "@{$user['username']}" : '';
+        $name = trim($user->firstName . ' ' . $user->lastName);
+        $username = $user->username ? "@{$user->username}" : '';
         printf("  ID: %d | %s %s | Active: %s\n",
-            $user['telegram_id'],
+            $user->telegramId,
             $name,
             $username,
-            $user['last_active']
+            $user->lastActive->format('Y-m-d H:i:s')
         );
     }
 }
@@ -228,7 +224,7 @@ function showPremiumReport(Database $database): void
 /**
  * Search user by username
  */
-function searchByUsername(Database $database): void
+function searchByUsername(SqliteUserRepository $userRepo): void
 {
     echo "\n=== SEARCH BY USERNAME ===\n\n";
     echo "Enter username (with or without @): ";
@@ -239,7 +235,7 @@ function searchByUsername(Database $database): void
         return;
     }
 
-    $user = $database->getUserByUsername($username);
+    $user = $userRepo->findByUsername($username);
 
     if ($user === null) {
         echo "User not found.\n";
@@ -252,7 +248,7 @@ function searchByUsername(Database $database): void
 /**
  * Search user by Telegram ID
  */
-function searchByTelegramId(Database $database): void
+function searchByTelegramId(SqliteUserRepository $userRepo): void
 {
     echo "\n=== SEARCH BY TELEGRAM ID ===\n\n";
     echo "Enter Telegram ID: ";
@@ -263,7 +259,7 @@ function searchByTelegramId(Database $database): void
         return;
     }
 
-    $user = $database->getUserByTelegramId($telegramId);
+    $user = $userRepo->findByTelegramId($telegramId);
 
     if ($user === null) {
         echo "User not found.\n";
@@ -276,17 +272,13 @@ function searchByTelegramId(Database $database): void
 /**
  * Show top active users
  */
-function showTopActiveUsers(Database $database): void
+function showTopActiveUsers(SqliteUserRepository $userRepo): void
 {
     echo "\n=== TOP ACTIVE USERS ===\n\n";
     echo "How many to show? [20]: ";
     $limit = (int)trim(fgets(STDIN)) ?: 20;
 
-    $pdo = $database->getPdo();
-
-    $sql = "SELECT * FROM users WHERE is_bot = 0 ORDER BY last_active DESC LIMIT " . (int)$limit;
-    $stmt = $pdo->query($sql);
-    $users = $stmt->fetchAll();
+    $users = $userRepo->findAll(null, $limit, 0);
 
     if (empty($users)) {
         echo "No users found.\n";
@@ -294,15 +286,15 @@ function showTopActiveUsers(Database $database): void
     }
 
     foreach ($users as $index => $user) {
-        $name = trim($user['first_name'] . ' ' . $user['last_name']);
-        $username = $user['username'] ? "@{$user['username']}" : '';
-        $premium = $user['is_premium'] ? ' ⭐' : '';
+        $name = trim($user->firstName . ' ' . $user->lastName);
+        $username = $user->username ? "@{$user->username}" : '';
+        $premium = $user->isPremium ? ' ⭐' : '';
 
         printf("%2d. %s %s | Last active: %s%s\n",
             $index + 1,
             $name,
             $username,
-            $user['last_active'],
+            $user->lastActive->format('Y-m-d H:i:s'),
             $premium
         );
     }
@@ -311,32 +303,33 @@ function showTopActiveUsers(Database $database): void
 /**
  * Show recent users
  */
-function showRecentUsers(Database $database): void
+function showRecentUsers(SqliteUserRepository $userRepo): void
 {
     echo "\n=== RECENT USERS ===\n\n";
     echo "How many to show? [20]: ";
     $limit = (int)trim(fgets(STDIN)) ?: 20;
 
-    $pdo = $database->getPdo();
+    // For recent users, we need to use PDO directly since we order by created_at
+    $pdo = $userRepo->getPdo();
 
     $sql = "SELECT * FROM users WHERE is_bot = 0 ORDER BY created_at DESC LIMIT " . (int)$limit;
     $stmt = $pdo->query($sql);
-    $users = $stmt->fetchAll();
+    $results = $stmt->fetchAll();
 
-    if (empty($users)) {
+    if (empty($results)) {
         echo "No users found.\n";
         return;
     }
 
-    foreach ($users as $index => $user) {
-        $name = trim($user['first_name'] . ' ' . $user['last_name']);
-        $username = $user['username'] ? "@{$user['username']}" : '';
+    foreach ($results as $index => $row) {
+        $name = trim($row['first_name'] . ' ' . $row['last_name']);
+        $username = $row['username'] ? "@{$row['username']}" : '';
 
         printf("%2d. %s %s | Joined: %s\n",
             $index + 1,
             $name,
             $username,
-            $user['created_at']
+            $row['created_at']
         );
     }
 }
@@ -344,11 +337,9 @@ function showRecentUsers(Database $database): void
 /**
  * Export user data to CSV
  */
-function exportUserData(Database $database): void
+function exportUserData(PDO $pdo): void
 {
     echo "\n=== EXPORT USER DATA ===\n\n";
-
-    $pdo = $database->getPdo();
 
     echo "Filters:\n";
     echo "Premium only? (y/n) [n]: ";
@@ -420,17 +411,16 @@ function exportUserData(Database $database): void
 /**
  * Display detailed user information
  */
-function displayUserDetails(array $user): void
+function displayUserDetails($user): void
 {
     echo "\n--- User Details ---\n";
-    echo "Telegram ID: {$user['telegram_id']}\n";
-    echo "Chat ID: {$user['chat_id']}\n";
-    echo "Name: {$user['first_name']} {$user['last_name']}\n";
-    echo "Username: " . ($user['username'] ? "@{$user['username']}" : 'none') . "\n";
-    echo "Language: " . ($user['language_code'] ?: 'unknown') . "\n";
-    echo "Premium: " . ($user['is_premium'] ? 'Yes ⭐' : 'No') . "\n";
-    echo "Bot: " . ($user['is_bot'] ? 'Yes 🤖' : 'No') . "\n";
-    echo "Registered: {$user['created_at']}\n";
-    echo "Updated: {$user['updated_at']}\n";
-    echo "Last Active: {$user['last_active']}\n";
+    echo "Telegram ID: {$user->telegramId}\n";
+    echo "Chat ID: {$user->chatId}\n";
+    echo "Name: {$user->firstName} {$user->lastName}\n";
+    echo "Username: " . ($user->username ? "@{$user->username}" : 'none') . "\n";
+    echo "Language: " . ($user->languageCode ?: 'unknown') . "\n";
+    echo "Premium: " . ($user->isPremium ? 'Yes ⭐' : 'No') . "\n";
+    echo "Bot: " . ($user->isBot ? 'Yes 🤖' : 'No') . "\n";
+    echo "Registered: " . $user->createdAt->format('Y-m-d H:i:s') . "\n";
+    echo "Last Active: " . $user->lastActive->format('Y-m-d H:i:s') . "\n";
 }

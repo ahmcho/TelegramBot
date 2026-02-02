@@ -1,0 +1,85 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AhmCho\Telegram\Enums;
+
+/**
+ * Telegram Bot API Methods Enumeration
+ *
+ * Defines all supported Telegram Bot API methods as type-safe enum values.
+ * Uses backing store for method names to ensure correctness in API calls.
+ */
+enum ApiMethod: string
+{
+    // Updates
+    case GET_UPDATES = 'getUpdates';
+
+        // Message methods
+    case SEND_MESSAGE = 'sendMessage';
+    case EDIT_MESSAGE_TEXT = 'editMessageText';
+    case EDIT_MESSAGE_CAPTION = 'editMessageCaption';
+    case DELETE_MESSAGE = 'deleteMessage';
+    case FORWARD_MESSAGE = 'forwardMessage';
+    case COPY_MESSAGE = 'copyMessage';
+
+        // Media methods
+    case SEND_PHOTO = 'sendPhoto';
+    case SEND_DOCUMENT = 'sendDocument';
+    case SEND_VIDEO = 'sendVideo';
+    case SEND_AUDIO = 'sendAudio';
+    case SEND_VOICE = 'sendVoice';
+    case SEND_ANIMATION = 'sendAnimation';
+    case SEND_STICKER = 'sendSticker';
+    case SEND_LOCATION = 'sendLocation';
+    case SEND_VENUE = 'sendVenue';
+    case SEND_CONTACT = 'sendContact';
+    case SEND_POLL = 'sendPoll';
+    case SEND_DICE = 'sendDice';
+
+        // Chat actions
+    case SEND_CHAT_ACTION = 'sendChatAction';
+
+        // Bot info
+    case GET_ME = 'getMe';
+
+        // Chat operations
+    case GET_CHAT = 'getChat';
+    case GET_CHAT_MEMBER = 'getChatMember';
+    case GET_CHAT_ADMINISTRATORS = 'getChatAdministrators';
+    case GET_CHAT_MEMBER_COUNT = 'getChatMemberCount';
+    case BAN_CHAT_MEMBER = 'banChatMember';
+    case UNBAN_CHAT_MEMBER = 'unbanChatMember';
+    case RESTRICT_CHAT_MEMBER = 'restrictChatMember';
+    case PROMOTE_CHAT_MEMBER = 'promoteChatMember';
+    case LEAVE_CHAT = 'leaveChat';
+
+        // Message management
+    case PIN_CHAT_MESSAGE = 'pinChatMessage';
+    case UNPIN_CHAT_MESSAGE = 'unpinChatMessage';
+    case UNPIN_ALL_CHAT_MESSAGES = 'unpinAllChatMessages';
+
+        // Chat settings
+    case SET_CHAT_TITLE = 'setChatTitle';
+    case SET_CHAT_DESCRIPTION = 'setChatDescription';
+    case SET_CHAT_PHOTO = 'setChatPhoto';
+    case DELETE_CHAT_PHOTO = 'deleteChatPhoto';
+    case SET_CHAT_PERMISSIONS = 'setChatPermissions';
+
+        // Webhook management
+    case SET_WEBHOOK = 'setWebhook';
+    case GET_WEBHOOK_INFO = 'getWebhookInfo';
+    case DELETE_WEBHOOK = 'deleteWebhook';
+
+        // Callback queries
+    case ANSWER_CALLBACK_QUERY = 'answerCallbackQuery';
+    case ANSWER_INLINE_QUERY = 'answerInlineQuery';
+
+        // Games
+    case SEND_GAME = 'sendGame';
+    case SET_GAME_SCORE = 'setGameScore';
+    case GET_GAME_HIGH_SCORES = 'getGameHighScores';
+
+        // Payments
+    case SEND_INVOICE = 'sendInvoice';
+}

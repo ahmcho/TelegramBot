@@ -1,14 +1,27 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Admin Bot Example
+ * Admin Bot Example - Modern API
  *
  * This example demonstrates group administration features
  * including ban/unban, restrict, promote, and group statistics.
  *
  * NOTE: Add this bot to a group as an administrator to test these features.
+ *
+ * Modern features showcased:
+ * - Service-oriented API ($bot->chats(), $bot->messages())
+ * - Auto-escaping for MarkdownV2 with special characters
+ * - PHP 8.1+ features (strict types, proper typing)
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Keyboard\Button;
+use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
+
+require_once __DIR__ . '/../autoload.php';
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -25,76 +38,80 @@ if (file_exists($envFile)) {
 // Command handlers
 function handleStart(TelegramBot $bot, int $chatId): void
 {
-    $keyboard = $bot->buildInlineKeyboard([
-        [
-            $bot->createCallbackButton('📊 Group Stats', 'admin:stats'),
-            $bot->createCallbackButton('👥 Admin List', 'admin:admins')
-        ],
-        [
-            $bot->createCallbackButton('ℹ️ Chat Info', 'admin:info'),
-            $bot->createCallbackButton('🔧 Member Count', 'admin:count')
-        ],
-        [
-            $bot->createCallbackButton('❓ Help', 'admin:help')
-        ]
-    ]);
+    $keyboard = InlineKeyboardBuilder::create()
+        ->addRow(
+            Button::callback('📊 Group Stats', 'admin:stats'),
+            Button::callback('👥 Admin List', 'admin:admins')
+        )
+        ->addRow(
+            Button::callback('ℹ️ Chat Info', 'admin:info'),
+            Button::callback('🔧 Member Count', 'admin:count')
+        )
+        ->addRow(
+            Button::callback('❓ Help', 'admin:help')
+        );
 
-    $bot->sendMessage([
+    // Using formatter - auto-escaped!
+    $text = $bot->formatter()
+        ->bold('👮 Admin Bot')
+        . "\n\n"
+        . 'I provide group administration features.'
+        . "\n\n"
+        . "Available commands:\n"
+        . "/ban - Ban a user\n"
+        . "/kick - Kick a user\n"
+        . "/unban - Unban a user\n"
+        . "/restrict - Restrict user permissions\n"
+        . "/promote - Promote to admin\n"
+        . "/demote - Demote from admin\n"
+        . "/mute - Mute user for time\n"
+        . "/info - Get user info\n"
+        . "/stats - Group statistics\n\n"
+        . 'Or use the buttons below:';
+
+    $bot->messages()->send([
         'chat_id' => $chatId,
-        'text' => "👮 *Admin Bot*\n\n"
-            . "I provide group administration features.\n\n"
-            . "Available commands:\n"
-            . "/ban - Ban a user\n"
-            . "/kick - Kick a user\n"
-            . "/unban - Unban a user\n"
-            . "/restrict - Restrict user permissions\n"
-            . "/promote - Promote to admin\n"
-            . "/demote - Demote from admin\n"
-            . "/mute - Mute user for time\n"
-            . "/info - Get user info\n"
-            . "/stats - Group statistics\n\n"
-            . "Or use the buttons below:",
-        'parse_mode' => 'Markdown',
-        'reply_markup' => $keyboard
+        'text' => $text,
+        'parse_mode' => 'MarkdownV2',
+        'reply_markup' => $keyboard->build()
     ]);
 }
 
 function handleStats(TelegramBot $bot, int $chatId): void
 {
     try {
-        $memberCount = $bot->getChatMemberCount(['chat_id' => $chatId]);
-        $chat = $bot->getChat(['chat_id' => $chatId]);
+        $memberCount = $bot->chats()->getMemberCount(['chat_id' => $chatId]);
+        $chat = $bot->chats()->getChat(['chat_id' => $chatId]);
 
-        $stats = "📊 *Group Statistics*\n\n";
+        $stats = $bot->formatter()->bold('📊 Group Statistics') . "\n\n";
 
         if (isset($chat['title'])) {
-            $stats .= "📛 Name: {$chat['title']}\n";
+            $stats .= '📛 Name: ' . $chat['title'] . "\n";
         }
 
         if (isset($chat['username'])) {
-            $stats .= "🔗 Username: @{$chat['username']}\n";
+            $stats .= '🔗 Username: @' . $chat['username'] . "\n";
         }
 
         if (isset($chat['type'])) {
-            $stats .= "📁 Type: " . ucfirst($chat['type']) . "\n";
+            $stats .= '📁 Type: ' . ucfirst($chat['type']) . "\n";
         }
 
-        $stats .= "👥 Members: {$memberCount}\n";
+        $stats .= '👥 Members: ' . $memberCount . "\n";
 
         if (isset($chat['description'])) {
-            $stats .= "\n📝 Description:\n{$chat['description']}\n";
+            $stats .= "\n📝 Description:\n" . $chat['description'] . "\n";
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $stats,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error getting stats: " . $e->getMessage()
+            'text' => '❌ Error getting stats: ' . $e->getMessage()
         ]);
     }
 }
@@ -102,9 +119,9 @@ function handleStats(TelegramBot $bot, int $chatId): void
 function handleAdminList(TelegramBot $bot, int $chatId): void
 {
     try {
-        $admins = $bot->getChatAdministrators(['chat_id' => $chatId]);
+        $admins = $bot->chats()->getAdministrators(['chat_id' => $chatId]);
 
-        $text = "👥 *Administrators*\n\n";
+        $text = $bot->formatter()->bold('👥 Administrators') . "\n\n";
 
         foreach ($admins as $admin) {
             $user = $admin['user'];
@@ -113,7 +130,7 @@ function handleAdminList(TelegramBot $bot, int $chatId): void
                 $name .= ' ' . $user['last_name'];
             }
             if (isset($user['username'])) {
-                $name .= " (@{$user['username']})";
+                $name .= ' (@' . $user['username'] . ')';
             }
 
             $status = $admin['status'];
@@ -122,23 +139,22 @@ function handleAdminList(TelegramBot $bot, int $chatId): void
                 'administrator' => '👮'
             ];
 
-            $text .= ($statusEmoji[$status] ?? '👤') . " {$name}\n";
+            $text .= ($statusEmoji[$status] ?? '👤') . ' ' . $name . "\n";
 
             if ($status === 'administrator' && isset($admin['can_be_edited'])) {
-                $text .= "  └ Can be edited: " . ($admin['can_be_edited'] ? '✅' : '❌') . "\n";
+                $text .= '  └ Can be edited: ' . ($admin['can_be_edited'] ? '✅' : '❌') . "\n";
             }
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $text,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error getting admin list: " . $e->getMessage()
+            'text' => '❌ Error getting admin list: ' . $e->getMessage()
         ]);
     }
 }
@@ -146,48 +162,47 @@ function handleAdminList(TelegramBot $bot, int $chatId): void
 function handleChatInfo(TelegramBot $bot, int $chatId): void
 {
     try {
-        $chat = $bot->getChat(['chat_id' => $chatId]);
+        $chat = $bot->chats()->getChat(['chat_id' => $chatId]);
 
-        $info = "ℹ️ *Chat Information*\n\n";
-        $info .= "🆔 ID: `{$chat['id']}`\n";
-        $info .= "📁 Type: " . ucfirst($chat['type']) . "\n";
+        $info = $bot->formatter()->bold('ℹ️ Chat Information') . "\n\n";
+        $info .= '🆔 ID: `' . $chat['id'] . "`\n";
+        $info .= '📁 Type: ' . ucfirst($chat['type']) . "\n";
 
         if (isset($chat['title'])) {
-            $info .= "📛 Title: {$chat['title']}\n";
+            $info .= '📛 Title: ' . $chat['title'] . "\n";
         }
 
         if (isset($chat['username'])) {
-            $info .= "🔗 Username: @{$chat['username']}\n";
+            $info .= '🔗 Username: @' . $chat['username'] . "\n";
         }
 
         if (isset($chat['full_name'])) {
-            $info .= "👤 Name: {$chat['full_name']}\n";
+            $info .= '👤 Name: ' . $chat['full_name'] . "\n";
         }
 
         if (isset($chat['description'])) {
-            $info .= "\n📝 *Description:*\n{$chat['description']}\n";
+            $info .= "\n📝 *Description:*\n" . $chat['description'] . "\n";
         }
 
         if (isset($chat['invite_link'])) {
-            $info .= "\n🔗 *Invite Link:* {$chat['invite_link']}\n";
+            $info .= "\n🔗 *Invite Link:* " . $chat['invite_link'] . "\n";
         }
 
         if (isset($chat['pinned_message'])) {
             $pinned = $chat['pinned_message'];
             $pinnedText = $pinned['text'] ?? '[Media or other content]';
-            $info .= "\n📌 *Pinned Message:*\n{$pinnedText}\n";
+            $info .= "\n📌 *Pinned Message:*\n" . $pinnedText . "\n";
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $info,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error getting chat info: " . $e->getMessage()
+            'text' => '❌ Error getting chat info: ' . $e->getMessage()
         ]);
     }
 }
@@ -195,19 +210,22 @@ function handleChatInfo(TelegramBot $bot, int $chatId): void
 function handleMemberCount(TelegramBot $bot, int $chatId): void
 {
     try {
-        $count = $bot->getChatMemberCount(['chat_id' => $chatId]);
+        $count = $bot->chats()->getMemberCount(['chat_id' => $chatId]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "👥 *Member Count*\n\n"
-                . "This chat has *{$count}* members.",
-            'parse_mode' => 'Markdown'
+            'text' => $bot->formatter()
+                ->bold('👥 Member Count')
+                . "\n\n"
+                . 'This chat has '
+                . $bot->formatter()->bold((string)$count)
+                . ' members.',
+            'parse_mode' => 'MarkdownV2'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error getting member count: " . $e->getMessage()
+            'text' => '❌ Error getting member count: ' . $e->getMessage()
         ]);
     }
 }
@@ -215,7 +233,7 @@ function handleMemberCount(TelegramBot $bot, int $chatId): void
 function handleUserInfo(TelegramBot $bot, int $chatId, int $userId): void
 {
     try {
-        $member = $bot->getChatMember([
+        $member = $bot->chats()->getMember([
             'chat_id' => $chatId,
             'user_id' => $userId
         ]);
@@ -226,41 +244,41 @@ function handleUserInfo(TelegramBot $bot, int $chatId, int $userId): void
             $name .= ' ' . $user['last_name'];
         }
 
-        $info = "👤 *User Information*\n\n";
-        $info .= "🆔 ID: `{$user['id']}`\n";
-        $info .= "👤 Name: {$name}\n";
+        $info = $bot->formatter()->bold('👤 User Information') . "\n\n";
+        $info .= '🆔 ID: `' . $user['id'] . "`\n";
+        $info .= '👤 Name: ' . $name . "\n";
 
         if (isset($user['username'])) {
-            $info .= "🔗 Username: @{$user['username']}\n";
+            $info .= '🔗 Username: @' . $user['username'] . "\n";
         }
 
         if (isset($user['language_code'])) {
-            $info .= "🌐 Language: {$user['language_code']}\n";
+            $info .= '🌐 Language: ' . $user['language_code'] . "\n";
         }
 
         $info .= "\n📋 Status: " . ucfirst($member['status']) . "\n";
 
         if ($member['status'] === 'administrator' || $member['status'] === 'creator') {
             if (isset($member['can_be_edited'])) {
-                $info .= "✏️ Can be edited: " . ($member['can_be_edited'] ? 'Yes' : 'No') . "\n";
+                $info .= '✏️ Can be edited: ' . ($member['can_be_edited'] ? 'Yes' : 'No') . "\n";
             }
             if (isset($member['can_change_info'])) {
-                $info .= "ℹ️ Can change info: " . ($member['can_change_info'] ? 'Yes' : 'No') . "\n";
+                $info .= 'ℹ️ Can change info: ' . ($member['can_change_info'] ? 'Yes' : 'No') . "\n";
             }
             if (isset($member['can_delete_messages'])) {
-                $info .= "🗑️ Can delete messages: " . ($member['can_delete_messages'] ? 'Yes' : 'No') . "\n";
+                $info .= '🗑️ Can delete messages: ' . ($member['can_delete_messages'] ? 'Yes' : 'No') . "\n";
             }
             if (isset($member['can_invite_users'])) {
-                $info .= "➕ Can invite users: " . ($member['can_invite_users'] ? 'Yes' : 'No') . "\n";
+                $info .= '➕ Can invite users: ' . ($member['can_invite_users'] ? 'Yes' : 'No') . "\n";
             }
             if (isset($member['can_restrict_members'])) {
-                $info .= "⛔ Can restrict members: " . ($member['can_restrict_members'] ? 'Yes' : 'No') . "\n";
+                $info .= '⛔ Can restrict members: ' . ($member['can_restrict_members'] ? 'Yes' : 'No') . "\n";
             }
             if (isset($member['can_pin_messages'])) {
-                $info .= "📌 Can pin messages: " . ($member['can_pin_messages'] ? 'Yes' : 'No') . "\n";
+                $info .= '📌 Can pin messages: ' . ($member['can_pin_messages'] ? 'Yes' : 'No') . "\n";
             }
             if (isset($member['can_promote_members'])) {
-                $info .= "⬆️ Can promote members: " . ($member['can_promote_members'] ? 'Yes' : 'No') . "\n";
+                $info .= '⬆️ Can promote members: ' . ($member['can_promote_members'] ? 'Yes' : 'No') . "\n";
             }
         }
 
@@ -268,16 +286,15 @@ function handleUserInfo(TelegramBot $bot, int $chatId, int $userId): void
             $info .= "\n⏰ Restricted until: " . date('Y-m-d H:i:s', $member['until_date']) . "\n";
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $info,
-            'parse_mode' => 'Markdown'
+            'parse_mode' => 'MarkdownV2'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error getting user info: " . $e->getMessage()
+            'text' => '❌ Error getting user info: ' . $e->getMessage()
         ]);
     }
 }
@@ -294,22 +311,21 @@ function handleBan(TelegramBot $bot, int $chatId, int $userId, ?int $untilDate =
             $params['until_date'] = $untilDate;
         }
 
-        $result = $bot->banChatMember($params);
+        $result = $bot->chats()->banMember($params);
 
-        $text = "⛔ User banned successfully!";
+        $text = '⛔ User banned successfully!';
         if ($untilDate !== null) {
             $text .= "\n\n⏰ Until: " . date('Y-m-d H:i:s', $untilDate);
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $text
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error banning user: " . $e->getMessage()
+            'text' => '❌ Error banning user: ' . $e->getMessage()
         ]);
     }
 }
@@ -317,21 +333,20 @@ function handleBan(TelegramBot $bot, int $chatId, int $userId, ?int $untilDate =
 function handleUnban(TelegramBot $bot, int $chatId, int $userId): void
 {
     try {
-        $bot->unbanChatMember([
+        $bot->chats()->unbanMember([
             'chat_id' => $chatId,
             'user_id' => $userId,
             'only_if_banned' => true
         ]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "✅ User unbanned successfully!"
+            'text' => '✅ User unbanned successfully!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error unbanning user: " . $e->getMessage()
+            'text' => '❌ Error unbanning user: ' . $e->getMessage()
         ]);
     }
 }
@@ -339,21 +354,20 @@ function handleUnban(TelegramBot $bot, int $chatId, int $userId): void
 function handleRestrict(TelegramBot $bot, int $chatId, int $userId, array $permissions): void
 {
     try {
-        $bot->restrictChatMember([
+        $bot->chats()->restrictMember([
             'chat_id' => $chatId,
             'user_id' => $userId,
             'permissions' => $permissions
         ]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "⛔ User restricted successfully!"
+            'text' => '⛔ User restricted successfully!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error restricting user: " . $e->getMessage()
+            'text' => '❌ Error restricting user: ' . $e->getMessage()
         ]);
     }
 }
@@ -361,20 +375,19 @@ function handleRestrict(TelegramBot $bot, int $chatId, int $userId, array $permi
 function handlePromote(TelegramBot $bot, int $chatId, int $userId, array $rights): void
 {
     try {
-        $bot->promoteChatMember(array_merge([
+        $bot->chats()->promoteMember(array_merge([
             'chat_id' => $chatId,
             'user_id' => $userId
         ], $rights));
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "⬆️ User promoted to administrator!"
+            'text' => '⬆️ User promoted to administrator!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error promoting user: " . $e->getMessage()
+            'text' => '❌ Error promoting user: ' . $e->getMessage()
         ]);
     }
 }
@@ -382,20 +395,19 @@ function handlePromote(TelegramBot $bot, int $chatId, int $userId, array $rights
 function handleKick(TelegramBot $bot, int $chatId, int $userId): void
 {
     try {
-        $bot->kickChatMember([
+        $bot->chats()->banMember([
             'chat_id' => $chatId,
             'user_id' => $userId
         ]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "👢 User kicked from the chat!"
+            'text' => '👢 User kicked from the chat!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error kicking user: " . $e->getMessage()
+            'text' => '❌ Error kicking user: ' . $e->getMessage()
         ]);
     }
 }
@@ -417,7 +429,7 @@ function handleMute(TelegramBot $bot, int $chatId, int $userId, int $duration): 
             'can_pin_messages' => false
         ];
 
-        $bot->restrictChatMember([
+        $bot->chats()->restrictMember([
             'chat_id' => $chatId,
             'user_id' => $userId,
             'permissions' => $permissions,
@@ -428,15 +440,14 @@ function handleMute(TelegramBot $bot, int $chatId, int $userId, int $duration): 
             ? round($duration / 3600) . ' hours'
             : round($duration / 60) . ' minutes';
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "🔇 User muted for {$durationText}!"
+            'text' => '🔇 User muted for ' . $durationText . '!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error muting user: " . $e->getMessage()
+            'text' => '❌ Error muting user: ' . $e->getMessage()
         ]);
     }
 }
@@ -444,21 +455,20 @@ function handleMute(TelegramBot $bot, int $chatId, int $userId, int $duration): 
 function handlePinMessage(TelegramBot $bot, int $chatId, int $messageId, bool $disableNotification = false): void
 {
     try {
-        $bot->pinChatMessage([
+        $bot->chats()->pinMessage([
             'chat_id' => $chatId,
             'message_id' => $messageId,
             'disable_notification' => $disableNotification
         ]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "📌 Message pinned successfully!"
+            'text' => '📌 Message pinned successfully!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error pinning message: " . $e->getMessage()
+            'text' => '❌ Error pinning message: ' . $e->getMessage()
         ]);
     }
 }
@@ -467,25 +477,24 @@ function handleUnpinMessage(TelegramBot $bot, int $chatId, ?int $messageId = nul
 {
     try {
         if ($messageId !== null) {
-            $bot->unpinChatMessage([
+            $bot->chats()->unpinMessage([
                 'chat_id' => $chatId,
                 'message_id' => $messageId
             ]);
-            $text = "📍 Message unpinned successfully!";
+            $text = '📍 Message unpinned successfully!';
         } else {
-            $bot->unpinAllChatMessages(['chat_id' => $chatId]);
-            $text = "📍 All messages unpinned successfully!";
+            $bot->chats()->unpinAllMessages(['chat_id' => $chatId]);
+            $text = '📍 All messages unpinned successfully!';
         }
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $text
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error unpinning: " . $e->getMessage()
+            'text' => '❌ Error unpinning: ' . $e->getMessage()
         ]);
     }
 }
@@ -493,20 +502,19 @@ function handleUnpinMessage(TelegramBot $bot, int $chatId, ?int $messageId = nul
 function handleSetChatTitle(TelegramBot $bot, int $chatId, string $title): void
 {
     try {
-        $bot->setChatTitle([
+        $bot->chats()->setTitle([
             'chat_id' => $chatId,
             'title' => $title
         ]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "✅ Chat title changed to: {$title}"
+            'text' => '✅ Chat title changed to: ' . $title
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error changing title: " . $e->getMessage()
+            'text' => '❌ Error changing title: ' . $e->getMessage()
         ]);
     }
 }
@@ -514,20 +522,19 @@ function handleSetChatTitle(TelegramBot $bot, int $chatId, string $title): void
 function handleSetChatDescription(TelegramBot $bot, int $chatId, string $description): void
 {
     try {
-        $bot->setChatDescription([
+        $bot->chats()->setDescription([
             'chat_id' => $chatId,
             'description' => $description
         ]);
 
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "✅ Chat description updated!"
+            'text' => '✅ Chat description updated!'
         ]);
-
     } catch (Exception $e) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
-            'text' => "❌ Error updating description: " . $e->getMessage()
+            'text' => '❌ Error updating description: ' . $e->getMessage()
         ]);
     }
 }
@@ -560,9 +567,10 @@ try {
                     $data = $callbackQuery['data'];
                     $queryId = $callbackQuery['id'];
 
-                    $bot->answerCallbackQuery([
-                        'callback_query_id' => $queryId
-                    ]);
+                    $bot->api()->call(
+                        ApiMethod::ANSWER_CALLBACK_QUERY,
+                        ['callback_query_id' => $queryId]
+                    );
 
                     $parts = explode(':', $data);
                     $action = $parts[1] ?? '';
@@ -581,25 +589,25 @@ try {
                             handleMemberCount($bot, $chatId);
                             break;
                         case 'help':
-                            $bot->editMessageText([
+                            $bot->messages()->editText([
                                 'chat_id' => $chatId,
                                 'message_id' => $messageId,
-                                'text' => "❓ *Admin Commands Help*\n\n"
-                                    . "/ban @user [time] - Ban user (optional: time in seconds)\n"
-                                    . "/unban @user - Unban user\n"
-                                    . "/kick @user - Kick user\n"
-                                    . "/mute @user [minutes] - Mute user (default: 60 minutes)\n"
-                                    . "/info @user - Get user info\n"
-                                    . "/promote @user - Promote to admin\n"
-                                    . "/demote @user - Demote from admin\n"
-                                    . "/pin - Pin the replied message\n"
-                                    . "/unpin - Unpin the replied message\n"
-                                    . "/unpinall - Unpin all messages\n"
-                                    . "/title <text> - Change chat title\n"
-                                    . "/desc <text> - Change chat description\n"
-                                    . "/stats - Show group statistics\n"
-                                    . "/admins - List administrators",
-                                'parse_mode' => 'Markdown'
+                                'text' => '❓ *Admin Commands Help*' . "\n\n"
+                                    . '/ban @user \[time\] - Ban user \(optional: time in seconds\)' . "\n"
+                                    . '/unban @user - Unban user' . "\n"
+                                    . '/kick @user - Kick user' . "\n"
+                                    . '/mute @user \[minutes\] - Mute user \(default: 60 minutes\)' . "\n"
+                                    . '/info @user - Get user info' . "\n"
+                                    . '/promote @user - Promote to admin' . "\n"
+                                    . '/demote @user - Demote from admin' . "\n"
+                                    . '/pin - Pin the replied message' . "\n"
+                                    . '/unpin - Unpin the replied message' . "\n"
+                                    . '/unpinall - Unpin all messages' . "\n"
+                                    . '/title <text> - Change chat title' . "\n"
+                                    . '/desc <text> - Change chat description' . "\n"
+                                    . '/stats - Show group statistics' . "\n"
+                                    . '/admins - List administrators',
+                                'parse_mode' => 'MarkdownV2'
                             ]);
                             break;
                     }
@@ -638,9 +646,9 @@ try {
                                     $userId = $message['reply_to_message']['from']['id'];
                                     handleUserInfo($bot, $chatId, $userId);
                                 } elseif (!empty($args[0]) && strpos($args[0], '@') === 0) {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to get their info."
+                                        'text' => '⚠️ Please reply to a user\'s message to get their info.'
                                     ]);
                                 } else {
                                     handleChatInfo($bot, $chatId);
@@ -657,9 +665,9 @@ try {
                                         handleBan($bot, $chatId, $userId);
                                     }
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to ban them."
+                                        'text' => '⚠️ Please reply to a user\'s message to ban them.'
                                     ]);
                                 }
                                 break;
@@ -669,9 +677,9 @@ try {
                                     $userId = $message['reply_to_message']['from']['id'];
                                     handleUnban($bot, $chatId, $userId);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to unban them."
+                                        'text' => '⚠️ Please reply to a user\'s message to unban them.'
                                     ]);
                                 }
                                 break;
@@ -681,9 +689,9 @@ try {
                                     $userId = $message['reply_to_message']['from']['id'];
                                     handleKick($bot, $chatId, $userId);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to kick them."
+                                        'text' => '⚠️ Please reply to a user\'s message to kick them.'
                                     ]);
                                 }
                                 break;
@@ -694,9 +702,9 @@ try {
                                     $duration = isset($args[0]) ? (int)$args[0] * 60 : 3600; // Default 1 hour
                                     handleMute($bot, $chatId, $userId, $duration);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to mute them."
+                                        'text' => '⚠️ Please reply to a user\'s message to mute them.'
                                     ]);
                                 }
                                 break;
@@ -713,9 +721,9 @@ try {
                                         'can_promote_members' => false
                                     ]);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to promote them."
+                                        'text' => '⚠️ Please reply to a user\'s message to promote them.'
                                     ]);
                                 }
                                 break;
@@ -731,9 +739,9 @@ try {
                                         'can_pin_messages' => false
                                     ]);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a user's message to demote them."
+                                        'text' => '⚠️ Please reply to a user\'s message to demote them.'
                                     ]);
                                 }
                                 break;
@@ -743,9 +751,9 @@ try {
                                     $messageId = $replyToMessage['message_id'];
                                     handlePinMessage($bot, $chatId, $messageId, false);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a message to pin it."
+                                        'text' => '⚠️ Please reply to a message to pin it.'
                                     ]);
                                 }
                                 break;
@@ -755,9 +763,9 @@ try {
                                     $messageId = $replyToMessage['message_id'];
                                     handleUnpinMessage($bot, $chatId, $messageId);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please reply to a message to unpin it, or use /unpinall to unpin all."
+                                        'text' => '⚠️ Please reply to a message to unpin it, or use /unpinall to unpin all.'
                                     ]);
                                 }
                                 break;
@@ -771,9 +779,9 @@ try {
                                 if (!empty($title)) {
                                     handleSetChatTitle($bot, $chatId, $title);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please provide a title. Usage: /title <new title>"
+                                        'text' => '⚠️ Please provide a title. Usage: /title <new title>'
                                     ]);
                                 }
                                 break;
@@ -783,29 +791,27 @@ try {
                                 if (!empty($description)) {
                                     handleSetChatDescription($bot, $chatId, $description);
                                 } else {
-                                    $bot->sendMessage([
+                                    $bot->messages()->send([
                                         'chat_id' => $chatId,
-                                        'text' => "⚠️ Please provide a description. Usage: /desc <new description>"
+                                        'text' => '⚠️ Please provide a description. Usage: /desc <new description>'
                                     ]);
                                 }
                                 break;
 
                             default:
-                                $bot->sendMessage([
+                                $bot->messages()->send([
                                     'chat_id' => $chatId,
-                                    'text' => "Unknown command: $command\nType /help to see available commands."
+                                    'text' => 'Unknown command: ' . $command . "\nType /help to see available commands."
                                 ]);
                         }
                     }
                 }
             }
-
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
             sleep(5);
         }
     }
-
 } catch (Exception $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);

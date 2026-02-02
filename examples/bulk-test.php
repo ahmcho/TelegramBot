@@ -1,12 +1,23 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Bulk Messaging Test Script
+ * Bulk Messaging Test Script - Modern API
  *
  * This script demonstrates the bulk messaging functionality
- * using curl_multi_exec for parallel requests.
+ * using the modern service-oriented API.
+ *
+ * Modern features showcased:
+ * - Service-oriented API ($bot->messages())
+ * - New bulk operations with auto-escaping for MarkdownV2
+ * - BulkResult object for detailed results
+ * - PHP 8.1+ features (strict types, proper typing)
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+
+require_once __DIR__ . '/../autoload.php';
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -27,15 +38,15 @@ echo "=== Bulk Messaging Test ===\n\n";
 
 // Test 1: Basic bulk send with different messages
 echo "Test 1: Sending different messages to the same chat...\n";
-$results = $bot->sendMessagesBulk([
+$results = $bot->messages()->sendBulk([
     ['chat_id' => getenv('TEST_CHAT_ID') ?: '162592443', 'text' => 'Bulk Test Message 1'],
     ['chat_id' => getenv('TEST_CHAT_ID') ?: '162592443', 'text' => 'Bulk Test Message 2'],
     ['chat_id' => getenv('TEST_CHAT_ID') ?: '162592443', 'text' => 'Bulk Test Message 3'],
 ]);
 
-echo "Sent: {$results['successful']}/{$results['total']} messages\n";
-if ($results['failed'] > 0) {
-    echo "Failed: " . implode(', ', $results['errors']) . "\n";
+echo "Sent: {$results->successful}/{$results->total} messages\n";
+if ($results->failed > 0) {
+    echo "Failed: " . implode(', ', $results->errors) . "\n";
 }
 echo "\n";
 
@@ -46,14 +57,14 @@ $chatIds = [
     // Add more chat IDs here for testing
 ];
 
-$results = $bot->broadcastMessage(
+$results = $bot->messages()->broadcast(
     $chatIds,
     'This is a broadcast test message!',
-    ['parse_mode' => 'Markdown']
+    ['parse_mode' => 'MarkdownV2']  // Auto-escaping enabled!
 );
 
-echo "Broadcast: {$results['successful']}/{$results['total']} delivered\n";
-foreach ($results['results'] as $result) {
+echo "Broadcast: {$results->successful}/{$results->total} delivered\n";
+foreach ($results->results as $result) {
     if ($result['success']) {
         echo "  ✅ Sent to {$result['chat_id']} (message_id: {$result['message_id']})\n";
     } else {
@@ -64,15 +75,14 @@ echo "\n";
 
 // Test 3: Error handling - include invalid chat_id
 echo "Test 3: Testing error handling with invalid chat_id...\n";
-$bot->throwExceptions(false);  // Disable exceptions to test error handling
-$results = $bot->sendMessagesBulk([
+// Bulk operations handle errors gracefully via BulkResult object
+$results = $bot->messages()->sendBulk([
     ['chat_id' => getenv('TEST_CHAT_ID') ?: '162592443', 'text' => 'Valid message'],
     ['chat_id' => '999999999', 'text' => 'Invalid chat (will fail)'],
 ]);
-$bot->throwExceptions(true);  // Re-enable exceptions for subsequent tests
 
-echo "Results: {$results['successful']}/{$results['total']} successful\n";
-foreach ($results['results'] as $index => $result) {
+echo "Results: {$results->successful}/{$results->total} successful\n";
+foreach ($results->results as $index => $result) {
     if ($result['success']) {
         echo "  Message $index: ✅ Sent to {$result['chat_id']}\n";
     } else {
@@ -83,7 +93,7 @@ echo "\n";
 
 // Test 4: Rate limiting with delay
 echo "Test 4: Testing with rate limiting (delay between batches)...\n";
-$results = $bot->sendMessagesBulk(
+$results = $bot->messages()->sendBulk(
     [
         ['chat_id' => getenv('TEST_CHAT_ID') ?: '162592443', 'text' => 'Rate limited message 1'],
         ['chat_id' => getenv('TEST_CHAT_ID') ?: '162592443', 'text' => 'Rate limited message 2'],
@@ -93,13 +103,37 @@ $results = $bot->sendMessagesBulk(
     ['max_concurrent' => 2, 'delay_ms' => 500]
 );
 
-echo "With rate limiting: {$results['successful']}/{$results['total']} sent\n";
+echo "With rate limiting: {$results->successful}/{$results->total} sent\n";
 echo "\n";
 
-// Test 5: Empty array handling
-echo "Test 5: Testing empty array...\n";
-$results = $bot->sendMessagesBulk([]);
+// Test 5: Bulk with MarkdownV2 auto-escaping
+echo "Test 5: Testing bulk with MarkdownV2 auto-escaping...\n";
+$results = $bot->messages()->sendBulk([
+    [
+        'chat_id' => getenv('TEST_CHAT_ID') ?: '162592443',
+        'text' => 'Message with *bold* and _italic_!',  // Special chars auto-escaped!
+        'parse_mode' => 'MarkdownV2'
+    ],
+    [
+        'chat_id' => getenv('TEST_CHAT_ID') ?: '162592443',
+        'text' => 'Another message with `code` and [links](https://example.com)!',
+        'parse_mode' => 'MarkdownV2'
+    ],
+]);
+
+echo "MarkdownV2 bulk: {$results->successful}/{$results->total} sent (auto-escaped!)\n";
+echo "\n";
+
+// Test 6: Empty array handling
+echo "Test 6: Testing empty array...\n";
+$results = $bot->messages()->sendBulk([]);
 echo "Empty result: " . json_encode($results) . "\n";
 echo "\n";
 
 echo "=== All Tests Complete ===\n";
+echo "\nKey Modern Features Demonstrated:\n";
+echo "- Service-oriented API with \$bot->messages()->sendBulk()\n";
+echo "- Auto-escaping for MarkdownV2 in bulk operations\n";
+echo "- Detailed BulkResult object with success/failure tracking\n";
+echo "- Rate limiting support with max_concurrent and delay_ms\n";
+echo "- Proper error handling for individual message failures\n";

@@ -18,11 +18,23 @@
  * - Rate limiting and error handling
  */
 
-// Load .env file if it exists
-require_once __DIR__ . '/../src/dotenv.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../src/TelegramBot.php';
-require_once __DIR__ . '/../src/Database.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Database\SqliteUserRepository;
+use AhmCho\Telegram\Database\UserFilters;
+
+// Load .env file
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2);
+        $_ENV[trim($name)] = trim($value);
+        putenv(trim($name) . '=' . trim($value));
+    }
+}
 
 // Check for bot token
 if (!getenv('TELEGRAM_BOT_TOKEN') && empty($_ENV['TELEGRAM_BOT_TOKEN'])) {
@@ -33,14 +45,14 @@ if (!getenv('TELEGRAM_BOT_TOKEN') && empty($_ENV['TELEGRAM_BOT_TOKEN'])) {
 
 // Initialize
 $bot = new TelegramBot();
-$database = new Database(__DIR__ . '/../data/bot.db');
-$bot->setDatabase($database);
+$userRepo = new SqliteUserRepository(__DIR__ . '/../data/bot.db');
+$bot->setUserRepository($userRepo);
 
 echo "Telegram Bot Database Broadcast Tool\n";
 echo "====================================\n\n";
 
 // Get current stats
-$stats = $database->getStats();
+$stats = $userRepo->getStats();
 echo "Current Database Stats:\n";
 echo "  Total Users: {$stats['total']}\n";
 echo "  Active (30d): {$stats['active_30_days']}\n";
@@ -82,7 +94,7 @@ while (true) {
             broadcastActivePremium($bot);
             break;
         case '7':
-            broadcastCustom($bot, $database);
+            broadcastCustom($bot, $userRepo);
             break;
         case '8':
             echo "Exiting...\n";
@@ -101,14 +113,14 @@ function broadcastAll(TelegramBot $bot): void
     $message = getMessageFromUser();
     $parseMode = getParseMode();
 
-    $results = $bot->broadcastToDatabase(
+    $result = $bot->broadcastToDatabase(
         $message,
         ['parse_mode' => $parseMode],
-        [],
+        null,
         ['max_concurrent' => 30, 'delay_ms' => 1000]
     );
 
-    displayResults($results);
+    displayResults($result);
 }
 
 /**
@@ -120,14 +132,17 @@ function broadcastActive(TelegramBot $bot, int $days): void
     $message = getMessageFromUser();
     $parseMode = getParseMode();
 
-    $results = $bot->broadcastToDatabase(
+    $filters = UserFilters::create()
+        ->withActiveSince(date('Y-m-d H:i:s', strtotime("-$days days")));
+
+    $result = $bot->broadcastToDatabase(
         $message,
         ['parse_mode' => $parseMode],
-        ['active_since' => date('Y-m-d H:i:s', strtotime("-$days days"))],
+        $filters,
         ['max_concurrent' => 30, 'delay_ms' => 1000]
     );
 
-    displayResults($results);
+    displayResults($result);
 }
 
 /**
@@ -139,14 +154,17 @@ function broadcastPremium(TelegramBot $bot): void
     $message = getMessageFromUser();
     $parseMode = getParseMode();
 
-    $results = $bot->broadcastToDatabase(
+    $filters = UserFilters::create()
+        ->withIsPremium(true);
+
+    $result = $bot->broadcastToDatabase(
         $message,
         ['parse_mode' => $parseMode],
-        ['is_premium' => true],
+        $filters,
         ['max_concurrent' => 30, 'delay_ms' => 1000]
     );
 
-    displayResults($results);
+    displayResults($result);
 }
 
 /**
@@ -158,14 +176,17 @@ function broadcastWithUsername(TelegramBot $bot): void
     $message = getMessageFromUser();
     $parseMode = getParseMode();
 
-    $results = $bot->broadcastToDatabase(
+    $filters = UserFilters::create()
+        ->withHasUsername(true);
+
+    $result = $bot->broadcastToDatabase(
         $message,
         ['parse_mode' => $parseMode],
-        ['has_username' => true],
+        $filters,
         ['max_concurrent' => 30, 'delay_ms' => 1000]
     );
 
-    displayResults($results);
+    displayResults($result);
 }
 
 /**
@@ -177,84 +198,96 @@ function broadcastActivePremium(TelegramBot $bot): void
     $message = getMessageFromUser();
     $parseMode = getParseMode();
 
-    $results = $bot->broadcastToDatabase(
+    $filters = UserFilters::create()
+        ->withIsPremium(true)
+        ->withActiveSince(date('Y-m-d H:i:s', strtotime('-30 days')));
+
+    $result = $bot->broadcastToDatabase(
         $message,
         ['parse_mode' => $parseMode],
-        [
-            'is_premium' => true,
-            'active_since' => date('Y-m-d H:i:s', strtotime('-30 days'))
-        ],
+        $filters,
         ['max_concurrent' => 30, 'delay_ms' => 1000]
     );
 
-    displayResults($results);
+    displayResults($result);
 }
 
 /**
  * Custom broadcast with user-defined filters
  */
-function broadcastCustom(TelegramBot $bot, Database $database): void
+function broadcastCustom(TelegramBot $bot, SqliteUserRepository $userRepo): void
 {
     echo "\n--- Custom Broadcast ---\n";
     $message = getMessageFromUser();
     $parseMode = getParseMode();
 
-    $filters = [];
+    $filters = UserFilters::create();
 
     // Active since
     echo "Active since (days ago, or 0 to skip): ";
     $days = (int)trim(fgets(STDIN));
     if ($days > 0) {
-        $filters['active_since'] = date('Y-m-d H:i:s', strtotime("-$days days"));
+        $filters = $filters->withActiveSince(date('Y-m-d H:i:s', strtotime("-$days days")));
     }
 
     // Premium only
     echo "Premium only? (y/n): ";
     $premium = strtolower(trim(fgets(STDIN)));
     if ($premium === 'y') {
-        $filters['is_premium'] = true;
+        $filters = $filters->withIsPremium(true);
     }
 
     // Has username
     echo "Has username only? (y/n): ";
     $username = strtolower(trim(fgets(STDIN)));
     if ($username === 'y') {
-        $filters['has_username'] = true;
+        $filters = $filters->withHasUsername(true);
     }
 
     // Limit
     echo "Limit (0 for unlimited): ";
     $limit = (int)trim(fgets(STDIN));
     if ($limit > 0) {
-        $filters['limit'] = $limit;
+        $filters = $filters->withLimit($limit);
     }
 
     // Show filter summary
     echo "\nFilter Summary:\n";
-    if (!empty($filters)) {
-        foreach ($filters as $key => $value) {
-            echo "  $key: $value\n";
-        }
-
-        // Estimate recipients
-        $chatIds = $database->getAllChatIds($filters);
-        echo "\nEstimated recipients: " . count($chatIds) . "\n";
-    } else {
+    if ($filters->activeSince !== null) {
+        echo "  active_since: {$filters->activeSince}\n";
+    }
+    if ($filters->isPremium !== null) {
+        echo "  is_premium: " . ($filters->isPremium ? 'true' : 'false') . "\n";
+    }
+    if ($filters->hasUsername !== null) {
+        echo "  has_username: " . ($filters->hasUsername ? 'true' : 'false') . "\n";
+    }
+    if ($filters->limit !== null) {
+        echo "  limit: {$filters->limit}\n";
+    }
+    if (
+        $filters->activeSince === null && $filters->isPremium === null &&
+        $filters->hasUsername === null && $filters->limit === null
+    ) {
         echo "  No filters (all users)\n";
     }
+
+    // Estimate recipients
+    $chatIds = $userRepo->getAllChatIds($filters);
+    echo "\nEstimated recipients: " . count($chatIds) . "\n";
 
     echo "\nSend broadcast? (y/n): ";
     $confirm = strtolower(trim(fgets(STDIN)));
 
     if ($confirm === 'y') {
-        $results = $bot->broadcastToDatabase(
+        $result = $bot->broadcastToDatabase(
             $message,
             ['parse_mode' => $parseMode],
             $filters,
             ['max_concurrent' => 30, 'delay_ms' => 1000]
         );
 
-        displayResults($results);
+        displayResults($result);
     } else {
         echo "Broadcast cancelled.\n";
     }
@@ -295,25 +328,45 @@ function getParseMode(): string
 /**
  * Display broadcast results
  */
-function displayResults(array $results): void
+function displayResults($result): void
 {
-    echo "\n--- Broadcast Results ---\n";
-    echo "Total messages: {$results['total']}\n";
-    echo "Successful: {$results['successful']}\n";
-    echo "Failed: {$results['failed']}\n";
+    // Handle both BulkResult (modern) and array (legacy/other)
+    if (is_array($result)) {
+        $total = $result['total'] ?? 0;
+        $successful = $result['successful'] ?? 0;
+        $failed = $result['failed'] ?? 0;
+        $errors = $result['errors'] ?? [];
+        $results = $result['results'] ?? [];
+    } else {
+        // BulkResult object
+        $total = $result->total;
+        $successful = $result->successful;
+        $failed = $result->failed;
+        $results = $result->results;
+        $errors = array_filter(array_map(fn($r) => $r->error ?? null, $results));
+    }
 
-    if ($results['failed'] > 0 && !empty($results['errors'])) {
+    echo "\n--- Broadcast Results ---\n";
+    echo "Total messages: $total\n";
+    echo "Successful: $successful\n";
+    echo "Failed: $failed\n";
+
+    if ($failed > 0 && !empty($errors)) {
         echo "\nErrors:\n";
-        foreach (array_unique($results['errors']) as $error) {
+        foreach (array_unique($errors) as $error) {
             echo "  - $error\n";
         }
     }
 
-    if ($results['failed'] > 0) {
+    if ($failed > 0) {
         echo "\nFailed chat IDs:\n";
-        foreach ($results['results'] as $result) {
-            if (!$result['success']) {
-                echo "  - Chat ID: {$result['chat_id']}, Error: {$result['error']}\n";
+        foreach ($results as $r) {
+            $chatId = is_array($r) ? $r['chat_id'] : ($r->chatId ?? 'unknown');
+            $success = is_array($r) ? $r['success'] : ($r->success ?? false);
+            $error = is_array($r) ? $r['error'] : ($r->error ?? 'unknown');
+
+            if (!$success) {
+                echo "  - Chat ID: $chatId, Error: $error\n";
             }
         }
     }

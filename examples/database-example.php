@@ -11,11 +11,23 @@
  * Run this script with long polling or set up a webhook pointing to it.
  */
 
-// Load .env file if it exists
-require_once __DIR__ . '/../src/dotenv.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-require_once __DIR__ . '/../src/TelegramBot.php';
-require_once __DIR__ . '/../src/Database.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Database\SqliteUserRepository;
+use AhmCho\Telegram\Database\UserFilters;
+
+// Load .env file
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2);
+        $_ENV[trim($name)] = trim($value);
+        putenv(trim($name) . '=' . trim($value));
+    }
+}
 
 // Check for bot token
 if (!getenv('TELEGRAM_BOT_TOKEN') && empty($_ENV['TELEGRAM_BOT_TOKEN'])) {
@@ -29,23 +41,23 @@ $bot = new TelegramBot();
 
 // Initialize database (optional - bot works without it)
 try {
-    $database = new Database(__DIR__ . '/../data/bot.db');
-    $bot->setDatabase($database);
-    echo "Database connected: " . $database->getDbPath() . "\n";
-} catch (Exception $e) {
+    $userRepo = new SqliteUserRepository(__DIR__ . '/../data/bot.db');
+    $bot->setUserRepository($userRepo);
+    echo "Database connected: " . __DIR__ . '/../data/bot.db' . "\n";
+} catch (\Exception $e) {
     echo "Database not available: " . $e->getMessage() . "\n";
     echo "Bot will continue without database functionality.\n";
-    $database = null;
+    $userRepo = null;
 }
 
 // Command: /start
-function handleStart(array $update, TelegramBot $bot, ?Database $database): void
+function handleStart(array $update, TelegramBot $bot, ?SqliteUserRepository $userRepo): void
 {
     $chatId = $update['message']['chat']['id'];
     $firstName = $update['message']['from']['first_name'] ?? 'Friend';
 
     // Save user to database
-    if ($database !== null) {
+    if ($userRepo !== null) {
         $bot->saveUserFromUpdate($update);
     }
 
@@ -56,26 +68,26 @@ function handleStart(array $update, TelegramBot $bot, ?Database $database): void
     $text .= "/broadcast_active - Send message to active users (admin only)\n";
     $text .= "/broadcast_premium - Send message to premium users (admin only)";
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $text
     ]);
 }
 
 // Command: /stats
-function handleStats(array $update, TelegramBot $bot, ?Database $database): void
+function handleStats(array $update, TelegramBot $bot, ?SqliteUserRepository $userRepo): void
 {
     $chatId = $update['message']['chat']['id'];
 
-    if ($database === null) {
-        $bot->sendMessage([
+    if ($userRepo === null) {
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => 'Database is not configured.'
         ]);
         return;
     }
 
-    $stats = $database->getStats();
+    $stats = $userRepo->getStats();
 
     $text = "📊 Database Statistics\n\n";
     $text .= "Total Users: {$stats['total']}\n";
@@ -85,30 +97,30 @@ function handleStats(array $update, TelegramBot $bot, ?Database $database): void
     $text .= "Bots: {$stats['bots']}\n";
     $text .= "New Today: {$stats['new_today']}";
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $text
     ]);
 }
 
 // Command: /me
-function handleMe(array $update, TelegramBot $bot, ?Database $database): void
+function handleMe(array $update, TelegramBot $bot, ?SqliteUserRepository $userRepo): void
 {
     $chatId = $update['message']['chat']['id'];
     $telegramId = $update['message']['from']['id'];
 
-    if ($database === null) {
-        $bot->sendMessage([
+    if ($userRepo === null) {
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => 'Database is not configured.'
         ]);
         return;
     }
 
-    $user = $database->getUserByTelegramId($telegramId);
+    $user = $userRepo->findByTelegramId($telegramId);
 
     if ($user === null) {
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => 'You are not in the database yet. Send /start to register.'
         ]);
@@ -116,29 +128,29 @@ function handleMe(array $update, TelegramBot $bot, ?Database $database): void
     }
 
     $text = "👤 Your Information\n\n";
-    $text .= "Telegram ID: {$user['telegram_id']}\n";
-    $text .= "Chat ID: {$user['chat_id']}\n";
-    $text .= "Name: {$user['first_name']} {$user['last_name']}\n";
-    $text .= "Username: @" . ($user['username'] ?: 'none') . "\n";
-    $text .= "Language: " . ($user['language_code'] ?: 'unknown') . "\n";
-    $text .= "Premium: " . ($user['is_premium'] ? 'Yes ✅' : 'No') . "\n";
-    $text .= "Bot: " . ($user['is_bot'] ? 'Yes 🤖' : 'No') . "\n";
-    $text .= "Registered: {$user['created_at']}\n";
-    $text .= "Last Active: {$user['last_active']}";
+    $text .= "Telegram ID: {$user->telegramId}\n";
+    $text .= "Chat ID: {$user->chatId}\n";
+    $text .= "Name: {$user->firstName} {$user->lastName}\n";
+    $text .= "Username: @" . ($user->username ?: 'none') . "\n";
+    $text .= "Language: " . ($user->languageCode ?: 'unknown') . "\n";
+    $text .= "Premium: " . ($user->isPremium ? 'Yes ✅' : 'No') . "\n";
+    $text .= "Bot: " . ($user->isBot ? 'Yes 🤖' : 'No') . "\n";
+    $text .= "Registered: " . $user->createdAt->format('Y-m-d H:i:s') . "\n";
+    $text .= "Last Active: " . $user->lastActive->format('Y-m-d H:i:s');
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $text
     ]);
 }
 
 // Command: /broadcast_active
-function handleBroadcastActive(array $update, TelegramBot $bot, ?Database $database): void
+function handleBroadcastActive(array $update, TelegramBot $bot, ?SqliteUserRepository $userRepo): void
 {
     $chatId = $update['message']['chat']['id'];
 
-    if ($database === null) {
-        $bot->sendMessage([
+    if ($userRepo === null) {
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => 'Database is not configured.'
         ]);
@@ -146,30 +158,33 @@ function handleBroadcastActive(array $update, TelegramBot $bot, ?Database $datab
     }
 
     // Send to users active in last 7 days
-    $results = $bot->broadcastToDatabase(
+    $filters = UserFilters::create()
+        ->withActiveSince(date('Y-m-d H:i:s', strtotime('-7 days')));
+
+    $result = $bot->broadcastToDatabase(
         '🔔 Hello! This is a broadcast to active users (last 7 days).',
         ['parse_mode' => 'Markdown'],
-        ['active_since' => date('Y-m-d H:i:s', strtotime('-7 days'))]
+        $filters
     );
 
     $text = "✅ Broadcast completed\n\n";
-    $text .= "Total: {$results['total']}\n";
-    $text .= "Successful: {$results['successful']}\n";
-    $text .= "Failed: {$results['failed']}";
+    $text .= "Total: {$result->total}\n";
+    $text .= "Successful: {$result->successful}\n";
+    $text .= "Failed: {$result->failed}";
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $text
     ]);
 }
 
 // Command: /broadcast_premium
-function handleBroadcastPremium(array $update, TelegramBot $bot, ?Database $database): void
+function handleBroadcastPremium(array $update, TelegramBot $bot, ?SqliteUserRepository $userRepo): void
 {
     $chatId = $update['message']['chat']['id'];
 
-    if ($database === null) {
-        $bot->sendMessage([
+    if ($userRepo === null) {
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => 'Database is not configured.'
         ]);
@@ -177,28 +192,31 @@ function handleBroadcastPremium(array $update, TelegramBot $bot, ?Database $data
     }
 
     // Send only to premium users
-    $results = $bot->broadcastToDatabase(
+    $filters = UserFilters::create()
+        ->withIsPremium(true);
+
+    $result = $bot->broadcastToDatabase(
         '⭐ Special message for our premium users! Thank you for your support.',
         [],
-        ['is_premium' => true]
+        $filters
     );
 
     $text = "✅ Premium broadcast completed\n\n";
-    $text .= "Total: {$results['total']}\n";
-    $text .= "Successful: {$results['successful']}\n";
-    $text .= "Failed: {$results['failed']}";
+    $text .= "Total: {$result->total}\n";
+    $text .= "Successful: {$result->successful}\n";
+    $text .= "Failed: {$result->failed}";
 
-    $bot->sendMessage([
+    $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $text
     ]);
 }
 
 // Message handler
-function handleMessage(array $update, TelegramBot $bot, ?Database $database): void
+function handleMessage(array $update, TelegramBot $bot, ?SqliteUserRepository $userRepo): void
 {
     // Save user to database on any message
-    if ($database !== null) {
+    if ($userRepo !== null) {
         $bot->saveUserFromUpdate($update);
     }
 
@@ -207,18 +225,18 @@ function handleMessage(array $update, TelegramBot $bot, ?Database $database): vo
 
     // Handle commands
     if (strpos($text, '/start') === 0) {
-        handleStart($update, $bot, $database);
+        handleStart($update, $bot, $userRepo);
     } elseif (strpos($text, '/stats') === 0) {
-        handleStats($update, $bot, $database);
+        handleStats($update, $bot, $userRepo);
     } elseif (strpos($text, '/me') === 0) {
-        handleMe($update, $bot, $database);
+        handleMe($update, $bot, $userRepo);
     } elseif (strpos($text, '/broadcast_active') === 0) {
-        handleBroadcastActive($update, $bot, $database);
+        handleBroadcastActive($update, $bot, $userRepo);
     } elseif (strpos($text, '/broadcast_premium') === 0) {
-        handleBroadcastPremium($update, $bot, $database);
+        handleBroadcastPremium($update, $bot, $userRepo);
     } else {
         // Echo non-command messages
-        $bot->sendMessage([
+        $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => "You said: $text\n\nTry /start to see available commands."
         ]);
@@ -241,12 +259,12 @@ while (true) {
 
         if (!empty($updates)) {
             foreach ($updates as $update) {
-                handleMessage($update, $bot, $database);
+                handleMessage($update, $bot, $userRepo);
                 $offset = $update['update_id'] + 1;
             }
             echo "Processed " . count($updates) . " updates\n";
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         echo "Error: " . $e->getMessage() . "\n";
         sleep(5);
     }

@@ -1,12 +1,26 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Menu Bot Example
+ * Menu Bot Example - Modern API
  *
  * This example demonstrates a complex inline keyboard menu
  * with multi-level navigation and dynamic menu generation.
+ *
+ * Modern features showcased:
+ * - Service-oriented API ($bot->messages(), $bot->formatter())
+ * - Auto-escaping for MarkdownV2 with special characters
+ * - Formatter for styled text (bold, italic, etc.)
+ * - PHP 8.1+ features (strict types, proper typing)
  */
 
-require_once __DIR__ . '/../src/TelegramBot.php';
+use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Keyboard\Button;
+use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
+
+require_once __DIR__ . '/../autoload.php';
 
 // Load environment variables
 $envFile = __DIR__ . '/../.env';
@@ -35,25 +49,27 @@ class MenuSystem
      */
     public function showMainMenu(int $chatId, ?int $messageId = null): void
     {
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('🛍️ Products', 'menu:products'),
-                $this->bot->createCallbackButton('📦 Services', 'menu:services')
-            ],
-            [
-                $this->bot->createCallbackButton('ℹ️ About Us', 'menu:about'),
-                $this->bot->createCallbackButton('📞 Contact', 'menu:contact')
-            ],
-            [
-                $this->bot->createCallbackButton('⚙️ Settings', 'menu:settings'),
-                $this->bot->createCallbackButton('❓ Help', 'menu:help')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('🛍️ Products', 'menu:products'),
+                Button::callback('📦 Services', 'menu:services')
+            )
+            ->addRow(
+                Button::callback('ℹ️ About Us', 'menu:about'),
+                Button::callback('📞 Contact', 'menu:contact')
+            )
+            ->addRow(
+                Button::callback('⚙️ Settings', 'menu:settings'),
+                Button::callback('❓ Help', 'menu:help')
+            );
 
-        $text = "🏠 *Welcome to the Menu Bot*\n\n"
-            . "Please select an option from the menu below:";
+        // Using formatter for styled text - auto-escaped!
+        $text = $this->bot->formatter()
+            ->bold('Welcome to the Menu Bot!')
+            . "\n\n"
+            . 'Please select an option from the menu below:';
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -61,24 +77,26 @@ class MenuSystem
      */
     public function showProductsMenu(int $chatId, ?int $messageId = null): void
     {
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('💻 Electronics', 'menu:products:electronics'),
-                $this->bot->createCallbackButton('👕 Clothing', 'menu:products:clothing')
-            ],
-            [
-                $this->bot->createCallbackButton('📚 Books', 'menu:products:books'),
-                $this->bot->createCallbackButton('🏠 Home', 'menu:products:home')
-            ],
-            [
-                $this->bot->createCallbackButton('🔙 Back to Main', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('💻 Electronics', 'menu:products:electronics'),
+                Button::callback('👕 Clothing', 'menu:products:clothing')
+            )
+            ->addRow(
+                Button::callback('📚 Books', 'menu:products:books'),
+                Button::callback('🏠 Home', 'menu:products:home')
+            )
+            ->addRow(
+                Button::callback('🔙 Back to Main', 'menu:main')
+            );
 
-        $text = "🛍️ *Products*\n\n"
-            . "Browse our product categories:";
+        // Auto-escaped formatting - no need to manually escape!
+        $text = $this->bot->formatter()
+            ->bold('Products')
+            . "\n\n"
+            . 'Browse our product categories:';
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -86,24 +104,25 @@ class MenuSystem
      */
     public function showServicesMenu(int $chatId, ?int $messageId = null): void
     {
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('🎨 Design', 'menu:services:design'),
-                $this->bot->createCallbackButton('💻 Development', 'menu:services:development')
-            ],
-            [
-                $this->bot->createCallbackButton('📈 Marketing', 'menu:services:marketing'),
-                $this->bot->createCallbackButton('🔧 Support', 'menu:services:support')
-            ],
-            [
-                $this->bot->createCallbackButton('🔙 Back to Main', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('🎨 Design', 'menu:services:design'),
+                Button::callback('💻 Development', 'menu:services:development')
+            )
+            ->addRow(
+                Button::callback('📈 Marketing', 'menu:services:marketing'),
+                Button::callback('🔧 Support', 'menu:services:support')
+            )
+            ->addRow(
+                Button::callback('🔙 Back to Main', 'menu:main')
+            );
 
-        $text = "📦 *Services*\n\n"
-            . "Explore our services:";
+        $text = $this->bot->formatter()
+            ->bold('Services')
+            . "\n\n"
+            . 'Explore our services:';
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -140,14 +159,13 @@ class MenuSystem
             $text .= "• $item\n";
         }
 
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('🔙 Back to Products', 'menu:products'),
-                $this->bot->createCallbackButton('🏠 Main Menu', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('🔙 Back to Products', 'menu:products'),
+                Button::callback('🏠 Main Menu', 'menu:main')
+            );
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -185,17 +203,16 @@ class MenuSystem
             . "✅ Fast delivery\n"
             . "✅ Competitive prices";
 
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('📞 Contact Us', 'menu:contact'),
-                $this->bot->createCallbackButton('🔙 Back to Services', 'menu:services')
-            ],
-            [
-                $this->bot->createCallbackButton('🏠 Main Menu', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('📞 Contact Us', 'menu:contact'),
+                Button::callback('🔙 Back to Services', 'menu:services')
+            )
+            ->addRow(
+                Button::callback('🏠 Main Menu', 'menu:main')
+            );
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -210,14 +227,13 @@ class MenuSystem
             . "👥 Our Team:\n"
             . "Experienced professionals dedicated to your success.";
 
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('🌐 Visit Website', 'url:https://example.com'),
-                $this->bot->createCallbackButton('🏠 Main Menu', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::url('🌐 Visit Website', 'https://example.com'),
+                Button::callback('🏠 Main Menu', 'menu:main')
+            );
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -233,17 +249,16 @@ class MenuSystem
             . "🕐 Business Hours:\n"
             . "Monday - Friday: 9:00 - 18:00";
 
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createUrlButton('🌐 Visit Website', 'https://example.com'),
-                $this->bot->createUrlButton('📧 Email Us', 'mailto:contact@example.com')
-            ],
-            [
-                $this->bot->createCallbackButton('🏠 Main Menu', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::url('🌐 Visit Website', 'https://example.com'),
+                Button::url('📧 Email Us', 'mailto:contact@example.com')
+            )
+            ->addRow(
+                Button::callback('🏠 Main Menu', 'menu:main')
+            );
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -251,24 +266,26 @@ class MenuSystem
      */
     public function showSettings(int $chatId, ?int $messageId = null): void
     {
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('🔔 Notifications', 'settings:notif'),
-                $this->bot->createCallbackButton('🌐 Language', 'settings:lang')
-            ],
-            [
-                $this->bot->createCallbackButton('🎨 Theme', 'settings:theme'),
-                $this->bot->createCallbackButton('🔒 Privacy', 'settings:privacy')
-            ],
-            [
-                $this->bot->createCallbackButton('🔙 Back to Main', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('🔔 Notifications', 'settings:notif'),
+                Button::callback('🌐 Language', 'settings:lang')
+            )
+            ->addRow(
+                Button::callback('🎨 Theme', 'settings:theme'),
+                Button::callback('🔒 Privacy', 'settings:privacy')
+            )
+            ->addRow(
+                Button::callback('🔙 Back to Main', 'menu:main')
+            );
 
-        $text = "⚙️ *Settings*\n\n"
-            . "Customize your experience:";
+        // Using formatter - auto-escaped for MarkdownV2!
+        $text = $this->bot->formatter()
+            ->bold('⚙️ Settings')
+            . "\n\n"
+            . 'Customize your experience:';
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -289,14 +306,13 @@ class MenuSystem
             . "• Q: Do you offer support?\n"
             . "  A: Yes! Check our Services menu.";
 
-        $keyboard = $this->bot->buildInlineKeyboard([
-            [
-                $this->bot->createCallbackButton('📞 Contact Support', 'menu:contact'),
-                $this->bot->createCallbackButton('🏠 Main Menu', 'menu:main')
-            ]
-        ]);
+        $keyboard = InlineKeyboardBuilder::create()
+            ->addRow(
+                Button::callback('📞 Contact Support', 'menu:contact'),
+                Button::callback('🏠 Main Menu', 'menu:main')
+            );
 
-        $this->sendMessageOrEdit($chatId, $text, $keyboard, $messageId);
+        $this->sendMessageOrEdit($chatId, $text, $keyboard->build(), $messageId);
     }
 
     /**
@@ -357,15 +373,15 @@ class MenuSystem
         $params = [
             'chat_id' => $chatId,
             'text' => $text,
-            'parse_mode' => 'Markdown',
+            'parse_mode' => 'MarkdownV2',  // Auto-escaping enabled!
             'reply_markup' => $keyboard
         ];
 
         if ($messageId !== null) {
             $params['message_id'] = $messageId;
-            $this->bot->editMessageText($params);
+            $this->bot->messages()->editText($params);
         } else {
-            $this->bot->sendMessage($params);
+            $this->bot->messages()->send($params);
         }
     }
 }
@@ -399,9 +415,10 @@ try {
                     $queryId = $callbackQuery['id'];
 
                     // Answer callback query
-                    $bot->answerCallbackQuery([
-                        'callback_query_id' => $queryId
-                    ]);
+                    $bot->api()->call(
+                        ApiMethod::ANSWER_CALLBACK_QUERY,
+                        ['callback_query_id' => $queryId]
+                    );
 
                     // Handle URL buttons
                     if (strpos($data, 'url:') === 0) {
@@ -428,25 +445,23 @@ try {
                     } elseif ($text === '/help') {
                         $menu->showHelp($chatId);
                     } else {
-                        $bot->sendMessage([
+                        $bot->messages()->send([
                             'chat_id' => $chatId,
                             'text' => "Welcome! Use the buttons below to navigate or type /menu to show the main menu.",
-                            'reply_markup' => $bot->buildInlineKeyboard([
-                                [
-                                    $bot->createCallbackButton('🏠 Show Menu', 'menu:main')
-                                ]
-                            ])
+                            'reply_markup' => InlineKeyboardBuilder::create()
+                                ->addRow(
+                                    Button::callback('🏠 Show Menu', 'menu:main')
+                                )
+                                ->build()
                         ]);
                     }
                 }
             }
-
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage() . "\n";
             sleep(5);
         }
     }
-
 } catch (Exception $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);

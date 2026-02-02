@@ -27,3 +27,7 @@ temp/
 # Composer (even though we don't use it)
 /vendor/
 composer.lock
+
+#Vendor specific files
+*.phar
+.phpunit.cache/*
