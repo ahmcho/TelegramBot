@@ -82,4 +82,56 @@ enum ApiMethod: string
 
         // Payments
     case SEND_INVOICE = 'sendInvoice';
+
+    /**
+     * Check if this method supports bulk operations
+     */
+    public function isBulkCapable(): bool
+    {
+        return in_array($this, [
+            self::SEND_MESSAGE,
+            self::SEND_PHOTO,
+            self::SEND_DOCUMENT,
+            self::SEND_VIDEO,
+            self::SEND_AUDIO,
+            self::SEND_VOICE,
+            self::SEND_ANIMATION,
+            self::COPY_MESSAGE,
+        ], true);
+    }
+
+    /**
+     * Get required parameters for this method
+     * @return array<string>
+     */
+    public function requiredParams(): array
+    {
+        return match($this) {
+            self::SEND_MESSAGE => ['chat_id', 'text'],
+            self::SEND_PHOTO => ['chat_id', 'photo'],
+            self::SEND_DOCUMENT => ['chat_id', 'document'],
+            self::SEND_VIDEO => ['chat_id', 'video'],
+            self::SEND_AUDIO => ['chat_id', 'audio'],
+            self::SEND_VOICE => ['chat_id', 'voice'],
+            self::SEND_ANIMATION => ['chat_id', 'animation'],
+            self::SEND_STICKER => ['chat_id', 'sticker'],
+            self::COPY_MESSAGE => ['chat_id', 'from_chat_id', 'message_id'],
+            self::EDIT_MESSAGE_TEXT => ['chat_id', 'message_id', 'text'],
+            self::EDIT_MESSAGE_CAPTION => ['chat_id', 'message_id'],
+            self::DELETE_MESSAGE => ['chat_id', 'message_id'],
+            self::FORWARD_MESSAGE => ['chat_id', 'from_chat_id', 'message_id'],
+            default => ['chat_id'],
+        };
+    }
+
+    /**
+     * Check if this method supports media uploads
+     */
+    public function supportsMedia(): bool
+    {
+        return str_starts_with($this->value, 'send') &&
+               in_array(substr($this->value, 4), [
+                   'Photo', 'Video', 'Audio', 'Document', 'Animation', 'Voice', 'Sticker'
+               ], true);
+    }
 }

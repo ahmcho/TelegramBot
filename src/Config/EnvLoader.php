@@ -43,10 +43,18 @@ class EnvLoader
         $value = $this->get($key);
 
         if ($value === null) {
-            throw new RuntimeException("Required environment variable '$key' is not set.");
+            $this->fail("Required environment variable '$key' is not set.");
         }
 
         return $value;
+    }
+
+    /**
+     * Fail with an exception (never returns)
+     */
+    public function fail(string $message): never
+    {
+        throw new RuntimeException($message);
     }
 
     private function parseLine(string $line): void
