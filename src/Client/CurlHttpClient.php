@@ -7,13 +7,15 @@ namespace AhmCho\Telegram\Client;
 use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
+use AhmCho\Telegram\Logging\LoggerInterface;
 
 class CurlHttpClient implements HttpClientInterface
 {
     private int $lastHttpCode = 0;
 
     public function __construct(
-        private readonly BotConfig $config
+        private readonly BotConfig $config,
+        private readonly ?LoggerInterface $logger = null
     ) {}
 
     /**
@@ -65,18 +67,22 @@ class CurlHttpClient implements HttpClientInterface
         }
 
         if ($error || $errno) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 "cURL error ($errno): $error",
                 $this->lastHttpCode,
                 $response ?: null
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         if ($response === false) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 'cURL request failed without error message',
                 $this->lastHttpCode
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         return $this->parseResponse($response);
@@ -274,21 +280,40 @@ class CurlHttpClient implements HttpClientInterface
         $data = json_decode($response, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 'Invalid JSON response: ' . json_last_error_msg(),
                 $this->lastHttpCode,
                 $response
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         if (!$data['ok']) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 "Telegram API error: " . ($data['description'] ?? 'Unknown error'),
                 $this->lastHttpCode,
                 $response
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         return $data['result'] ?? [];
+    }
+
+    /**
+     * Log exception if logger is configured
+     * Never throws exceptions from logging operations
+     */
+    private function logExceptionIfEnabled(\Throwable $exception): void
+    {
+        if ($this->logger !== null) {
+            try {
+                $this->logger->logException($exception);
+            } catch (\Throwable $e) {
+                // Fail silently - never throw from logger
+            }
+        }
     }
 }

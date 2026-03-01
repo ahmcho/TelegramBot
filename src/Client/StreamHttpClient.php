@@ -7,13 +7,15 @@ namespace AhmCho\Telegram\Client;
 use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
+use AhmCho\Telegram\Logging\LoggerInterface;
 
 class StreamHttpClient implements HttpClientInterface
 {
     private int $lastHttpCode = 0;
 
     public function __construct(
-        private readonly BotConfig $config
+        private readonly BotConfig $config,
+        private readonly ?LoggerInterface $logger = null
     ) {}
 
     /**
@@ -34,9 +36,11 @@ class StreamHttpClient implements HttpClientInterface
         array $params = []
     ): mixed {
         if (!extension_loaded('openssl')) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 'OpenSSL extension is not enabled. Please enable extension=openssl in your php.ini file.'
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         $options = [
@@ -59,7 +63,9 @@ class StreamHttpClient implements HttpClientInterface
         if ($response === false) {
             $error = error_get_last();
             $errorMessage = $error['message'] ?? 'Unknown error';
-            throw new HttpClientException("HTTP request failed: $errorMessage");
+            $exception = new HttpClientException("HTTP request failed: $errorMessage");
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         // Parse HTTP status code
@@ -106,21 +112,40 @@ class StreamHttpClient implements HttpClientInterface
         $data = json_decode($response, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 'Invalid JSON response: ' . json_last_error_msg(),
                 $this->lastHttpCode,
                 $response
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         if (!$data['ok']) {
-            throw new HttpClientException(
+            $exception = new HttpClientException(
                 "Telegram API error: " . ($data['description'] ?? 'Unknown error'),
                 $this->lastHttpCode,
                 $response
             );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
 
         return $data['result'] ?? [];
+    }
+
+    /**
+     * Log exception if logger is configured
+     * Never throws exceptions from logging operations
+     */
+    private function logExceptionIfEnabled(\Throwable $exception): void
+    {
+        if ($this->logger !== null) {
+            try {
+                $this->logger->logException($exception);
+            } catch (\Throwable $e) {
+                // Fail silently - never throw from logger
+            }
+        }
     }
 }

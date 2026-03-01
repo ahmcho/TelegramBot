@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use PDO;
 use PDOException;
 use AhmCho\Telegram\Exception\TelegramException;
+use AhmCho\Telegram\Logging\LoggerInterface;
 
 /**
  * SQLite User Repository Implementation
@@ -19,7 +20,8 @@ class SqliteUserRepository implements UserRepositoryInterface
     private PDO $pdo;
 
     public function __construct(
-        private readonly string $dbPath
+        private readonly string $dbPath,
+        private readonly ?LoggerInterface $logger = null
     ) {
         $this->ensureExtensionsLoaded();
         $this->ensureDirectoryExists();
@@ -49,7 +51,7 @@ class SqliteUserRepository implements UserRepositoryInterface
 
         try {
             $stmt = $this->pdo->prepare($sql);
-            return $stmt->execute([
+            $result = $stmt->execute([
                 ':telegram_id' => $user->telegramId,
                 ':chat_id' => $user->chatId,
                 ':first_name' => $user->firstName,
@@ -59,8 +61,11 @@ class SqliteUserRepository implements UserRepositoryInterface
                 ':is_bot' => $user->isBot ? 1 : 0,
                 ':is_premium' => $user->isPremium ? 1 : 0,
             ]);
+            return $result;
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to save user: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to save user: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception, ['telegram_id' => $user->telegramId]);
+            throw $exception;
         }
     }
 
@@ -75,7 +80,9 @@ class SqliteUserRepository implements UserRepositoryInterface
 
             return $result ? UserEntity::fromDatabaseRow($result) : null;
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to get user: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to get user: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception, ['telegram_id' => $telegramId]);
+            throw $exception;
         }
     }
 
@@ -91,7 +98,9 @@ class SqliteUserRepository implements UserRepositoryInterface
 
             return $result ? UserEntity::fromDatabaseRow($result) : null;
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to get user: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to get user: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception, ['username' => $username]);
+            throw $exception;
         }
     }
 
@@ -130,7 +139,9 @@ class SqliteUserRepository implements UserRepositoryInterface
             $results = $stmt->fetchAll();
             return array_column($results, 'chat_id');
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to get chat IDs: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to get chat IDs: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
     }
 
@@ -171,7 +182,9 @@ class SqliteUserRepository implements UserRepositoryInterface
                 $results
             );
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to get users: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to get users: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
         }
     }
 
@@ -183,7 +196,9 @@ class SqliteUserRepository implements UserRepositoryInterface
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute([':telegram_id' => $telegramId]);
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to update last active: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to update last active: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception, ['telegram_id' => $telegramId]);
+            throw $exception;
         }
     }
 
@@ -195,7 +210,9 @@ class SqliteUserRepository implements UserRepositoryInterface
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute([':telegram_id' => $telegramId]);
         } catch (PDOException $e) {
-            throw new TelegramException("Failed to delete user: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Failed to delete user: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception, ['telegram_id' => $telegramId]);
+            throw $exception;
         }
     }
 
@@ -253,7 +270,9 @@ class SqliteUserRepository implements UserRepositoryInterface
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            throw new TelegramException("Database connection failed: " . $e->getMessage(), 0, $e);
+            $exception = new TelegramException("Database connection failed: " . $e->getMessage(), 0, $e);
+            $this->logExceptionIfEnabled($exception, ['db_path' => $this->dbPath]);
+            throw $exception;
         }
     }
 
@@ -281,5 +300,20 @@ class SqliteUserRepository implements UserRepositoryInterface
         CREATE INDEX IF NOT EXISTS idx_users_is_premium ON users(is_premium);";
 
         $this->pdo->exec($sql);
+    }
+
+    /**
+     * Log exception if logger is configured
+     * Never throws exceptions from logging operations
+     */
+    private function logExceptionIfEnabled(\Throwable $exception, array $context = []): void
+    {
+        if ($this->logger !== null) {
+            try {
+                $this->logger->logException($exception, $context);
+            } catch (\Throwable $e) {
+                // Fail silently - never throw from logger
+            }
+        }
     }
 }

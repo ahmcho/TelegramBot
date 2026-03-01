@@ -20,6 +20,8 @@ use AhmCho\Telegram\Database\UserRepositoryInterface;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
 use AhmCho\Telegram\Formatting\TextFormatterInterface;
 use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Logging\LoggerFactory;
+use AhmCho\Telegram\Logging\LoggerInterface;
 
 /**
  * Telegram Bot Facade
@@ -34,6 +36,7 @@ class TelegramBot
     private readonly ChatService $chats;
     private readonly WebhookService $webhooks;
     private readonly MarkdownV2Formatter $formatter;
+    private readonly ?LoggerInterface $logger;
     private ?UserRepositoryInterface $userRepository = null;
     private string $inputSource = 'php://input';
 
@@ -49,13 +52,26 @@ class TelegramBot
             token: $token ?? $loader->require('TELEGRAM_BOT_TOKEN')
         );
 
-        $httpClient ??= HttpClientFactory::create($config);
+        // Create logger from config
+        $this->logger = LoggerFactory::createFromConfig($config);
 
-        $this->apiService = new ApiService(
-            $httpClient,
-            $config,
-            new BulkOperationManager($httpClient, $config)
-        );
+        // Log bot initialization
+        $this->logIfEnabled('info', 'TelegramBot initialized', [
+            'token_hash' => substr(md5($config->getToken()), 0, 8),
+            'logging_enabled' => $config->isLoggingEnabled(),
+            'log_level' => $config->getLogLevel(),
+            'timeout' => $config->getTimeout(),
+            'throw_exceptions' => $config->shouldThrowExceptions()
+        ]);
+
+        // Create HTTP client with logger
+        $httpClient ??= HttpClientFactory::create($config, $this->logger);
+
+        // Create bulk manager with logger
+        $bulkManager = new BulkOperationManager($httpClient, $config, $this->logger);
+
+        // Create API service with logger
+        $this->apiService = new ApiService($httpClient, $config, $bulkManager, $this->logger);
 
         $this->messages = new MessageService($this->apiService);
         $this->media = new MediaService($this->apiService);
@@ -94,6 +110,15 @@ class TelegramBot
     public function api(): ApiService
     {
         return $this->apiService;
+    }
+
+    /**
+     * Get the logger instance
+     * Returns null if logging is disabled
+     */
+    public function getLogger(): ?LoggerInterface
+    {
+        return $this->logger;
     }
 
     // Convenience methods for backward compatibility
@@ -226,5 +251,23 @@ class TelegramBot
         }
 
         return $params;
+    }
+
+    /**
+     * Log message if logger is configured
+     * Never throws exceptions from logging operations
+     *
+     * @param 'info'|'warning'|'error'|'debug' $level
+     * @param array<string, mixed> $context
+     */
+    private function logIfEnabled(string $level, string $message, array $context = []): void
+    {
+        if ($this->logger !== null) {
+            try {
+                $this->logger->log($level, $message, $context);
+            } catch (\Throwable $e) {
+                // Fail silently - never throw from logger
+            }
+        }
     }
 }

@@ -16,7 +16,10 @@ class BotConfig
         private readonly string $apiUrl = 'https://api.telegram.org/',
         private readonly int $timeout = 30,
         private readonly bool $throwExceptions = true,
-        private readonly bool $verifySsl = false
+        private readonly bool $verifySsl = false,
+        private readonly bool $loggingEnabled = true,
+        private readonly string $logFilePath = 'bot.log',
+        private readonly string $logLevel = 'INFO'
     ) {
     }
 
@@ -50,6 +53,43 @@ class BotConfig
         return $this->verifySsl;
     }
 
+    /**
+     * Check if logging is enabled
+     */
+    public function isLoggingEnabled(): bool
+    {
+        return $this->loggingEnabled;
+    }
+
+    /**
+     * Get the log file path
+     */
+    public function getLogFilePath(): string
+    {
+        return $this->logFilePath;
+    }
+
+    /**
+     * Get the log level
+     */
+    public function getLogLevel(): string
+    {
+        return $this->logLevel;
+    }
+
+    /**
+     * Get all logging configuration as an array
+     *
+     * @return array{log_file_path: string, log_level: string}
+     */
+    public function getLogConfig(): array
+    {
+        return [
+            'log_file_path' => $this->logFilePath,
+            'log_level' => $this->logLevel,
+        ];
+    }
+
     public function withTimeout(int $timeout): self
     {
         return new self(
@@ -57,7 +97,10 @@ class BotConfig
             $this->apiUrl,
             $timeout,
             $this->throwExceptions,
-            $this->verifySsl
+            $this->verifySsl,
+            $this->loggingEnabled,
+            $this->logFilePath,
+            $this->logLevel
         );
     }
 
@@ -68,7 +111,61 @@ class BotConfig
             $this->apiUrl,
             $this->timeout,
             $throw,
-            $this->verifySsl
+            $this->verifySsl,
+            $this->loggingEnabled,
+            $this->logFilePath,
+            $this->logLevel
+        );
+    }
+
+    /**
+     * Create a new config with logging enabled/disabled
+     */
+    public function withLoggingEnabled(bool $enabled): self
+    {
+        return new self(
+            $this->token,
+            $this->apiUrl,
+            $this->timeout,
+            $this->throwExceptions,
+            $this->verifySsl,
+            $enabled,
+            $this->logFilePath,
+            $this->logLevel
+        );
+    }
+
+    /**
+     * Create a new config with a different log file path
+     */
+    public function withLogFilePath(string $path): self
+    {
+        return new self(
+            $this->token,
+            $this->apiUrl,
+            $this->timeout,
+            $this->throwExceptions,
+            $this->verifySsl,
+            $this->loggingEnabled,
+            $path,
+            $this->logLevel
+        );
+    }
+
+    /**
+     * Create a new config with a different log level
+     */
+    public function withLogLevel(string $level): self
+    {
+        return new self(
+            $this->token,
+            $this->apiUrl,
+            $this->timeout,
+            $this->throwExceptions,
+            $this->verifySsl,
+            $this->loggingEnabled,
+            $this->logFilePath,
+            $level
         );
     }
 }
