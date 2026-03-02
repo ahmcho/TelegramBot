@@ -46,7 +46,7 @@ enum LogLevel: string
         return match(strtoupper($level)) {
             'DEBUG' => self::DEBUG,
             'INFO' => self::INFO,
-            'NOTICE', 'INFO' => self::INFO,
+            'NOTICE' => self::INFO,
             'WARNING', 'WARN' => self::WARNING,
             'ERROR' => self::ERROR,
             'CRITICAL', 'ALERT', 'EMERGENCY' => self::CRITICAL,

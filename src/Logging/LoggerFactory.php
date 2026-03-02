@@ -41,7 +41,7 @@ class LoggerFactory
         $logLevel = $config['log_level'] ?? 'INFO';
 
         $handler = new FileLogHandler($logFilePath);
-        $level = LogLevel::from($logLevel);
+        $level = LogLevel::fromPsr3($logLevel);
 
         return new Logger($handler, $level);
     }
