@@ -457,12 +457,12 @@ try {
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             echo "Error: " . $e->getMessage() . "\n";
             sleep(5);
         }
     }
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);
 }

@@ -164,7 +164,7 @@ try {
     echo "✅ All tests passed successfully!\n";
     echo "================================\n";
 
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     echo "\n❌ Test failed: " . $e->getMessage() . "\n";
     exit(1);
 }

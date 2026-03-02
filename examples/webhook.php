@@ -77,7 +77,7 @@ class CommandRouter
             if (isset($update['message'])) {
                 $this->handleMessage($update['message']);
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Error handling update: " . $e->getMessage());
         }
     }

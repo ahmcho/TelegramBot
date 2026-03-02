@@ -26,7 +26,7 @@ try {
     $repository = new SqliteUserRepository(__DIR__ . '/../data/bot.db');
     $bot->setUserRepository($repository);
     echo "Database connected: " . __DIR__ . "/../data/bot.db\n";
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     echo "Database not available: " . $e->getMessage() . "\n";
     echo "Bot will continue without database functionality.\n";
     $repository = null;
@@ -220,7 +220,7 @@ while (true) {
             }
             echo "Processed " . count($updates) . " updates\n";
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         echo "Error: " . $e->getMessage() . "\n";
         sleep(5);
     }

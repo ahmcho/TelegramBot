@@ -108,7 +108,7 @@ function handleStats(TelegramBot $bot, int $chatId): void
             'text' => $stats,
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error getting stats: ' . $e->getMessage()
@@ -151,7 +151,7 @@ function handleAdminList(TelegramBot $bot, int $chatId): void
             'text' => $text,
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error getting admin list: ' . $e->getMessage()
@@ -199,7 +199,7 @@ function handleChatInfo(TelegramBot $bot, int $chatId): void
             'text' => $info,
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error getting chat info: ' . $e->getMessage()
@@ -222,7 +222,7 @@ function handleMemberCount(TelegramBot $bot, int $chatId): void
                 . ' members.',
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error getting member count: ' . $e->getMessage()
@@ -291,7 +291,7 @@ function handleUserInfo(TelegramBot $bot, int $chatId, int $userId): void
             'text' => $info,
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error getting user info: ' . $e->getMessage()
@@ -322,7 +322,7 @@ function handleBan(TelegramBot $bot, int $chatId, int $userId, ?int $untilDate =
             'chat_id' => $chatId,
             'text' => $text
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error banning user: ' . $e->getMessage()
@@ -343,7 +343,7 @@ function handleUnban(TelegramBot $bot, int $chatId, int $userId): void
             'chat_id' => $chatId,
             'text' => '✅ User unbanned successfully!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error unbanning user: ' . $e->getMessage()
@@ -364,7 +364,7 @@ function handleRestrict(TelegramBot $bot, int $chatId, int $userId, array $permi
             'chat_id' => $chatId,
             'text' => '⛔ User restricted successfully!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error restricting user: ' . $e->getMessage()
@@ -384,7 +384,7 @@ function handlePromote(TelegramBot $bot, int $chatId, int $userId, array $rights
             'chat_id' => $chatId,
             'text' => '⬆️ User promoted to administrator!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error promoting user: ' . $e->getMessage()
@@ -404,7 +404,7 @@ function handleKick(TelegramBot $bot, int $chatId, int $userId): void
             'chat_id' => $chatId,
             'text' => '👢 User kicked from the chat!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error kicking user: ' . $e->getMessage()
@@ -444,7 +444,7 @@ function handleMute(TelegramBot $bot, int $chatId, int $userId, int $duration): 
             'chat_id' => $chatId,
             'text' => '🔇 User muted for ' . $durationText . '!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error muting user: ' . $e->getMessage()
@@ -465,7 +465,7 @@ function handlePinMessage(TelegramBot $bot, int $chatId, int $messageId, bool $d
             'chat_id' => $chatId,
             'text' => '📌 Message pinned successfully!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error pinning message: ' . $e->getMessage()
@@ -491,7 +491,7 @@ function handleUnpinMessage(TelegramBot $bot, int $chatId, ?int $messageId = nul
             'chat_id' => $chatId,
             'text' => $text
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error unpinning: ' . $e->getMessage()
@@ -511,7 +511,7 @@ function handleSetChatTitle(TelegramBot $bot, int $chatId, string $title): void
             'chat_id' => $chatId,
             'text' => '✅ Chat title changed to: ' . $title
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error changing title: ' . $e->getMessage()
@@ -531,7 +531,7 @@ function handleSetChatDescription(TelegramBot $bot, int $chatId, string $descrip
             'chat_id' => $chatId,
             'text' => '✅ Chat description updated!'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error updating description: ' . $e->getMessage()
@@ -807,12 +807,12 @@ try {
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             echo "Error: " . $e->getMessage() . "\n";
             sleep(5);
         }
     }
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);
 }

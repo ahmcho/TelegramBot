@@ -54,7 +54,7 @@ echo "✓ Direct logger test completed\n\n";
 echo "Test 5: Testing logger exception handling...\n";
 try {
     throw new Exception('Test exception for logging');
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     $directLogger->logException($e, ['context' => 'test']);
     echo "✓ Exception logged successfully\n\n";
 }

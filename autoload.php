@@ -18,7 +18,7 @@ spl_autoload_register(function (string $class): void {
 
     // Base directory for the namespace prefix
     $base_dir = __DIR__ . '/src/';
-    $psr_base_dir = __DIR__ . '/vendor/psr/log/';
+    $psr_base_dir = __DIR__ . '/src/Psr/Log/';
 
     // Check if the class uses the project namespace prefix
     $len = strlen($prefix);

@@ -117,7 +117,7 @@ function handlePhoto(TelegramBot $bot, int $chatId, bool $fromUrl = true): void
                 'parse_mode' => 'MarkdownV2'
             ]);
         }
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending photo: ' . $e->getMessage()
@@ -151,7 +151,7 @@ function handleVideo(TelegramBot $bot, int $chatId): void
             'text' => '💾 File ID: `' . $fileId . '`',
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending video: ' . $e->getMessage()
@@ -182,7 +182,7 @@ function handleAudio(TelegramBot $bot, int $chatId): void
             'text' => '💾 File ID: `' . $fileId . '`',
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending audio: ' . $e->getMessage()
@@ -211,7 +211,7 @@ function handleVoice(TelegramBot $bot, int $chatId): void
             'text' => '💾 File ID: `' . $fileId . '`',
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending voice: ' . $e->getMessage()
@@ -249,7 +249,7 @@ function handleDocument(TelegramBot $bot, int $chatId): void
             'text' => '💾 File ID: `' . $fileId . "`\n\nDocument sent successfully!",
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending document: ' . $e->getMessage()
@@ -280,7 +280,7 @@ function handleAnimation(TelegramBot $bot, int $chatId): void
             'text' => '💾 File ID: `' . $fileId . "`\n\nAnimation sent successfully!",
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         // Fallback if GIF URL doesn't work
         $bot->messages()->send([
             'chat_id' => $chatId,
@@ -302,7 +302,7 @@ function handleSticker(TelegramBot $bot, int $chatId): void
                 . '`$bot->media()->sendSticker([\'chat_id\' => $chatId, \'sticker\' => \'FILE_ID\']);`',
             'parse_mode' => 'MarkdownV2'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error: ' . $e->getMessage()
@@ -325,7 +325,7 @@ function handleLocation(TelegramBot $bot, int $chatId): void
             'chat_id' => $chatId,
             'text' => '📍 Location sent!' . "\n\nThis is the location of the Eiffel Tower in Paris."
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending location: ' . $e->getMessage()
@@ -349,7 +349,7 @@ function handleVenue(TelegramBot $bot, int $chatId): void
             'chat_id' => $chatId,
             'text' => '🏛️ Venue sent!' . "\n\nA venue includes location, title, and address."
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending venue: ' . $e->getMessage()
@@ -372,7 +372,7 @@ function handleContact(TelegramBot $bot, int $chatId): void
             'chat_id' => $chatId,
             'text' => '👤 Contact sent!' . "\n\nUsers can save this contact to their phone."
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending contact: ' . $e->getMessage()
@@ -391,7 +391,7 @@ function handlePoll(TelegramBot $bot, int $chatId): void
             'is_anonymous' => false,
             'allows_multiple_answers' => false
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error creating poll: ' . $e->getMessage()
@@ -405,7 +405,7 @@ function handleDice(TelegramBot $bot, int $chatId): void
         $bot->media()->sendDice([
             'chat_id' => $chatId
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error sending dice: ' . $e->getMessage()
@@ -444,7 +444,7 @@ function handleChatAction(TelegramBot $bot, int $chatId): void
             ]);
 
             sleep(1);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => '❌ Error with action \'' . $action . '\': ' . $e->getMessage()
@@ -467,7 +467,7 @@ function handleMediaGroup(TelegramBot $bot, int $chatId): void
                 . 'However, this requires an array of media objects with proper attachment IDs.' . "\n\n"
                 . 'For simplicity, check the Telegram Bot API documentation for sendMediaGroup.'
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error: ' . $e->getMessage()
@@ -496,7 +496,7 @@ function handleEditCaption(TelegramBot $bot, int $chatId): void
             'message_id' => $messageId,
             'caption' => '✏️ Edited caption!' . "\n\nYou can edit captions of photos, videos, documents, etc."
         ]);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
             'text' => '❌ Error editing caption: ' . $e->getMessage()
@@ -697,12 +697,12 @@ try {
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             echo "Error: " . $e->getMessage() . "\n";
             sleep(5);
         }
     }
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     echo "Fatal error: " . $e->getMessage() . "\n";
     exit(1);
 }
