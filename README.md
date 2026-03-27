@@ -2,6 +2,8 @@
 
 A lightweight, dependency-free PHP library for creating Telegram bots. This library uses pure PHP with no external dependencies or frameworks required.
 
+## ⚠️ Important Change: Database Support Removed
+
 ## Requirements
 
 - PHP 8.0 or higher (8.3+ recommended)
