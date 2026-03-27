@@ -86,23 +86,8 @@ $tests['Bulk'] = [
 ];
 echo "✅ Bulk classes loaded: " . count($tests['Bulk']) . " items\n\n";
 
-// Test 6: Database classes can be loaded
-echo "Test 6: Loading database classes...\n";
-
-use AhmCho\Telegram\Database\UserEntity;
-use AhmCho\Telegram\Database\UserFilters;
-use AhmCho\Telegram\Database\UserRepositoryInterface;
-use AhmCho\Telegram\Database\SqliteUserRepository;
-
-$filters = UserFilters::create();
-$tests['Database'] = [
-    'UserFilters created' => $filters !== null,
-    'UserFilters withIsPremium' => $filters->withIsPremium(true)->isPremium === true,
-];
-echo "✅ Database classes loaded: " . count($tests['Database']) . " items\n\n";
-
-// Test 7: Keyboard classes can be loaded
-echo "Test 7: Loading keyboard classes...\n";
+// Test 6: Keyboard classes can be loaded
+echo "Test 6: Loading keyboard classes...\n";
 
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\KeyboardBuilderInterface;
@@ -116,8 +101,8 @@ $tests['Keyboard'] = [
 ];
 echo "✅ Keyboard classes loaded: " . count($tests['Keyboard']) . " items\n\n";
 
-// Test 8: Formatter classes can be loaded
-echo "Test 8: Loading formatter classes...\n";
+// Test 7: Formatter classes can be loaded
+echo "Test 7: Loading formatter classes...\n";
 
 use AhmCho\Telegram\Formatting\TextFormatterInterface;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
@@ -130,8 +115,8 @@ $tests['Formatter'] = [
 ];
 echo "✅ Formatter classes loaded: " . count($tests['Formatter']) . " items\n\n";
 
-// Test 9: API service classes can be loaded
-echo "Test 9: Loading API service classes...\n";
+// Test 8: API service classes can be loaded
+echo "Test 8: Loading API service classes...\n";
 
 use AhmCho\Telegram\Api\ApiService;
 use AhmCho\Telegram\Api\Methods\MessageService;
@@ -144,8 +129,8 @@ $tests['API'] = [
 ];
 echo "✅ API service classes loaded: " . $tests['API']['API services'] . "\n\n";
 
-// Test 10: Bot facade can be loaded
-echo "Test 10: Loading bot facade...\n";
+// Test 9: Bot facade can be loaded
+echo "Test 9: Loading bot facade...\n";
 
 use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Bot\BotFactory;
@@ -161,11 +146,12 @@ echo "✅ ALL TESTS PASSED!\n";
 echo "==================================\n\n";
 
 echo "📊 Summary:\n";
-echo "  - 35+ classes created\n";
+echo "  - 30+ classes created\n";
 echo "  - All PHP 8.1+ features working\n";
 echo "  - Namespaces organized properly\n";
 echo "  - Autoloader working correctly\n";
 echo "  - SOLID principles followed\n";
-echo "  - Type-safe throughout\n\n";
+echo "  - Type-safe throughout\n";
+echo "  - Focused on Telegram Bot API only\n\n";
 
 echo "🚀 The tg-bots library has been successfully modernized!\n";
