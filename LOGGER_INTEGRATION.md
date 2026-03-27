@@ -68,22 +68,7 @@ The logger has been successfully integrated into all major components of the fra
   - **DEBUG**: API calls (with sanitized params)
   - **ERROR**: API call failures (with method and sanitized params)
 
-### 4. Database (`src/Database/`)
-
-#### SqliteUserRepository
-- **Constructor**: Added `?LoggerInterface $logger = null` parameter
-- **Method**: Added `logExceptionIfEnabled()` helper
-- **Logging points**:
-  - **ERROR**: Save user failures (with telegram_id)
-  - **ERROR**: Find by telegram_id failures (with telegram_id)
-  - **ERROR**: Find by username failures (with username)
-  - **ERROR**: Get all chat IDs failures
-  - **ERROR**: Find all users failures
-  - **ERROR**: Update last active failures (with telegram_id)
-  - **ERROR**: Delete user failures (with telegram_id)
-  - **ERROR**: Database connection failures (with db_path)
-
-### 5. Bot Facade (`src/Bot/`)
+### 4. Bot Facade (`src/Bot/`)
 
 #### TelegramBot
 - **Import**: Added `use AhmCho\Telegram\Logging\LoggerFactory;`
@@ -227,7 +212,6 @@ Testing PHP syntax...
 ✓ src/Client/HttpClientFactory.php
 ✓ src/Bulk/BulkOperationManager.php
 ✓ src/Api/ApiService.php
-✓ src/Database/SqliteUserRepository.php
 ✓ src/Bot/TelegramBot.php
 ✓ src/Logging/LoggerInterface.php
 ✓ src/Logging/LoggerFactory.php
@@ -255,9 +239,8 @@ All files have valid syntax!
 3. `src/Client/HttpClientFactory.php`
 4. `src/Bulk/BulkOperationManager.php`
 5. `src/Api/ApiService.php`
-6. `src/Database/SqliteUserRepository.php`
-7. `src/Bot/TelegramBot.php`
-8. `composer.json`
+6. `src/Bot/TelegramBot.php`
+7. `composer.json`
 
 ## Next Steps
 
