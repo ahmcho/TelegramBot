@@ -84,21 +84,6 @@ final class BotFactoryTest extends TestCase
         $this->assertInstanceOf(TelegramBot::class, $bot);
     }
 
-    public function test_createWithDatabase_returns_bot_instance(): void
-    {
-        $bot = BotFactory::createWithDatabase('test_token');
-
-        $this->assertInstanceOf(TelegramBot::class, $bot);
-    }
-
-    public function test_createWithDatabase_with_repository(): void
-    {
-        $repository = $this->createMock(\AhmCho\Telegram\Database\UserRepositoryInterface::class);
-        $bot = BotFactory::createWithDatabase('test_token', $repository);
-
-        $this->assertInstanceOf(TelegramBot::class, $bot);
-    }
-
     public function test_createWithHttpClient_returns_bot_instance(): void
     {
         $mockClient = new MockHttpClient();

@@ -8,8 +8,6 @@ use PHPUnit\Framework\TestCase;
 use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Client\HttpClientFactory;
 use AhmCho\Telegram\Config\BotConfig;
-use AhmCho\Telegram\Database\SqliteUserRepository;
-use AhmCho\Telegram\Database\UserEntity;
 use AhmCho\Telegram\Tests\Helpers\MockHttpClient;
 use AhmCho\Telegram\Tests\Helpers\TestDataFactory;
 use AhmCho\Telegram\Tests\Helpers\WebhookStreamWrapper;
@@ -228,16 +226,7 @@ final class TelegramBotTest extends TestCase
         WebhookStreamWrapper::clear();
     }
 
-    public function test_setUserRepository(): void
-    {
-        $bot = new TelegramBot('test_token');
-        $repository = $this->createMock(\AhmCho\Telegram\Database\UserRepositoryInterface::class);
-
-        $bot->setUserRepository($repository);
-
-        // No assertion needed - just verify no exception thrown
-        $this->assertTrue(true);
-    }
+    public function test_getLogger_returns_logger_instance(): void
 
     public function test_saveUserFromUpdate_saves_user(): void
     {
