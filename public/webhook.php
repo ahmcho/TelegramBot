@@ -93,15 +93,15 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
         // Handle /start command
         if (isset($message['text']) && $message['text'] === '/start') {
-            $keyboard = $bot->buildInlineKeyboard([
-                [
-                    $bot->createCallbackButton('ℹ️ Help', 'callback:help'),
-                    $bot->createCallbackButton('📊 Stats', 'callback:stats')
-                ],
-                [
-                    $bot->createUrlButton('🌐 Visit Website', 'https://example.com')
-                ]
-            ]);
+            $keyboard = InlineKeyboardBuilder::create()
+                ->addRow(
+                    Button::callback('ℹ️ Help', 'help'),
+                    Button::callback('📊 Stats', 'stats')
+                )
+                ->addRow(
+                    Button::url('🌐 Visit Website', 'https://example.com')
+                )
+                ->build();
 
             $bot->sendMessage([
                 'chat_id' => $chatId,
