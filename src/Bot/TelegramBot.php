@@ -14,9 +14,6 @@ use AhmCho\Telegram\Client\HttpClientFactory;
 use AhmCho\Telegram\Client\HttpClientInterface;
 use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Config\EnvLoader;
-use AhmCho\Telegram\Database\UserEntity;
-use AhmCho\Telegram\Database\UserFilters;
-use AhmCho\Telegram\Database\UserRepositoryInterface;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
 use AhmCho\Telegram\Formatting\TextFormatterInterface;
 use AhmCho\Telegram\Enums\ApiMethod;
@@ -37,7 +34,6 @@ class TelegramBot
     private readonly WebhookService $webhooks;
     private readonly MarkdownV2Formatter $formatter;
     private readonly ?LoggerInterface $logger;
-    private ?UserRepositoryInterface $userRepository = null;
     private string $inputSource = 'php://input';
 
     public function __construct(
@@ -181,76 +177,13 @@ class TelegramBot
         }
     }
 
-    // Database integration
-
-    public function setUserRepository(UserRepositoryInterface $repository): void
-    {
-        $this->userRepository = $repository;
-    }
-
     /**
-     * Set the input source for webhook updates (for testing)
+     * Set input source for webhook updates (for testing)
      * Allows overriding php://input with a custom stream
      */
     public function setInputSource(string $source): void
     {
         $this->inputSource = $source;
-    }
-
-    public function saveUserFromUpdate(array $update): bool
-    {
-        if ($this->userRepository === null) {
-            throw new \RuntimeException('User repository not configured');
-        }
-
-        $user = UserEntity::fromTelegramUpdate($update);
-
-        return $user !== null && $this->userRepository->save($user);
-    }
-
-    public function broadcastToDatabase(
-        string $text,
-        array $commonParams = [],
-        ?UserFilters $filters = null,
-        array $options = []
-    ) {
-        if ($this->userRepository === null) {
-            throw new \RuntimeException('User repository not configured');
-        }
-
-        $chatIds = $this->userRepository->getAllChatIds($filters);
-        $params = [...$commonParams, 'text' => $text];
-
-        // Apply escaping for MarkdownV2 before broadcasting
-        $params = $this->escapeForMarkdownV2Helper($params);
-
-        return $this->apiService->getBulkManager()->broadcast(
-            ApiMethod::SEND_MESSAGE,
-            $chatIds,
-            $params,
-            $options
-        );
-    }
-
-    /**
-     * Helper method to escape params for MarkdownV2
-     * (Uses MessageService logic for broadcastToDatabase)
-     */
-    private function escapeForMarkdownV2Helper(array $params): array
-    {
-        if (!isset($params['parse_mode']) || $params['parse_mode'] !== 'MarkdownV2') {
-            return $params;
-        }
-
-        if (isset($params['text']) && is_string($params['text'])) {
-            $params['text'] = $this->formatter->escape($params['text']);
-        }
-
-        if (isset($params['caption']) && is_string($params['caption'])) {
-            $params['caption'] = $this->formatter->escape($params['caption']);
-        }
-
-        return $params;
     }
 
     /**
