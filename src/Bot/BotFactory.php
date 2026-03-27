@@ -7,7 +7,6 @@ namespace AhmCho\Telegram\Bot;
 use AhmCho\Telegram\Client\HttpClientFactory;
 use AhmCho\Telegram\Client\HttpClientInterface;
 use AhmCho\Telegram\Config\BotConfig;
-use AhmCho\Telegram\Database\UserRepositoryInterface;
 
 /**
  * Bot Factory
@@ -30,22 +29,6 @@ class BotFactory
     public static function createWithConfig(BotConfig $config): TelegramBot
     {
         return new TelegramBot(null, $config);
-    }
-
-    /**
-     * Create a bot with database repository
-     */
-    public static function createWithDatabase(
-        ?string $token = null,
-        ?UserRepositoryInterface $repository = null
-    ): TelegramBot {
-        $bot = new TelegramBot($token);
-
-        if ($repository !== null) {
-            $bot->setUserRepository($repository);
-        }
-
-        return $bot;
     }
 
     /**
