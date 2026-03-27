@@ -12,7 +12,6 @@ use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
-use AhmCho\Telegram\Database\UserFilters;
 use AhmCho\Telegram\Enums\ApiMethod;
 
 require_once __DIR__ . '/../autoload.php';
@@ -61,19 +60,8 @@ echo "   Escaped: " . $formatter->escape('Hello World!') . "\n";
 echo "   Bold: " . $formatter->bold('Hello World') . "\n";
 echo "   Italic: " . $formatter->italic('Hello World') . "\n\n";
 
-// ===== Feature 6: Fluent Interface =====
-echo "6️⃣  Fluent Interface (Method Chaining)\n";
-$filters = UserFilters::create()
-    ->withIsPremium(true)
-    ->withHasUsername(true)
-    ->withActiveSince(date('Y-m-d H:i:s', strtotime('-30 days')));
-
-echo "   Premium: " . ($filters->isPremium ? 'Yes' : 'No') . "\n";
-echo "   Has username: " . ($filters->hasUsername ? 'Yes' : 'No') . "\n";
-echo "   Active since: " . ($filters->activeSince ?? 'Not set') . "\n\n";
-
-// ===== Feature 7: Keyboard Builder =====
-echo "7️⃣  Keyboard Builder (Fluent Interface)\n";
+// ===== Feature 6: Keyboard Builder =====
+echo "6️⃣  Keyboard Builder (Fluent Interface)\n";
 $keyboard = InlineKeyboardBuilder::create()
     ->addRow(
         Button::url('Google', 'https://google.com'),
@@ -89,8 +77,8 @@ $structure = $keyboard->toArray();
 echo "   Rows: " . count($structure['inline_keyboard']) . "\n";
 echo "   First button: " . $structure['inline_keyboard'][0][0]['text'] . "\n\n";
 
-// ===== Feature 8: Value Objects =====
-echo "8️⃣  Value Objects (Immutable)\n";
+// ===== Feature 7: Value Objects =====
+echo "7️⃣  Value Objects (Immutable)\n";
 
 use AhmCho\Telegram\Bulk\BulkResult;
 
@@ -99,15 +87,15 @@ echo "   BulkResult is readonly class: " . (new ReflectionClass($result)->isRead
 echo "   Total: " . $result->total . "\n";
 echo "   Success rate: " . $result->getSuccessRate() . "%\n\n";
 
-// ===== Feature 9: Match Expression =====
-echo "9️⃣  Match Expressions (Type Safety)\n";
+// ===== Feature 8: Match Expression =====
+echo "8️⃣  Match Expressions (Type Safety)\n";
 echo "   HTTP client factory uses match() for type safety:\n";
 echo "   - Checks cURL availability\n";
 echo "   - Checks OpenSSL availability\n";
 echo "   - Returns appropriate client\n\n";
 
-// ===== Feature 10: Named Arguments =====
-echo "🔟 Named Arguments (PHP 8.0+)\n";
+// ===== Feature 9: Named Arguments =====
+echo "9️⃣  Named Arguments (PHP 8.0+)\n";
 echo "   \$bot->messages()->send(\n";
 echo "       text: 'Message',\n";
 echo "       chat_id: 123,\n";
@@ -118,7 +106,6 @@ echo "   );\n\n";
 echo "📖 Real Usage Example:\n\n";
 $code = <<<'CODE'
 use AhmCho\Telegram\Bot\TelegramBot;
-use AhmCho\Telegram\Database\UserFilters;
 
 $bot = new TelegramBot(); // Loads token from .env
 
@@ -127,9 +114,6 @@ $update = $bot->getWebhookUpdates();
 if ($update && isset($update['message'])) {
     $chatId = $update['message']['chat']['id'];
 
-    // Save user to database
-    $bot->saveUserFromUpdate($update);
-
     // Send message with auto-escaped formatting
     $bot->messages()->send([
         'chat_id' => $chatId,
@@ -137,17 +121,6 @@ if ($update && isset($update['message'])) {
         'parse_mode' => 'MarkdownV2'
     ]);
 }
-
-// Broadcast to premium users
-$filters = UserFilters::create()
-    ->withIsPremium(true)
-    ->withActiveSince('-30 days');
-
-$bot->broadcastToDatabase(
-    'Special offer!',
-    ['parse_mode' => 'MarkdownV2'],
-    $filters
-);
 CODE;
 
 echo $code . "\n";
@@ -165,7 +138,6 @@ echo "  ✅ Named arguments - Clearer calls\n";
 echo "  ✅ Fluent interfaces - Method chaining\n";
 echo "  ✅ Value objects - Immutable data\n";
 echo "  ✅ Service-oriented - Separated concerns\n";
-echo "  ✅ Repository pattern - Database abstraction\n";
 echo "  ✅ PSR-4 autoloading - Modern class loading\n\n";
 
 echo "🎓 The library is fully modernized and ready to use!\n";
