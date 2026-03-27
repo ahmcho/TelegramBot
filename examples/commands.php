@@ -130,12 +130,12 @@ function handleFeatures(TelegramBot $bot, int $chatId): void
     $features = $bot->formatter()
         ->bold('🎮 Bot Features')
         . "\n\n"
-        . "✅ Commands \\(/start, /help, /keyboard, /photo, /dice\\)\n"
+        . "✅ Commands \(/start, /help, /keyboard, /photo, /dice\)\)\n"
         . "✅ Inline keyboards\n"
         . "✅ Callback queries\n"
         . "✅ Custom reply keyboards\n"
-        . "✅ Media sending \\(photos, videos, etc.\\)\n"
-        . "✅ Message formatting \\(Markdown, HTML\\)\n"
+        . "✅ Media sending \(photos, videos, etc.\)\n"
+        . "✅ Message formatting \(Markdown, HTML\)\n"
         . "✅ And much more!";
 
     $bot->messages()->send([
