@@ -64,30 +64,6 @@ $bot->media()->sendPhoto([
     'caption' => 'Check this out!'
 ]);
 
-// Example 5: Database integration with value objects
-use AhmCho\Telegram\Database\UserFilters;
-use AhmCho\Telegram\Database\SqliteUserRepository;
-
-$repository = new SqliteUserRepository(__DIR__ . '/../data/bot.db');
-$bot->setUserRepository($repository);
-
-// Save user from update
-$update = $bot->getWebhookUpdates();
-if ($update) {
-    $bot->saveUserFromUpdate($update);
-}
-
-// Broadcast with filter builder
-$filters = UserFilters::create()
-    ->withIsPremium(true)
-    ->withActiveSince(date('Y-m-d H:i:s', strtotime('-30 days')));
-
-$bot->broadcastToDatabase(
-    text: 'Special for premium users!',
-    commonParams: ['parse_mode' => 'MarkdownV2'],
-    filters: $filters
-);
-
 echo "Modern API examples executed successfully!\n";
 echo "Key PHP 8.1+ features demonstrated:\n";
 echo "- Enums for type safety\n";
@@ -95,6 +71,4 @@ echo "- Readonly classes and properties\n";
 echo "- Constructor property promotion\n";
 echo "- Match expressions\n";
 echo "- Named arguments\n";
-echo "- First-class callables\n";
-echo "- Null coalescing assignment\n";
 echo "- Service-oriented architecture\n";
