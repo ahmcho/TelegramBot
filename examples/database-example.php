@@ -11,7 +11,7 @@
  * Run this script with long polling or set up a webhook pointing to it.
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../autoload.php';
 
 use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Database\SqliteUserRepository;
