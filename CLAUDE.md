@@ -2,11 +2,59 @@
 
 ## Purpose & Scope
 
-This document provides comprehensive context for AI assistants and developers working on the **AhmCho\Telegram** framework. It complements the user-facing [README.md](README.md) and [QUICKSTART.md](QUICKSTART.md) by explaining the architecture, design patterns, and implementation details that enable effective contributions to the codebase.
+This document provides comprehensive context for AI assistants and developers working on the **AhmCho\Telegram** framework. It complements the user-facing [README.md](README.md) by explaining the architecture, design patterns, and implementation details that enable effective contributions to the codebase.
 
 ## What is This Framework?
 
 **AhmCho\Telegram** is a modern, dependency-free PHP 8.1+ Telegram Bot Framework that provides a clean, service-oriented interface to the Telegram Bot API. It requires zero external dependencies for core functionality, making it lightweight and easy to deploy.
+
+## 📌 Important Notice
+
+**Database support has been removed from this framework as of version 1.1**
+
+The framework now focuses solely on Telegram Bot API logic. If you need user storage, please implement your own solution using your preferred database and persistence layer.
+
+### What Changed?
+
+To follow the Single Responsibility Principle and provide a more focused, lightweight framework:
+- ❌ No database dependencies
+- ✅ Simpler architecture
+- ✅ Easier to integrate with your infrastructure
+- ✅ More predictable behavior
+
+### What's Still Included?
+
+All Telegram Bot API features remain fully functional:
+- ✅ Message handling and formatting
+- ✅ Media sending (photos, videos, audio, etc.)
+- ✅ Chat administration
+- ✅ Webhook support
+- ✅ Bulk messaging (with your own user lists)
+- ✅ Inline and reply keyboards
+- ✅ Auto-escaping for MarkdownV2
+- ✅ Comprehensive logging
+
+### Managing Users Yourself?
+
+You have full control over user storage:
+
+```php
+// Extract user from update
+$update = $bot->getWebhookUpdates();
+$userId = $update['message']['from']['id'];
+$username = $update['message']['from']['username'];
+
+// Store in your preferred database
+// (PostgreSQL, MySQL, MongoDB, Redis, etc.)
+
+// Send bulk messages to your user list
+$userIds = [123, 456, 789]; // From your database
+$bot->messages()->sendBulk([
+    ['chat_id' => 123, 'text' => 'Hello!'],
+    ['chat_id' => 456, 'text' => 'Hello!'],
+    ['chat_id' => 789, 'text' => 'Hello!']
+]);
+```
 
 ### Key Design Philosophy
 
@@ -29,7 +77,6 @@ This document provides comprehensive context for AI assistants and developers wo
 │                   Facade Layer                               │
 │            TelegramBot (Main Entry Point)                    │
 │         - Service Accessors                                  │
-│         - Database Integration                               │
 │         - Convenience Methods                                │
 └──────────────────────────┬──────────────────────────────────┘
                            │
@@ -69,7 +116,6 @@ This document provides comprehensive context for AI assistants and developers wo
 |---------|-------|----------|
 | **Facade** | TelegramBot provides unified interface | `src/Bot/TelegramBot.php` |
 | **Factory** | Creates configured bot instances | `src/Bot/BotFactory.php` |
-| **Repository** | Database abstraction for users | `src/Database/UserRepositoryInterface.php` |
 | **Builder** | Fluent keyboard construction | `src/Keyboard/*KeyboardBuilder.php` |
 | **Service Layer** | Domain-specific API operations | `src/Api/Methods/*Service.php` |
 | **Strategy** | Swappable HTTP clients | `src/Client/HttpClientInterface.php` |
@@ -82,7 +128,6 @@ tg-bots/
 ├── composer.json                # Composer configuration (dev deps only)
 ├── CLAUDE.md                    # This file - developer/AI guide
 ├── README.md                    # User-facing documentation
-├── QUICKSTART.md                # Quick start guide
 ├── .env.example                 # Environment template
 │
 ├── src/                         # Framework source code
@@ -112,13 +157,6 @@ tg-bots/
 │   ├── Config/                  # Configuration
 │   │   ├── BotConfig.php             # Type-safe configuration
 │   │   └── EnvLoader.php             # .env file loader
-│   │
-│   ├── Database/                # SQLite database integration
-│   │   ├── Database.php              # SQLite handler (PDO wrapper)
-│   │   ├── UserRepositoryInterface.php
-│   │   ├── SqliteUserRepository.php
-│   │   ├── UserEntity.php            # User data model
-│   │   └── UserFilters.php           # Query filtering
 │   │
 │   ├── Enums/                   # Type-safe enums
 │   │   ├── ApiMethod.php             # Telegram API methods
@@ -150,7 +188,6 @@ tg-bots/
 │   ├── echo.php                 # Simple echo bot
 │   ├── commands.php             # Command handling
 │   ├── menu.php                 # Keyboard navigation
-│   ├── database-example.php     # Database integration
 │   └── bulk-test.php            # Bulk messaging demo
 │
 ├── tests/                       # Test suite
@@ -159,8 +196,6 @@ tg-bots/
 │   ├── Helpers/                 # Test utilities
 │   └── bootstrap.php            # Test bootstrap
 │
-└── data/                        # Runtime data (gitignored)
-    └── *.db                     # SQLite databases
 ```
 
 ## Key Components Deep Dive
@@ -173,7 +208,6 @@ tg-bots/
 
 **Key Responsibilities:**
 - Service accessor methods (`messages()`, `media()`, `chats()`, `webhooks()`)
-- Database integration (`setUserRepository()`, `saveUserFromUpdate()`)
 - Webhook handling (`getWebhookUpdates()`, `processWebhook()`)
 - Backward compatibility methods (`sendMessage()`, `sendPhoto()`)
 
@@ -186,10 +220,6 @@ $bot = new TelegramBot();
 // Access services
 $bot->messages()->send(['chat_id' => 123, 'text' => 'Hello']);
 $bot->media()->sendPhoto(['chat_id' => 123, 'photo' => '...']);
-
-// Database operations
-$bot->setUserRepository($repository);
-$bot->saveUserFromUpdate($update);
 ```
 
 **Critical Implementation Detail:**
@@ -211,9 +241,6 @@ BotFactory::create($token);
 
 // With custom config
 BotFactory::createWithConfig($config);
-
-// With database repository
-BotFactory::createWithDatabase($token, $repository);
 
 // With custom HTTP client
 BotFactory::createWithHttpClient($token, $httpClient);
@@ -374,79 +401,7 @@ foreach ($result->results as $r) {
 }
 ```
 
-### 4. Database Integration (`src/Database/`)
-
-**SQLite-based user storage with interface-based design.**
-
-#### Architecture
-
-```
-Database (PDO wrapper)
-    └── SqliteUserRepository implements UserRepositoryInterface
-            ├── save(UserEntity)
-            ├── findByChatId()
-            ├── getAllChatIds(UserFilters)
-            └── ... (CRUD operations)
-
-UserEntity (Data model)
-    ├── fromTelegramUpdate() - Extract user from any update
-    └── Properties: chatId, username, firstName, etc.
-
-UserFilters (Query builder)
-    ├── onlyActive()
-    ├── onlyPremium()
-    ├── withUsername()
-    └── lastSeenAfter()
-```
-
-#### Key Features
-
-1. **Automatic User Extraction**
-```php
-$user = UserEntity::fromTelegramUpdate($update);
-// Works with message, callback_query, inline_query, etc.
-```
-
-2. **Flexible Filtering**
-```php
-$filters = UserFilters::create()
-    ->onlyActive()
-    ->lastSeenAfter('-7 days')
-    ->withUsername();
-
-$chatIds = $repository->getAllChatIds($filters);
-```
-
-3. **Broadcast Integration**
-```php
-$bot->broadcastToDatabase(
-    'Important announcement!',
-    ['parse_mode' => 'Markdown'],
-    UserFilters::create()->onlyPremium()
-);
-```
-
-#### Database Schema
-
-```sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    chat_id INTEGER UNIQUE NOT NULL,
-    username TEXT,
-    first_name TEXT,
-    last_name TEXT,
-    language_code TEXT,
-    is_premium INTEGER DEFAULT 0,
-    is_bot INTEGER DEFAULT 0,
-    last_seen_at TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_users_chat_id ON users(chat_id);
-CREATE INDEX idx_users_last_seen ON users(last_seen_at);
-```
-
-### 5. Configuration (`src/Config/`)
+### 4. Configuration (`src/Config/`)
 
 #### BotConfig
 
@@ -622,7 +577,6 @@ $keyboard = ReplyKeyboardBuilder::create()
 | Methods | camelCase | `sendMessage`, `getWebhookInfo` |
 | Properties | camelCase | `$userRepository`, `$apiService` |
 | Constants | SCREAMING_SNAKE_CASE | `DEFAULT_TIMEOUT`, `MAX_RETRIES` |
-| Database fields | snake_case | `chat_id`, `first_name`, `last_seen_at` |
 
 ### File Structure Conventions
 
@@ -725,24 +679,6 @@ public function yourDomain(): YourDomainService
 
 **Step 3:** Write tests
 
-#### 3. Adding Database Operations
-
-**For new repository methods:**
-
-```php
-// In UserRepositoryInterface
-public function findCustom(CustomCriteria $criteria): array;
-
-// In SqliteUserRepository
-public function findCustom(CustomCriteria $criteria): array
-{
-    $sql = "SELECT * FROM users WHERE ...";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute($criteria->toArray());
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-```
-
 ### Working with Services
 
 **Always access services through the facade:**
@@ -760,7 +696,6 @@ $apiService = new ApiService(...); // Don't do this
 
 **Why:**
 - Consistent interface
-- Database integration works automatically
 - Configuration is centralized
 - Easier testing and mocking
 
@@ -813,7 +748,6 @@ tests/
 │   ├── Bot/                   # Facade tests
 │   ├── Bulk/                  # Bulk operation tests
 │   ├── Config/                # Configuration tests
-│   ├── Database/              # Database tests
 │   ├── Formatting/            # Formatter tests
 │   ├── Keyboard/              # Builder tests
 │   └── Exception/             # Exception tests
@@ -909,21 +843,6 @@ $client->setResponse(['ok' => true, 'result' => [...]]);
 $apiService = new ApiService($client, $config, $bulkManager);
 ```
 
-**TestDataFactory:**
-```php
-$update = TestDataFactory::createMessageUpdate(
-    chatId: 123,
-    text: 'Hello',
-    username: 'testuser'
-);
-
-$user = TestDataFactory::createUserEntity(
-    chatId: 123,
-    username: 'testuser',
-    isPremium: true
-);
-```
-
 ## Common Tasks Reference
 
 ### Running Examples
@@ -951,32 +870,6 @@ $result = $bot->webhooks()->set([
 ]);
 
 print_r($result);
-```
-
-### Using Database
-
-```php
-use AhmCho\Telegram\Bot\TelegramBot;
-use AhmCho\Telegram\Database\Database;
-use AhmCho\Telegram\Database\SqliteUserRepository;
-
-$bot = new TelegramBot();
-
-// Set up database
-$database = new Database(__DIR__ . '/data/bot.db');
-$repository = new SqliteUserRepository($database);
-$bot->setUserRepository($repository);
-
-// Auto-save user from webhook/webhook update
-$update = $bot->getWebhookUpdates();
-$bot->saveUserFromUpdate($update);
-
-// Broadcast to active users
-$bot->broadcastToDatabase(
-    'Hello active users!',
-    ['parse_mode' => 'Markdown'],
-    UserFilters::create()->onlyActive()->lastSeenAfter('-7 days')
-);
 ```
 
 ### Manual Text Formatting
@@ -1044,7 +937,6 @@ $bot = new TelegramBot(null, $config, $customClient);
 | `autoload.php` | PSR-4 autoloader | Use this or `vendor/autoload.php` |
 | `src/Bot/TelegramBot.php` | Main facade | Entry point for all operations |
 | `src/Config/EnvLoader.php` | .env loader | Auto-loads in TelegramBot constructor |
-| `src/Database/Database.php` | SQLite wrapper | PDO-based, auto-creates tables |
 | `src/Bulk/BulkOperationManager.php` | Parallel requests | Uses curl_multi_exec |
 | `src/Api/Methods/MessageService.php` | Message ops | Auto-escapes MarkdownV2 |
 | `public/webhook.php` | Production endpoint | Deploy this for webhooks |
@@ -1061,17 +953,6 @@ $bot = new TelegramBot(null, $config, $customClient);
 1. Use HTML parse mode instead
 2. Use formatters (HtmlFormatter, MarkdownV2Formatter) for styling
 3. Don't mix manual formatting with auto-escape
-
-### Database Repository Not Configured
-
-**Error:** "User repository not configured"
-
-**Cause:** Calling `saveUserFromUpdate()` or `broadcastToDatabase()` without setting repository
-
-**Fix:**
-```php
-$bot->setUserRepository($repository);
-```
 
 ### Test Failures
 
@@ -1131,12 +1012,6 @@ $bot->setUserRepository($repository);
 - **Default max concurrent:** 30 requests
 - **Adjust based on:** Server capacity, network, Telegram rate limits
 - **Delay between batches:** Use `delay_ms` option for rate limiting
-
-### Database Queries
-
-- **Indexes:** Added on `chat_id` and `last_seen_at`
-- **Prepared statements:** Always used for safety
-- **Lazy loading:** Database only created when needed
 
 ### HTTP Client Selection
 
