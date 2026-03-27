@@ -31,6 +31,7 @@ require_once __DIR__ . '/../autoload.php';
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Bot\TelegramBot;
 
 // Load environment variables (done automatically by TelegramBot constructor)
 
