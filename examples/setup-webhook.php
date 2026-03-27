@@ -11,7 +11,7 @@
  * php examples/setup-webhook.php info
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../autoload.php';
 
 use AhmCho\Telegram\Bot\TelegramBot;
 
