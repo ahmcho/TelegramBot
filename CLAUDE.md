@@ -855,7 +855,6 @@ export TELEGRAM_BOT_TOKEN='your_token_here'
 **Run example:**
 ```bash
 php examples/echo.php
-php examples/database-example.php
 php examples/bulk-test.php
 ```
 
@@ -1078,6 +1077,6 @@ Example:
 
 ---
 
-**Last Updated:** 2025-03-02
-**Framework Version:** 1.0
+**Last Updated:** 2026-03-27
+**Framework Version:** 1.1
 **PHP Version:** 8.1+
