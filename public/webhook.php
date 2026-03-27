@@ -26,19 +26,13 @@ ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/../logs/webhook_errors.log');
 
 // Autoload the bot class
-require_once __DIR__ . '/../src/TelegramBot.php';
+require_once __DIR__ . '/../autoload.php';
 
-// Load environment variables
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
-        list($name, $value) = explode('=', $line, 2);
-        $_ENV[trim($name)] = trim($value);
-        putenv(trim($name) . '=' . trim($value));
-    }
-}
+use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
+use AhmCho\Telegram\Keyboard\Button;
+use AhmCho\Telegram\Enums\ApiMethod;
+
+// Load environment variables (done automatically by TelegramBot constructor)
 
 /**
  * Log webhook update for debugging
@@ -145,7 +139,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
         // Handle /info command
         if (isset($message['text']) && $message['text'] === '/info') {
             try {
-                $chat = $bot->getChat(['chat_id' => $chatId]);
+                $chat = $bot->chats()->getChat(['chat_id' => $chatId]);
 
                 $info = "📊 *Chat Information*\n\n";
                 $info .= "ID: `{$chat['id']}`\n";
@@ -205,7 +199,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
         // Handle stickers
         if (isset($message['sticker'])) {
-            $bot->sendSticker([
+            $bot->media()->sendSticker([
                 'chat_id' => $chatId,
                 'sticker' => $message['sticker']['file_id']
             ]);
@@ -237,9 +231,10 @@ function handleUpdate(TelegramBot $bot, array $update): void
             $queryId = $callbackQuery['id'];
 
             // Answer the callback query to remove loading state
-            $bot->answerCallbackQuery([
-                'callback_query_id' => $queryId
-            ]);
+            $bot->api()->call(
+                ApiMethod::ANSWER_CALLBACK_QUERY,
+                ['callback_query_id' => $queryId]
+            );
 
             $parts = explode(':', $data);
             $action = $parts[1] ?? '';
@@ -261,11 +256,9 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
                 case 'stats':
                     try {
-                        $memberCount = $bot->getChatMemberCount(['chat_id' => $chatId]);
-                        $chat = $bot->getChat(['chat_id' => $chatId]);
+                        $chat = $bot->chats()->getChat(['chat_id' => $chatId]);
 
                         $stats = "📊 *Statistics*\n\n";
-                        $stats .= "Members: $memberCount\n";
 
                         if (isset($chat['title'])) {
                             $stats .= "Name: {$chat['title']}\n";
