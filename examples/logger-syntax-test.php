@@ -11,7 +11,6 @@ $files = [
     'src/Client/HttpClientFactory.php',
     'src/Bulk/BulkOperationManager.php',
     'src/Api/ApiService.php',
-    'src/Database/SqliteUserRepository.php',
     'src/Bot/TelegramBot.php',
     'src/Logging/LoggerInterface.php',
     'src/Logging/LoggerFactory.php',
