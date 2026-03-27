@@ -14,7 +14,6 @@ use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 use AhmCho\Telegram\Enums\ApiMethod;
-use AhmCho\Telegram\Database\UserFilters;
 
 echo "🎯 Modernized tg-bots Library Demo\n";
 echo "===================================\n\n";
@@ -54,15 +53,6 @@ $keyboard = InlineKeyboardBuilder::create()
     );
 
 echo "  - Keyboard built: " . json_encode($keyboard->toArray(), JSON_PRETTY_PRINT) . "\n\n";
-
-// Demonstrate database filters
-echo "🗄️  Database Filters (Fluent Interface):\n";
-$filters = UserFilters::create()
-    ->withIsPremium(true)
-    ->withActiveSince(date('Y-m-d H:i:s', strtotime('-7 days')));
-
-echo "  - Premium filter: " . ($filters->isPremium ? 'true' : 'false') . "\n";
-echo "  - Active since: " . $filters->activeSince . "\n\n";
 
 // Demonstrate configuration
 echo "⚙️  Bot Configuration:\n";
