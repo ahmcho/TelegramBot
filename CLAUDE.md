@@ -55,13 +55,13 @@ Infrastructure
 
 ## Design Patterns
 
-| Pattern | Location | Purpose |
-|---------|------------|---------|
-| Facade | `src/Bot/TelegramBot.php` | Unified interface |
-| Factory | `src/Bot/BotFactory.php` | Pre-configured instances |
-| Builder | `src/Keyboard/*Builder.php` | Fluent keyboard construction |
-| Service Layer | `src/Api/Methods/` | Domain-specific operations |
-| Strategy | `src/Client/HttpClientInterface.php` | Swappable HTTP clients |
+| Pattern       | Location                             | Purpose                      |
+| ------------- | ------------------------------------ | ---------------------------- |
+| Facade        | `src/Bot/TelegramBot.php`            | Unified interface            |
+| Factory       | `src/Bot/BotFactory.php`             | Pre-configured instances     |
+| Builder       | `src/Keyboard/*Builder.php`          | Fluent keyboard construction |
+| Service Layer | `src/Api/Methods/`                   | Domain-specific operations   |
+| Strategy      | `src/Client/HttpClientInterface.php` | Swappable HTTP clients       |
 
 ---
 
@@ -105,6 +105,7 @@ tg-bots/
 **Main facade** providing unified access to all framework functionality.
 
 **Service Accessors:**
+
 - `messages()` → MessageService
 - `media()` → MediaService
 - `chats()` → ChatService
@@ -113,11 +114,13 @@ tg-bots/
 - `formatter()` → MarkdownV2Formatter
 
 **Webhook Methods:**
+
 - `getWebhookUpdates()` - Parse webhook input
 - `processWebhook()` - Process updates via handler
 - `setInputSource()` - Override input (testing)
 
 **Implementation Notes:**
+
 - Constructor auto-loads environment via `EnvLoader`
 - All services cached in readonly properties
 - Logger instantiated from config
@@ -128,21 +131,45 @@ tg-bots/
 
 When `parse_mode => 'MarkdownV2'` is set, `text` and `caption` are automatically escaped to prevent API errors.
 
-**Special Characters Escaped:** `_ * [ ] ( ) ~ > # + - = | { } . !`
+**Special Characters Escaped:** `\ _ * [ ] ( ) ~ ` > # + - = | { } . !` (19 characters total)
+
+**Important:** The backslash `\` is escaped first to avoid double-escaping issues.
+
+**Escaping Implementation Details:**
+
+- Backslash is escaped first (before other special characters)
+- This prevents scenarios like `\*` from becoming `\\\*` (triple backslash)
+- Correct escaping: `\*` → `\\*` (double backslash)
+- All escaping uses `str_replace()` for UTF-8 compatibility
+- Inside `pre` and `code` entities, only `` ` `` and `\` need to be escaped
 
 **Methods:**
+
 - `send()` - Send with auto-escape
+- `sendRaw()` - Send without auto-escape (preserves pre-formatted MarkdownV2)
 - `editText()` - Edit text with auto-escape
+- `editTextRaw()` - Edit text without auto-escape (preserves pre-formatted MarkdownV2)
 - `editCaption()` - Edit caption with auto-escape
+- `editCaptionRaw()` - Edit caption without auto-escape (preserves pre-formatted MarkdownV2)
 - `delete()`, `forward()`, `copy()`
 - `sendBulk()` - Batch with auto-escape
+- `sendBulkRaw()` - Batch without auto-escape (preserves pre-formatted MarkdownV2)
 - `broadcast()` - Broadcast with auto-escape
+- `broadcastRaw()` - Broadcast without auto-escape (preserves pre-formatted MarkdownV2)
+
+**When to use Raw methods:**
+
+Use `*Raw()` methods when you have text that is already formatted with MarkdownV2 and you want to preserve the formatting. This is useful when:
+- Echoing back user messages that contain formatting (e.g., `*bold*`, `_italic_`)
+- Manually formatting text with MarkdownV2 syntax
+- Forwarding pre-formatted content
 
 ### MediaService (`src/Api/Methods/MediaService.php`)
 
 **File Types:** Photo, Audio, Document, Video, Animation, Voice, VideoNote, Sticker
 
 **Input Types:**
+
 - File ID (string) - Previous upload
 - URL (string) - Telegram downloads
 - CURLFile (object) - Local upload
@@ -152,6 +179,7 @@ When `parse_mode => 'MarkdownV2'` is set, `text` and `caption` are automatically
 **Core orchestrator** for all Telegram API calls.
 
 **Responsibilities:**
+
 - Constructs full API URLs from bot token
 - Delegates to HTTP client
 - Provides access to BulkOperationManager
@@ -162,6 +190,7 @@ When `parse_mode => 'MarkdownV2'` is set, `text` and `caption` are automatically
 **Parallel execution** using `curl_multi_exec` for optimal performance.
 
 **BulkResult Structure:**
+
 ```php
 [
     'success' => bool,
@@ -182,12 +211,14 @@ When `parse_mode => 'MarkdownV2'` is set, `text` and `caption` are automatically
 ```
 
 **Configuration:**
+
 - `max_concurrent` - Default: 30
 - `delay_ms` - Default: 0
 
 ### Configuration (`src/Config/`)
 
 **BotConfig** - Immutable configuration with readonly properties:
+
 ```php
 $config = new BotConfig(
     token: '123:ABC',
@@ -200,6 +231,7 @@ $config = new BotConfig(
 ```
 
 **EnvLoader** - Object-oriented .env loader:
+
 - Searches multiple paths
 - Supports quoted/unquoted values
 - Skips comments
@@ -212,27 +244,32 @@ $config = new BotConfig(
 ### Where Logic Lives
 
 **Service Layer** → Domain-specific business logic
+
 - MessageService: Text formatting, auto-escaping
 - MediaService: File handling
 - ChatService: Chat administration
 - WebhookService: Webhook management
 
 **API Layer** → Pure HTTP orchestration
+
 - No business logic
 - Just URL construction and HTTP delegation
 
 **Facade Layer** → Entry point and orchestration
+
 - TelegramBot: Service accessors + convenience methods
 
 ### What to Avoid
 
 ❌ **Anti-Patterns:**
+
 - Instantiating services directly (use TelegramBot)
 - Bypassing ApiService in new service classes
 - Hardcoding tokens or configuration
 - Mixing responsibilities (service doing HTTP work)
 
 ✅ **Best Practices:**
+
 - Use service accessors through TelegramBot facade
 - Let service layer handle business logic
 - Let API layer handle HTTP concerns
@@ -243,13 +280,15 @@ $config = new BotConfig(
 **Adding New API Methods:**
 
 1. Add enum value to `ApiMethod`:
+
 ```php
 enum ApiMethod: string {
     case YOUR_NEW_METHOD = 'yourNewMethod';
 }
 ```
 
-2. Add method to appropriate service class:
+1. Add method to appropriate service class:
+
 ```php
 public function yourNewMethod(array $params): array
 {
@@ -257,11 +296,12 @@ public function yourNewMethod(array $params): array
 }
 ```
 
-3. Add accessor to TelegramBot if needed (for frequently used methods)
+1. Add accessor to TelegramBot if needed (for frequently used methods)
 
 **Adding New Services:**
 
 1. Create service class in `src/Api/Methods/`:
+
 ```php
 <?php
 declare(strict_types=1);
@@ -283,8 +323,8 @@ class YourDomainService
 }
 ```
 
-2. Add service instance to TelegramBot constructor
-3. Add accessor method if service is frequently accessed
+1. Add service instance to TelegramBot constructor
+2. Add accessor method if service is frequently accessed
 
 **Using Custom HTTP Client:**
 
@@ -300,12 +340,12 @@ $bot = new TelegramBot(null, $config, $httpClient);
 
 ### Naming
 
-| Type | Convention |
-|-------|------------|
-| Classes | PascalCase |
-| Methods | camelCase |
-| Properties | camelCase |
-| Constants | SCREAMING_SNAKE_CASE |
+| Type       | Convention           |
+| ---------- | -------------------- |
+| Classes    | PascalCase           |
+| Methods    | camelCase            |
+| Properties | camelCase            |
+| Constants  | SCREAMING_SNAKE_CASE |
 
 ### File Structure
 
@@ -317,6 +357,7 @@ $bot = new TelegramBot(null, $config, $httpClient);
 ### Type Annotations
 
 Required for:
+
 - All public methods
 - Complex array shapes: `@param array<key, type>`
 - Non-obvious return types
@@ -370,6 +411,7 @@ try {
 **Auto-escape** is applied automatically by MessageService.
 
 **Manual Formatting:**
+
 ```php
 $formatter = new MarkdownV2Formatter();
 $bold = $formatter->bold('Bold');
@@ -514,17 +556,20 @@ tests/
 ### Auto-Escape MarkdownV2
 
 **Rationale:**
+
 - MarkdownV2 has strict syntax requirements
 - Unescaped characters cause API errors
 - Auto-escaping provides better UX
 
 **Trade-off:**
+
 - Manual formatting requires using formatters
 - Can bypass by using HTML parse mode
 
 ### Service-Oriented Architecture
 
 **Benefits:**
+
 - Clear separation of concerns
 - Easy to test (services can be mocked)
 - Easy to extend (add new services)
@@ -532,6 +577,7 @@ tests/
 ### Readonly Properties
 
 **Benefits:**
+
 - Immutability by default
 - Thread-safe
 - Self-documenting
@@ -539,6 +585,7 @@ tests/
 ### Enums
 
 **Benefits:**
+
 - Type safety (compile-time checking)
 - IDE support (autocomplete, refactoring)
 - No magic strings
@@ -595,6 +642,7 @@ tests/
 ```
 
 Example:
+
 ```
 [FEATURE] Add support for new Telegram API method
 
@@ -608,14 +656,14 @@ Example:
 
 ## Critical Files Reference
 
-| File | Purpose |
-|------|---------|
-| `autoload.php` | PSR-4 autoloader |
-| `src/Bot/TelegramBot.php` | Main facade |
-| `src/Config/EnvLoader.php` | .env loader |
+| File                                 | Purpose                   |
+| ------------------------------------ | ------------------------- |
+| `autoload.php`                       | PSR-4 autoloader          |
+| `src/Bot/TelegramBot.php`            | Main facade               |
+| `src/Config/EnvLoader.php`           | .env loader               |
 | `src/Api/Methods/MessageService.php` | Message ops (auto-escape) |
-| `src/Bulk/BulkOperationManager.php` | Parallel requests |
-| `public/webhook.php` | Production endpoint |
+| `src/Bulk/BulkOperationManager.php`  | Parallel requests         |
+| `public/webhook.php`                 | Production endpoint       |
 
 ---
 

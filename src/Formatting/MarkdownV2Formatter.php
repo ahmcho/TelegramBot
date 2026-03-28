@@ -12,12 +12,17 @@ namespace AhmCho\Telegram\Formatting;
 class MarkdownV2Formatter implements TextFormatterInterface
 {
     private const SPECIAL_CHARS = [
+        // Note: Backslash is handled separately before this loop to avoid double-escaping
         '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+',
         '-', '=', '|', '{', '}', '.', '!'
     ];
 
     public function escape(string $text): string
     {
+        // Escape backslash FIRST to avoid double-escaping
+        echo "$text";
+        $text = str_replace('\\', '\\\\', $text);
+
         foreach (self::SPECIAL_CHARS as $char) {
             $text = str_replace($char, '\\' . $char, $text);
         }
@@ -50,6 +55,12 @@ class MarkdownV2Formatter implements TextFormatterInterface
         return '`' . $this->escape($text) . '`';
     }
 
+    /**
+     * Pre-formatted code block
+     *
+     * Note: Inside pre blocks, only ` and \ need to be escaped.
+     * All other characters are treated as literal text.
+     */
     public function pre(string $text): string
     {
         return "```" . "\n" . $text . "\n" . "```";

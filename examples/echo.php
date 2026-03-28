@@ -10,7 +10,7 @@ declare(strict_types=1);
  *
  * Modern features showcased:
  * - Service-oriented API with $bot->messages()
- * - Auto-escaping for MarkdownV2 (no manual escaping needed!)
+ * - sendRaw() method to preserve Markdown formatting from user input
  * - PHP 8.1+ features (strict types, proper typing)
  */
 
@@ -62,12 +62,11 @@ try {
 
                     echo "[{$chatId}] $text\n";
 
-                    // Echo the message back with MarkdownV2 auto-escaping!
-                    // Note: Special characters like !, _, *, etc. are automatically escaped
-                    // No need to manually call escapeMarkdownV2() anymore!
+                    // Echo the message back with sendRaw to preserve formatting!
+                    // Use sendRaw() when you want to preserve Markdown formatting from user input
                     $bot->messages()->send([
                         'chat_id' => $chatId,
-                        'text' => "You said: $text",  // Auto-escaped with MarkdownV2!
+                        'text' => "You said: $text",
                         'parse_mode' => 'MarkdownV2'
                     ]);
                 }
@@ -80,15 +79,16 @@ try {
 
                     echo "[{$chatId}] Edited: $text\n";
 
-                    $bot->messages()->send([
+                    $bot->messages()->sendRaw([
                         'chat_id' => $chatId,
-                        'text' => "You edited to: $text",  // Also auto-escaped!
+                        'text' => "You edited to: $text",
                         'parse_mode' => 'MarkdownV2'
                     ]);
                 }
             }
         } catch (\Throwable $e) {
             echo "Error: " . $e->getMessage() . "\n";
+            echo "Stack trace: " . $e->getTraceAsString() . "\n";
             sleep(5);  // Wait before retrying
         }
     }

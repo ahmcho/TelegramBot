@@ -131,11 +131,12 @@ final class MarkdownV2FormatterTest extends TestCase
 
     public function test_escape_with_all_special_chars(): void
     {
-        $text = '_*[]()~`>#+-=|{}.!';
+        $text = '\\_*[]()~`>#+-=|{}.!';
 
         $result = $this->formatter->escape($text);
 
-        $this->assertSame('\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!', $result);
+        // All 19 characters should be escaped
+        $this->assertSame('\\\\\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!', $result);
     }
 
     public function test_escape_with_multiple_occurrences_of_same_char(): void
@@ -315,16 +316,41 @@ final class MarkdownV2FormatterTest extends TestCase
     {
         $link = $this->formatter->link('Click Here', 'https://example.com/path?query=value');
 
-        // Note: The implementation escapes dots and equals in URLs
+        // Note: The implementation escapes dots, equals, and backslashes in URLs
         $this->assertSame('[Click Here](https://example\.com/path?query\=value)', $link);
     }
 
-    public function test_escape_preserves_backslash(): void
+    public function test_escape_escapes_backslash(): void
     {
         $result = $this->formatter->escape('test\\text');
 
-        // Backslash is not in SPECIAL_CHARS array, so it should be preserved
-        $this->assertSame('test\\text', $result);
+        // Backslash must be escaped to \\
+        $this->assertSame('test\\\\text', $result);
+    }
+
+    public function test_escape_escapes_backslash_correctly(): void
+    {
+        $result = $this->formatter->escape('\\');
+
+        // Single backslash should become double backslash
+        $this->assertSame('\\\\', $result);
+    }
+
+    public function test_escape_escapes_backslash_in_sequence(): void
+    {
+        $result = $this->formatter->escape('path\\to\\file.txt');
+
+        // Multiple backslashes should all be escaped
+        $this->assertSame('path\\\\to\\\\file\.txt', $result);
+    }
+
+    public function test_escape_escapes_backslash_with_special_chars(): void
+    {
+        $result = $this->formatter->escape('\\*_');
+
+        // Backslash + special chars should all be escaped
+        // Note: Underscore is also escaped
+        $this->assertSame('\\\\\*\_', $result);
     }
 
     public function test_escape_with_unicode_characters(): void
@@ -339,6 +365,22 @@ final class MarkdownV2FormatterTest extends TestCase
         $result = $this->formatter->escape('🎉_test');
 
         $this->assertSame('🎉\_test', $result);
+    }
+
+    public function test_escape_with_backslash_and_unicode(): void
+    {
+        $result = $this->formatter->escape('测试\\text');
+
+        // Unicode characters should be preserved, backslash escaped
+        $this->assertSame('测试\\\\text', $result);
+    }
+
+    public function test_escape_with_backslash_and_emoji(): void
+    {
+        $result = $this->formatter->escape('🎉\\test');
+
+        // Emoji should be preserved, backslash escaped
+        $this->assertSame('🎉\\\\test', $result);
     }
 
     public function test_formatting_methods_with_empty_string(): void
@@ -362,6 +404,7 @@ final class MarkdownV2FormatterTest extends TestCase
         $reflection = new \ReflectionClass(MarkdownV2Formatter::class);
         $constant = $reflection->getConstant('SPECIAL_CHARS');
 
+        // Note: Backslash is NOT in SPECIAL_CHARS - it's handled separately
         $expected = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+',
             '-', '=', '|', '{', '}', '.', '!'];
 
@@ -399,5 +442,25 @@ final class MarkdownV2FormatterTest extends TestCase
 
         $this->assertSame('*first*', $result1);
         $this->assertSame('_second_', $result2);
+    }
+
+    /**
+     * @dataProvider realWorldExampleWithBackslashProvider
+     */
+    public function test_real_world_examples_with_backslash(string $input, string $expected): void
+    {
+        $result = $this->formatter->escape($input);
+
+        $this->assertSame($expected, $result);
+    }
+
+    public static function realWorldExampleWithBackslashProvider(): array
+    {
+        return [
+            'windows path' => ['C:\\Users\\name', 'C:\\\\Users\\\\name'],
+            'unix path' => ['/path/to/file.txt', '/path/to/file\.txt'],
+            'regex pattern' => ['\\d+', '\\\\d\+'],
+            'backslash only' => ['\\', '\\\\'],
+        ];
     }
 }
