@@ -143,8 +143,6 @@ function handleFeatures(TelegramBot $bot, int $chatId): void
     $bot->messages()->send([
         'chat_id' => $chatId,
         'text' => $features,
-        'parse_mode' => 'MarkdownV2'
-]
 
 function handleContact(TelegramBot $bot, int $chatId): void
 {
