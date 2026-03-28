@@ -809,6 +809,7 @@ try {
             }
         } catch (\Throwable $e) {
             echo "Error: " . $e->getMessage() . "\n";
+            echo "Stack trace: " . $e->getTraceAsString() . "\n";
             sleep(5);
         }
     }

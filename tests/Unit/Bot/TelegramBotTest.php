@@ -227,6 +227,18 @@ final class TelegramBotTest extends TestCase
     }
 
     public function test_getLogger_returns_logger_instance(): void
+    {
+        $config = new BotConfig(
+            token: 'test_token',
+            loggingEnabled: true
+        );
+
+        $mockClient = new MockHttpClient();
+        $bot = new TelegramBot(null, $config, $mockClient);
+
+        $logger = $bot->getLogger();
+        $this->assertIsObject($logger);
+    }
 
     public function test_saveUserFromUpdate_saves_user(): void
     {

@@ -59,6 +59,15 @@ class MessageService
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
+    public function sendRaw(array $params): array
+    {
+        return $this->apiService->call(ApiMethod::SEND_MESSAGE, $params);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     public function editText(array $params): array
     {
         $params = $this->escapeForMarkdownV2($params);
@@ -69,9 +78,27 @@ class MessageService
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
+    public function editTextRaw(array $params): array
+    {
+        return $this->apiService->call(ApiMethod::EDIT_MESSAGE_TEXT, $params);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     public function editCaption(array $params): array
     {
         $params = $this->escapeForMarkdownV2($params);
+        return $this->apiService->call(ApiMethod::EDIT_MESSAGE_CAPTION, $params);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    public function editCaptionRaw(array $params): array
+    {
         return $this->apiService->call(ApiMethod::EDIT_MESSAGE_CAPTION, $params);
     }
 
@@ -124,6 +151,19 @@ class MessageService
     }
 
     /**
+     * @param array<int, array<string, mixed>> $messagesArray
+     * @param array{max_concurrent?: int, delay_ms?: int} $options
+     */
+    public function sendBulkRaw(array $messagesArray, array $options = []): BulkResult
+    {
+        return $this->apiService->getBulkManager()->sendBulk(
+            ApiMethod::SEND_MESSAGE,
+            $messagesArray,
+            $options
+        );
+    }
+
+    /**
      * @param array<int, int|string> $chatIds
      * @param array<string, mixed> $commonParams
      * @param array{max_concurrent?: int, delay_ms?: int} $options
@@ -138,6 +178,27 @@ class MessageService
 
         // Apply escaping to the params before broadcasting
         $params = $this->escapeForMarkdownV2($params);
+
+        return $this->apiService->getBulkManager()->broadcast(
+            ApiMethod::SEND_MESSAGE,
+            $chatIds,
+            $params,
+            $options
+        );
+    }
+
+    /**
+     * @param array<int, int|string> $chatIds
+     * @param array<string, mixed> $commonParams
+     * @param array{max_concurrent?: int, delay_ms?: int} $options
+     */
+    public function broadcastRaw(
+        array $chatIds,
+        string $text,
+        array $commonParams = [],
+        array $options = []
+    ): BulkResult {
+        $params = [...$commonParams, 'text' => $text];
 
         return $this->apiService->getBulkManager()->broadcast(
             ApiMethod::SEND_MESSAGE,
