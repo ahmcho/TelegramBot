@@ -11,7 +11,7 @@ use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 
-class BulkOperationManager
+final class BulkOperationManager
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,

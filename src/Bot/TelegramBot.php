@@ -25,7 +25,7 @@ use AhmCho\Telegram\Logging\LoggerInterface;
  *
  * Main entry point for interacting with the Telegram Bot API
  */
-class TelegramBot
+final class TelegramBot
 {
     private readonly ApiService $apiService;
     private readonly MessageService $messages;

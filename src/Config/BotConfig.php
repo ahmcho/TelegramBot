@@ -9,7 +9,7 @@ namespace AhmCho\Telegram\Config;
  *
  * Immutable configuration for Telegram bot
  */
-class BotConfig
+final class BotConfig
 {
     public function __construct(
         private readonly string $token,

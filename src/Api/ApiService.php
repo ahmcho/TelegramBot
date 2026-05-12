@@ -16,7 +16,7 @@ use AhmCho\Telegram\Logging\LoggerInterface;
  *
  * Central orchestration for all Telegram API calls
  */
-class ApiService
+final class ApiService
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,

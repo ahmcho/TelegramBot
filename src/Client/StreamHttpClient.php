@@ -9,7 +9,7 @@ use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 
-class StreamHttpClient implements HttpClientInterface
+final class StreamHttpClient implements HttpClientInterface
 {
     private int $lastHttpCode = 0;
 

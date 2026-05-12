@@ -9,7 +9,7 @@ namespace AhmCho\Telegram\Formatting;
  *
  * Formats text using Telegram's MarkdownV2 format
  */
-class MarkdownV2Formatter implements TextFormatterInterface
+final class MarkdownV2Formatter implements TextFormatterInterface
 {
     private const SPECIAL_CHARS = [
         // Note: Backslash is handled separately before this loop to avoid double-escaping
@@ -20,7 +20,6 @@ class MarkdownV2Formatter implements TextFormatterInterface
     public function escape(string $text): string
     {
         // Escape backslash FIRST to avoid double-escaping
-        echo "$text";
         $text = str_replace('\\', '\\\\', $text);
 
         foreach (self::SPECIAL_CHARS as $char) {

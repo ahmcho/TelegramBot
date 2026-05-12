@@ -9,7 +9,7 @@ use AhmCho\Telegram\Logging\Context\ExceptionContext;
 /**
  * PSR-3 compliant logger implementation
  */
-class Logger implements LoggerInterface
+final class Logger implements LoggerInterface
 {
     private readonly LogLevel $minLevel;
 

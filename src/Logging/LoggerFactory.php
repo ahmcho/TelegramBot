@@ -9,7 +9,7 @@ use AhmCho\Telegram\Config\BotConfig;
 /**
  * Factory for creating logger instances
  */
-class LoggerFactory
+final class LoggerFactory
 {
     /**
      * Create a logger from BotConfig

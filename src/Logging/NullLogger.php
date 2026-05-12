@@ -8,7 +8,7 @@ namespace AhmCho\Telegram\Logging;
  * Null logger implementation that does nothing
  * Used when logging is disabled or for testing
  */
-class NullLogger implements LoggerInterface
+final class NullLogger implements LoggerInterface
 {
     public function emergency($message, array $context = []): void
     {

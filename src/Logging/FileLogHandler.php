@@ -7,7 +7,7 @@ namespace AhmCho\Telegram\Logging;
 /**
  * File-based log handler with concurrent write protection
  */
-class FileLogHandler
+final class FileLogHandler
 {
     private readonly string $logFilePath;
     private int $maxRetries = 3;

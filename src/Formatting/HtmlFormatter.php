@@ -9,7 +9,7 @@ namespace AhmCho\Telegram\Formatting;
  *
  * Formats text using Telegram's HTML parse mode
  */
-class HtmlFormatter implements TextFormatterInterface
+final class HtmlFormatter implements TextFormatterInterface
 {
     public function escape(string $text): string
     {
