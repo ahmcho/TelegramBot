@@ -37,8 +37,7 @@ readonly class ExceptionContext
         // Add specific data for known exception types
         if ($exception instanceof ApiException) {
             $additionalData = [
-                'http_code' => $exception->getHttpCode(),
-                'api_response' => $exception->getApiResponse(),
+                'error_code' => $exception->getErrorCode(),
             ];
         } elseif ($exception instanceof HttpClientException) {
             $additionalData = [
