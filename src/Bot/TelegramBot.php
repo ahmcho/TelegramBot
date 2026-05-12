@@ -19,6 +19,7 @@ use AhmCho\Telegram\Formatting\TextFormatterInterface;
 use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Logging\LoggerFactory;
 use AhmCho\Telegram\Logging\LoggerInterface;
+use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 
 /**
  * Telegram Bot Facade
@@ -27,6 +28,8 @@ use AhmCho\Telegram\Logging\LoggerInterface;
  */
 final class TelegramBot
 {
+    use LoggerHelperTrait;
+
     private readonly ApiService $apiService;
     private readonly MessageService $messages;
     private readonly MediaService $media;
@@ -184,23 +187,5 @@ final class TelegramBot
     public function setInputSource(string $source): void
     {
         $this->inputSource = $source;
-    }
-
-    /**
-     * Log message if logger is configured
-     * Never throws exceptions from logging operations
-     *
-     * @param 'info'|'warning'|'error'|'debug' $level
-     * @param array<string, mixed> $context
-     */
-    private function logIfEnabled(string $level, string $message, array $context = []): void
-    {
-        if ($this->logger !== null) {
-            try {
-                $this->logger->log($level, $message, $context);
-            } catch (\Throwable $e) {
-                // Fail silently - never throw from logger
-            }
-        }
     }
 }

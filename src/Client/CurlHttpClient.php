@@ -8,9 +8,12 @@ use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
+use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 
 final class CurlHttpClient implements HttpClientInterface
 {
+    use LoggerHelperTrait;
+
     private int $lastHttpCode = 0;
 
     public function __construct(
@@ -295,18 +298,4 @@ final class CurlHttpClient implements HttpClientInterface
         return $data['result'] ?? [];
     }
 
-    /**
-     * Log exception if logger is configured
-     * Never throws exceptions from logging operations
-     */
-    private function logExceptionIfEnabled(\Throwable $exception): void
-    {
-        if ($this->logger !== null) {
-            try {
-                $this->logger->logException($exception);
-            } catch (\Throwable $e) {
-                // Fail silently - never throw from logger
-            }
-        }
-    }
 }

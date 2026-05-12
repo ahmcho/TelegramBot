@@ -10,9 +10,12 @@ use AhmCho\Telegram\Exception\TelegramException;
 use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
+use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 
 final class BulkOperationManager
 {
+    use LoggerHelperTrait;
+
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly BotConfig $config,
@@ -113,36 +116,4 @@ final class BulkOperationManager
         return $this->sendBulk($method, $requestsArray, $options);
     }
 
-    /**
-     * Log message if logger is configured
-     * Never throws exceptions from logging operations
-     *
-     * @param 'info'|'warning'|'error'|'debug' $level
-     * @param array<string, mixed> $context
-     */
-    private function logIfEnabled(string $level, string $message, array $context = []): void
-    {
-        if ($this->logger !== null) {
-            try {
-                $this->logger->log($level, $message, $context);
-            } catch (\Throwable $e) {
-                // Fail silently - never throw from logger
-            }
-        }
-    }
-
-    /**
-     * Log exception if logger is configured
-     * Never throws exceptions from logging operations
-     */
-    private function logExceptionIfEnabled(\Throwable $exception): void
-    {
-        if ($this->logger !== null) {
-            try {
-                $this->logger->logException($exception);
-            } catch (\Throwable $e) {
-                // Fail silently - never throw from logger
-            }
-        }
-    }
 }
