@@ -30,7 +30,6 @@
         </include>
         <exclude>
             <directory>src/TelegramBot.php</directory>
-            <file>src/Database.php</file>
             <file>src/dotenv.php</file>
         </exclude>
     </source>
