@@ -62,10 +62,6 @@ class CurlHttpClient implements HttpClientInterface
         $error = curl_error($ch);
         $errno = curl_errno($ch);
 
-        if (PHP_VERSION_ID < 80500) {
-            curl_close($ch);
-        }
-
         if ($error || $errno) {
             $exception = new HttpClientException(
                 "cURL error ($errno): $error",
@@ -119,9 +115,6 @@ class CurlHttpClient implements HttpClientInterface
         // Cleanup
         foreach ($handles as $handleData) {
             curl_multi_remove_handle($mh, $handleData['handle']);
-            if (PHP_VERSION_ID < 80500) {
-                curl_close($handleData['handle']);
-            }
         }
         curl_multi_close($mh);
 
