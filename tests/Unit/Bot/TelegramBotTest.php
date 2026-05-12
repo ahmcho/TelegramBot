@@ -16,7 +16,7 @@ use AhmCho\Telegram\Tests\Helpers\WebhookStreamWrapper;
  * Telegram Bot Tests
  *
  * Tests construction, service accessors, convenience methods,
- * webhook handling, and database integration.
+ * and webhook handling.
  */
 final class TelegramBotTest extends TestCase
 {

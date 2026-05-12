@@ -283,7 +283,7 @@ final class EnvLoaderTest extends TestCase
             "# Telegram Bot Configuration\n" .
             "BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11\n" .
             "WEBHOOK_URL=https://example.com/webhook.php\n" .
-            "DB_PATH=/var/www/bot/database.sqlite"
+            "LOG_FILE_PATH=/var/www/bot/logs/bot.log"
         );
 
         $this->loader = new EnvLoader();
@@ -291,6 +291,6 @@ final class EnvLoaderTest extends TestCase
 
         $this->assertSame('123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11', $this->loader->require('BOT_TOKEN'));
         $this->assertSame('https://example.com/webhook.php', $this->loader->require('WEBHOOK_URL'));
-        $this->assertSame('/var/www/bot/database.sqlite', $this->loader->require('DB_PATH'));
+        $this->assertSame('/var/www/bot/logs/bot.log', $this->loader->require('LOG_FILE_PATH'));
     }
 }
