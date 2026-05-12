@@ -322,53 +322,6 @@ class TestDataFactory
     }
 
     /**
-     * Create database user record
-     *
-     * @param int $chat_id Chat ID
-     * @param string $first_name First name
-     * @param string|null $username Username
-     * @param string|null $language_code Language code
-     * @return array<string, mixed>
-     */
-    public static function createDbUser(
-        int $chat_id = 123456789,
-        string $first_name = 'Test',
-        ?string $username = 'testuser',
-        ?string $language_code = 'en'
-    ): array {
-        return [
-            'chat_id' => $chat_id,
-            'first_name' => $first_name,
-            'username' => $username,
-            'language_code' => $language_code,
-            'created_at' => time(),
-            'updated_at' => time()
-        ];
-    }
-
-    /**
-     * Create multiple database user records
-     *
-     * @param int $count Number of users to create
-     * @return array<int, array<string, mixed>>
-     */
-    public static function createDbUsers(int $count = 10): array
-    {
-        $users = [];
-
-        for ($i = 1; $i <= $count; $i++) {
-            $users[] = self::createDbUser(
-                100000 + $i,
-                "User$i",
-                "user$i",
-                'en'
-            );
-        }
-
-        return $users;
-    }
-
-    /**
      * Get sample API response for various methods
      *
      * @param string $method API method name
