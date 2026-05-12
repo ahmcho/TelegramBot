@@ -9,10 +9,12 @@ use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
+use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
 
 final class StreamHttpClient implements HttpClientInterface
 {
     use LoggerHelperTrait;
+    use ResponseParserTrait;
 
     private int $lastHttpCode = 0;
 
@@ -108,32 +110,5 @@ final class StreamHttpClient implements HttpClientInterface
     {
         return extension_loaded('openssl') &&
             in_array('https', stream_get_wrappers(), true);
-    }
-
-    private function parseResponse(string $response): mixed
-    {
-        $data = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $exception = new HttpClientException(
-                'Invalid JSON response: ' . json_last_error_msg(),
-                $this->lastHttpCode,
-                $response
-            );
-            $this->logExceptionIfEnabled($exception);
-            throw $exception;
-        }
-
-        if (!$data['ok']) {
-            $exception = new HttpClientException(
-                "Telegram API error: " . ($data['description'] ?? 'Unknown error'),
-                $this->lastHttpCode,
-                $response
-            );
-            $this->logExceptionIfEnabled($exception);
-            throw $exception;
-        }
-
-        return $data['result'] ?? [];
     }
 }
