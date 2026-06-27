@@ -12,6 +12,7 @@ use AhmCho\Telegram\Api\Methods\WebhookService;
 use AhmCho\Telegram\Bulk\BulkOperationManager;
 use AhmCho\Telegram\Client\HttpClientFactory;
 use AhmCho\Telegram\Client\HttpClientInterface;
+use AhmCho\Telegram\Command\CommandHandler;
 use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Config\EnvLoader;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
@@ -37,6 +38,7 @@ final class TelegramBot
     private readonly WebhookService $webhooks;
     private readonly MarkdownV2Formatter $formatter;
     private readonly ?LoggerInterface $logger;
+    private readonly CommandHandler $commands;
     private string $inputSource = 'php://input';
 
     public function __construct(
@@ -77,6 +79,7 @@ final class TelegramBot
         $this->chats = new ChatService($this->apiService);
         $this->webhooks = new WebhookService($this->apiService);
         $this->formatter = new MarkdownV2Formatter();
+        $this->commands = new CommandHandler($this);
     }
 
     // Service accessors
@@ -104,6 +107,11 @@ final class TelegramBot
     public function formatter(): TextFormatterInterface
     {
         return $this->formatter;
+    }
+
+    public function commands(): CommandHandler
+    {
+        return $this->commands;
     }
 
     public function api(): ApiService
