@@ -31,7 +31,7 @@ final class BulkOperationManager
         array $requestsArray,
         array $options = []
     ): BulkResult {
-        if (empty($requestsArray)) {
+        if ($requestsArray === []) {
             return BulkResult::empty();
         }
 
@@ -97,7 +97,7 @@ final class BulkOperationManager
         array $commonParams,
         array $options = []
     ): BulkResult {
-        if (empty($chatIds)) {
+        if ($chatIds === []) {
             return BulkResult::empty();
         }
 

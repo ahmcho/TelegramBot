@@ -20,7 +20,7 @@ final class FileLogHandler
     public function __construct(string $logFilePath, bool $createDirectory = true)
     {
         // Validate log file path
-        if (empty($logFilePath)) {
+        if ($logFilePath === '' || $logFilePath === '0') {
             throw new \InvalidArgumentException("Log file path cannot be empty");
         }
 
@@ -103,7 +103,7 @@ final class FileLogHandler
     {
         $directory = dirname($this->logFilePath);
 
-        if (!is_dir($directory) && !empty($directory)) {
+        if (!is_dir($directory) && $directory !== '' && $directory !== '.') {
             if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
                 throw new \RuntimeException("Failed to create log directory: {$directory}");
             }

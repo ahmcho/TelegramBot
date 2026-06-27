@@ -87,7 +87,7 @@ final class Logger implements LoggerInterface
         $interpolatedMessage = $this->interpolate($message, $context);
 
         // Format context as JSON
-        $contextJson = !empty($context)
+        $contextJson = $context !== []
             ? json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
             : '';
 
@@ -127,7 +127,7 @@ final class Logger implements LoggerInterface
      */
     private function interpolate(string $message, array $context): string
     {
-        if (empty($context)) {
+        if ($context === []) {
             return $message;
         }
 
