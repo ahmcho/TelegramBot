@@ -21,16 +21,16 @@ use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 
 require_once __DIR__ . '/../autoload.php';
 
-// Load environment variables
-$envFile = __DIR__ . '/../.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
-        list($name, $value) = explode('=', $line, 2);
-        $_ENV[trim($name)] = trim($value);
-        putenv(trim($name) . '=' . trim($value));
-    }
+// Load environment variables (using the modern EnvLoader)
+require_once __DIR__ . '/../src/Config/EnvLoader.php';
+
+$loader = new \AhmCho\Telegram\Config\EnvLoader();
+$loader->load();
+
+// Helper function to safely extract file ID from API response
+function getFileId(array $result, string $mediaType): ?string
+{
+    return $result[$mediaType]['file_id'] ?? null;
 }
 
 // Command handlers
@@ -109,13 +109,15 @@ function handlePhoto(TelegramBot $bot, int $chatId, bool $fromUrl = true): void
             ]);
 
             // Save file ID for demonstration
-            $fileId = $result['photo'][0]['file_id'];
-            $bot->messages()->send([
-                'chat_id' => $chatId,
-                'text' => '💾 File ID saved: `' . $fileId . '`' . "\n\n"
-                    . 'You can use this file ID to send this photo again without re-uploading.',
-                'parse_mode' => 'MarkdownV2'
-            ]);
+            $fileId = $result['photo'][0]['file_id'] ?? null;
+            if ($fileId !== null) {
+                $bot->messages()->send([
+                    'chat_id' => $chatId,
+                    'text' => '💾 File ID saved: `' . $fileId . '`' . "\n\n"
+                        . 'You can use this file ID to send this photo again without re-uploading.',
+                    'parse_mode' => 'MarkdownV2'
+                ]);
+            }
         }
     } catch (\Throwable $e) {
         $bot->messages()->send([
@@ -145,12 +147,14 @@ function handleVideo(TelegramBot $bot, int $chatId): void
             'duration' => 10
         ]);
 
-        $fileId = $result['video']['file_id'];
-        $bot->messages()->send([
-            'chat_id' => $chatId,
-            'text' => '💾 File ID: `' . $fileId . '`',
-            'parse_mode' => 'MarkdownV2'
-        ]);
+        $fileId = getFileId($result, 'video');
+        if ($fileId !== null) {
+            $bot->messages()->send([
+                'chat_id' => $chatId,
+                'text' => '💾 File ID: `' . $fileId . '`',
+                'parse_mode' => 'MarkdownV2'
+            ]);
+        }
     } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
@@ -176,12 +180,14 @@ function handleAudio(TelegramBot $bot, int $chatId): void
             'title' => 'Sample Song'
         ]);
 
-        $fileId = $result['audio']['file_id'];
-        $bot->messages()->send([
-            'chat_id' => $chatId,
-            'text' => '💾 File ID: `' . $fileId . '`',
-            'parse_mode' => 'MarkdownV2'
-        ]);
+        $fileId = getFileId($result, 'audio');
+        if ($fileId !== null) {
+            $bot->messages()->send([
+                'chat_id' => $chatId,
+                'text' => '💾 File ID: `' . $fileId . '`',
+                'parse_mode' => 'MarkdownV2'
+            ]);
+        }
     } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
@@ -205,12 +211,14 @@ function handleVoice(TelegramBot $bot, int $chatId): void
             'caption' => '🎤 Voice message example'  // Auto-escaped!
         ]);
 
-        $fileId = $result['voice']['file_id'];
-        $bot->messages()->send([
-            'chat_id' => $chatId,
-            'text' => '💾 File ID: `' . $fileId . '`',
-            'parse_mode' => 'MarkdownV2'
-        ]);
+        $fileId = getFileId($result, 'voice');
+        if ($fileId !== null) {
+            $bot->messages()->send([
+                'chat_id' => $chatId,
+                'text' => '💾 File ID: `' . $fileId . '`',
+                'parse_mode' => 'MarkdownV2'
+            ]);
+        }
     } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
@@ -243,12 +251,14 @@ function handleDocument(TelegramBot $bot, int $chatId): void
         // Clean up
         unlink($tempFile);
 
-        $fileId = $result['document']['file_id'];
-        $bot->messages()->send([
-            'chat_id' => $chatId,
-            'text' => '💾 File ID: `' . $fileId . "`\n\nDocument sent successfully!",
-            'parse_mode' => 'MarkdownV2'
-        ]);
+        $fileId = getFileId($result, 'document');
+        if ($fileId !== null) {
+            $bot->messages()->send([
+                'chat_id' => $chatId,
+                'text' => '💾 File ID: `' . $fileId . "`\n\nDocument sent successfully!",
+                'parse_mode' => 'MarkdownV2'
+            ]);
+        }
     } catch (\Throwable $e) {
         $bot->messages()->send([
             'chat_id' => $chatId,
@@ -274,12 +284,14 @@ function handleAnimation(TelegramBot $bot, int $chatId): void
             'height' => 400
         ]);
 
-        $fileId = $result['animation']['file_id'];
-        $bot->messages()->send([
-            'chat_id' => $chatId,
-            'text' => '💾 File ID: `' . $fileId . "`\n\nAnimation sent successfully!",
-            'parse_mode' => 'MarkdownV2'
-        ]);
+        $fileId = getFileId($result, 'animation');
+        if ($fileId !== null) {
+            $bot->messages()->send([
+                'chat_id' => $chatId,
+                'text' => '💾 File ID: `' . $fileId . "`\n\nAnimation sent successfully!",
+                'parse_mode' => 'MarkdownV2'
+            ]);
+        }
     } catch (\Throwable $e) {
         // Fallback if GIF URL doesn't work
         $bot->messages()->send([
