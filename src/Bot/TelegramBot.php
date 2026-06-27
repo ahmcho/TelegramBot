@@ -160,16 +160,15 @@ final class TelegramBot
     public function getWebhookUpdates(): ?array
     {
         $input = file_get_contents($this->inputSource);
-        if (empty($input)) {
+        if ($input === false || $input === '' || $input === null) {
             return null;
         }
 
-        $data = json_decode($input, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!json_validate($input)) {
             return null;
         }
 
-        return $data;
+        return json_decode($input, true);
     }
 
     public function processWebhook(callable $handler): void
