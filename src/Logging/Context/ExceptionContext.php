@@ -32,27 +32,26 @@ readonly class ExceptionContext
         $previous = $exception->getPrevious();
         $previousContext = $previous !== null ? self::formatPreviousException($previous) : null;
 
-        $additionalData = null;
-
-        // Add specific data for known exception types
-        if ($exception instanceof ApiException) {
-            $additionalData = [
+        // Add specific data for known exception types using match expression
+        $additionalData = match ($exception::class) {
+            ApiException::class => [
                 'error_code' => $exception->getErrorCode(),
-            ];
-        } elseif ($exception instanceof HttpClientException) {
-            $additionalData = [
+            ],
+            HttpClientException::class => [
                 'http_code' => $exception->getHttpCode(),
                 'response_body' => $exception->getResponseBody(),
-            ];
-        } elseif ($exception instanceof BulkSendException) {
-            $result = $exception->getResult();
-            $additionalData = [
-                'bulk_total' => $result->total,
-                'bulk_successful' => $result->successful,
-                'bulk_failed' => $result->failed,
-                'success_rate' => round($result->getSuccessRate(), 2) . '%',
-            ];
-        }
+            ],
+            BulkSendException::class => (function() use ($exception) {
+                $result = $exception->getResult();
+                return [
+                    'bulk_total' => $result->total,
+                    'bulk_successful' => $result->successful,
+                    'bulk_failed' => $result->failed,
+                    'success_rate' => round($result->getSuccessRate(), 2) . '%',
+                ];
+            })(),
+            default => null
+        };
 
         return new self(
             exceptionType: get_class($exception),
@@ -87,7 +86,7 @@ readonly class ExceptionContext
         }
 
         if ($this->additionalData !== null) {
-            $data = array_merge($data, $this->additionalData);
+            $data = [...$data, ...$this->additionalData];
         }
 
         return $data;
