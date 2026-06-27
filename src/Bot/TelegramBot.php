@@ -187,4 +187,142 @@ final class TelegramBot
     {
         $this->inputSource = $source;
     }
+
+    // Retry methods with automatic error handling
+
+    /**
+     * Send message with automatic retry on failure
+     *
+     * @param array<string, mixed> $params Message parameters
+     * @param array<string, mixed> $options Retry options:
+     *   - max_retries: int (default: 3)
+     *   - initial_delay_ms: int (default: 1000)
+     *   - max_delay_ms: int (default: 10000)
+     *   - on_retry: callable Called on each retry
+     * @return array<string, mixed> The API response
+     */
+    public function sendMessageWithRetry(array $params, array $options = []): array
+    {
+        return $this->executeWithRetry(
+            fn() => $this->messages->send($params),
+            $options
+        );
+    }
+
+    /**
+     * Execute bulk operation with retry on failure
+     *
+     * @param array<int, array<string, mixed>> $messagesArray Messages to send
+     * @param array<string, mixed> $bulkOptions Bulk operation options
+     * @param array<string, mixed> $retryOptions Retry options
+     * @return array<string, mixed> Bulk operation result
+     */
+    public function sendBulkWithRetry(
+        array $messagesArray,
+        array $bulkOptions = [],
+        array $retryOptions = []
+    ): array {
+        return $this->executeWithRetry(
+            fn() => $this->messages->sendBulk($messagesArray, $bulkOptions),
+            $retryOptions
+        );
+    }
+
+    /**
+     * Execute callback with automatic retry on failure
+     *
+     * @param callable $callback The function to execute
+     * @param array<string, mixed> $options Retry options
+     * @return mixed The result from the callback
+     */
+    public function executeWithRetry(callable $callback, array $options = []): mixed
+    {
+        $maxRetries = $options['max_retries'] ?? 3;
+        $initialDelayMs = $options['initial_delay_ms'] ?? 1000;
+        $maxDelayMs = $options['max_delay_ms'] ?? 10000;
+        $onRetry = $options['on_retry'] ?? null;
+
+        if ($this->logger !== null) {
+            $this->logger->debug('Starting operation with retry', [
+                'max_retries' => $maxRetries,
+                'initial_delay_ms' => $initialDelayMs
+            ]);
+        }
+
+        $lastException = null;
+        $delayMs = $initialDelayMs;
+
+        for ($attempt = 0; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $result = $callback();
+
+                if ($this->logger !== null && $attempt > 0) {
+                    $this->logger->info('Operation succeeded after retry', [
+                        'attempt' => $attempt + 1
+                    ]);
+                }
+
+                return $result;
+            } catch (\AhmCho\Telegram\Exception\ApiException $e) {
+                $lastException = $e;
+
+                // Log the error
+                if ($this->logger !== null) {
+                    $this->logger->warning('API request failed', [
+                        'attempt' => $attempt + 1,
+                        'error' => $e->getMessage(),
+                        'http_code' => $e->getHttpCode()
+                    ]);
+                }
+
+                // Don't retry on client errors (4xx) except 429
+                if ($e->getHttpCode() >= 400 && $e->getHttpCode() < 500 && $e->getHttpCode() !== 429) {
+                    throw $e;
+                }
+
+                // Don't retry if this was the last attempt
+                if ($attempt === $maxRetries) {
+                    break;
+                }
+
+                // Handle rate limit (429)
+                if ($e->getHttpCode() === 429) {
+                    $response = $e->getResponseBody();
+                    $retryAfter = 1;
+
+                    if (is_array($response) && isset($response['parameters']['retry_after'])) {
+                        $retryAfter = (int) $response['parameters']['retry_after'];
+                    }
+
+                    $delayMs = $retryAfter * 1000;
+
+                    if ($this->logger !== null) {
+                        $this->logger->info('Rate limit detected, waiting', [
+                            'retry_after_seconds' => $retryAfter
+                        ]);
+                    }
+                }
+
+                // Call retry callback
+                if ($onRetry !== null && is_callable($onRetry)) {
+                    $onRetry($attempt + 1, $e, $delayMs);
+                }
+
+                // Wait before retry
+                usleep($delayMs * 1000);
+
+                // Exponential backoff
+                $delayMs = min($delayMs * 2, $maxDelayMs);
+            }
+        }
+
+        if ($this->logger !== null) {
+            $this->logger->error('Operation failed after all retries', [
+                'max_retries' => $maxRetries,
+                'final_error' => $lastException?->getMessage()
+            ]);
+        }
+
+        throw $lastException;
+    }
 }
