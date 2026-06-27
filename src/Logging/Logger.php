@@ -113,7 +113,7 @@ final class Logger implements LoggerInterface
     public function logException(\Throwable $exception, array $context = []): void
     {
         $exceptionContext = ExceptionContext::fromException($exception);
-        $mergedContext = array_merge($context, $exceptionContext->toArray());
+        $mergedContext = [...$context, ...$exceptionContext->toArray()];
 
         $this->log(
             LogLevel::ERROR,

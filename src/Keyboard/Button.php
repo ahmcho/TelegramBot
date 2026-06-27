@@ -107,6 +107,6 @@ readonly class Button
             $button['switch_inline_query_current_chat'] = $this->switchInlineQueryCurrentChat;
         }
 
-        return array_merge($button, $this->metadata);
+        return [...$button, ...$this->metadata];
     }
 }
