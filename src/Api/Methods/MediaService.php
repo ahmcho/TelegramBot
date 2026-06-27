@@ -6,7 +6,7 @@ namespace AhmCho\Telegram\Api\Methods;
 
 use AhmCho\Telegram\Api\ApiService;
 use AhmCho\Telegram\Enums\ApiMethod;
-use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
+use AhmCho\Telegram\Traits\MarkdownV2EscapeTrait;
 
 /**
  * Media Service
@@ -15,34 +15,11 @@ use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
  */
 class MediaService
 {
+    use MarkdownV2EscapeTrait;
+
     public function __construct(
         private readonly ApiService $apiService
     ) {}
-
-    /**
-     * Auto-escape text and caption for MarkdownV2 format
-     *
-     * @param array<string, mixed> $params
-     * @return array<string, mixed>
-     */
-    private function escapeForMarkdownV2(array $params): array
-    {
-        if (!isset($params['parse_mode']) || $params['parse_mode'] !== 'MarkdownV2') {
-            return $params;
-        }
-
-        $formatter = new MarkdownV2Formatter();
-
-        if (isset($params['text']) && is_string($params['text'])) {
-            $params['text'] = $formatter->escape($params['text']);
-        }
-
-        if (isset($params['caption']) && is_string($params['caption'])) {
-            $params['caption'] = $formatter->escape($params['caption']);
-        }
-
-        return $params;
-    }
 
     /**
      * @param array<string, mixed> $params
