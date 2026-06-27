@@ -47,7 +47,7 @@ final class CurlHttpClient implements HttpClientInterface
             CURLOPT_POST => $method === HttpMethod::POST,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->config->getTimeout(),
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => $this->config->shouldVerifySsl(),
             CURLOPT_SSL_VERIFYHOST => $this->config->shouldVerifySsl() ? 2 : 0,
         ];
 
