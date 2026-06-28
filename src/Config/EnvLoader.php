@@ -65,8 +65,8 @@ class EnvLoader
             return;
         }
 
-        // Parse KEY=VALUE or KEY="VALUE" or KEY='VALUE'
-        if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/', $line, $matches)) {
+        // Parse KEY=VALUE or KEY = VALUE or KEY="VALUE" or KEY='VALUE'
+        if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/', $trimmed, $matches)) {
             return;
         }
 

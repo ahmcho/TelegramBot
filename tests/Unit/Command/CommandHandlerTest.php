@@ -253,6 +253,26 @@ class CommandHandlerTest extends TestCase
         $this->assertCount(0, $this->commandHandler->getRegisteredCommands());
     }
 
+    public function testClearAlsoClearsMiddleware(): void
+    {
+        $middlewareFired = false;
+
+        $this->commandHandler
+            ->register('test', function () {})
+            ->addMiddleware('tracker', function () use (&$middlewareFired) {
+                $middlewareFired = true;
+                return true;
+            });
+
+        $this->commandHandler->clear();
+
+        // Re-register the command so handleUpdate has something to route to
+        $this->commandHandler->register('test', function () {});
+        $this->commandHandler->handleUpdate($this->createUpdate(123, '/test'));
+
+        $this->assertFalse($middlewareFired, 'Middleware should not fire after clear()');
+    }
+
     public function testChaining(): void
     {
         $result = $this->commandHandler

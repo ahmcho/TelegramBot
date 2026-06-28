@@ -268,6 +268,7 @@ class CommandHandler
     {
         $this->commands = [];
         $this->descriptions = [];
+        $this->middleware = [];
     }
 
     /**

@@ -62,7 +62,8 @@ final class MarkdownV2Formatter implements TextFormatterInterface
      */
     public function pre(string $text): string
     {
-        return "```" . "\n" . $text . "\n" . "```";
+        $escaped = str_replace(['\\', '`'], ['\\\\', '\`'], $text);
+        return "```\n" . $escaped . "\n```";
     }
 
     public function link(string $text, string $url): string
@@ -77,6 +78,6 @@ final class MarkdownV2Formatter implements TextFormatterInterface
 
     public function hashtag(string $tag): string
     {
-        return '#' . ltrim($tag, '#');
+        return '#' . $this->escape(ltrim($tag, '#'));
     }
 }
