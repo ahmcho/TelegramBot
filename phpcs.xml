@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<ruleset name="AhmCho Telegram Bot Framework">
+    <description>PSR-12 coding standard for Telegram Bot Framework</description>
+
+    <!-- What to scan -->
+    <file>src</file>
+
+    <!-- Exclude patterns -->
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>*/autoload.php</exclude-pattern>
+
+    <!-- Show progress -->
+    <arg value="p"/>
+
+    <!-- Use colors in output -->
+    <arg name="colors"/>
+
+    <!-- Show sniff codes -->
+    <arg value="s"/>
+
+    <!-- Base standard -->
+    <rule ref="PSR12">
+        <!-- Allow line length > 80 for better readability -->
+        <exclude name="Generic.Files.LineLength"/>
+    </rule>
+
+    <!-- Arrays -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+
+    <!-- White space -->
+    <rule ref="Generic.WhiteSpace.ScopeIndent">
+        <properties>
+            <property name="indent" value="4"/>
+        </properties>
+    </rule>
+</ruleset>
