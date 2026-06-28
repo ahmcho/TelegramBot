@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdoc xmlns="https://www.phpdoc.org/guides/phpdoc/latest/phpdoc.xsd"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="https://www.phpdoc.org/guides/phpdoc/latest/phpdoc.xsd
+                           https://www.phpdoc.org/guides/phpdoc/latest/phpdoc.xsd">
+    <title>Telegram Bot Framework</title>
+    <parser default-package-name="AhmCho\Telegram">
+        <target>docs/api</target>
+        <extensions>
+            <extension>php</extension>
+        </extensions>
+        <visibility>
+            <private>off</private>
+            <protected>on</protected>
+            <public>on</public>
+        </visibility>
+        <directory>src</directory>
+        <ignore>
+            <path>vendor/</path>
+        </ignore>
+    </parser>
+    <transformer>
+        <target>docs/api</target>
+        <source>
+            <path>src</path>
+        </source>
+    </transformer>
+    <files>
+        <directory>src</directory>
+    </files>
+</phpdoc>
