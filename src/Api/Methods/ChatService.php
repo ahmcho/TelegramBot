@@ -134,4 +134,32 @@ class ChatService
     {
         return $this->apiService->call(ApiMethod::UNPIN_ALL_CHAT_MESSAGES, $params);
     }
+
+    /**
+     * Get the current menu button
+     *
+     * @param array{chat_id?: int|string} $params
+     * @return array<string, mixed>
+     */
+    public function getMenuButton(array $params = []): array
+    {
+        return $this->apiService->call(
+            ApiMethod::GET_CHAT_MENU_BUTTON,
+            $params
+        );
+    }
+
+    /**
+     * Change the menu button
+     *
+     * @param array{chat_id?: int|string, menu_button: array} $params
+     * @return array<string, mixed>
+     */
+    public function setMenuButton(array $params): array
+    {
+        return $this->apiService->call(
+            ApiMethod::SET_CHAT_MENU_BUTTON,
+            $params
+        );
+    }
 }

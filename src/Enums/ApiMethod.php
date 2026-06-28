@@ -67,6 +67,8 @@ enum ApiMethod: string
     case SET_CHAT_PHOTO = 'setChatPhoto';
     case DELETE_CHAT_PHOTO = 'deleteChatPhoto';
     case SET_CHAT_PERMISSIONS = 'setChatPermissions';
+    case GET_CHAT_MENU_BUTTON = 'getChatMenuButton';
+    case SET_CHAT_MENU_BUTTON = 'setChatMenuButton';
 
         // Forum topics
     case CREATE_FORUM_TOPIC = 'createForumTopic';
