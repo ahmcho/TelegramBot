@@ -138,10 +138,9 @@ final class FileLogHandlerTest extends TestCase
         $this->handler->write("[2026-05-13 10:00:02] [INFO] Line 3\n");
 
         $lines = $this->handler->readLastLines(2);
-        $this->assertIsArray($lines);
-        $this->assertNotEmpty($lines);
-        // Just verify we get some lines back
-        $this->assertGreaterThanOrEqual(1, count($lines));
+        $this->assertCount(2, $lines);
+        $this->assertStringContainsString('Line 2', $lines[0]);
+        $this->assertStringContainsString('Line 3', $lines[1]);
     }
 
     public function test_read_last_lines_returns_all_lines_when_request_more_than_exist(): void

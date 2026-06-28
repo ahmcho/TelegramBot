@@ -34,7 +34,7 @@ trait ResponseParserTrait
             throw $exception;
         }
 
-        if (!$data['ok']) {
+        if (!is_array($data) || !($data['ok'] ?? false)) {
             $exception = new HttpClientException(
                 "Telegram API error: " . ($data['description'] ?? 'Unknown error'),
                 $this->lastHttpCode,
