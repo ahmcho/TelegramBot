@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Api\Methods;
 
 use AhmCho\Telegram\Api\ApiService;
+use AhmCho\Telegram\Enums\ApiMethod;
 
 /**
  * Invite Links Service
@@ -64,9 +65,9 @@ class InviteLinksService
      * Export an invite link as a file
      *
      * @param array{chat_id: int|string} $params
-     * @return array<string, mixed>
+     * @return mixed
      */
-    public function export(array $params): array
+    public function export(array $params): mixed
     {
         return $this->apiService->call(
             ApiMethod::EXPORT_CHAT_INVITE_LINK,

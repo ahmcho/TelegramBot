@@ -30,7 +30,6 @@ require_once __DIR__ . '/../autoload.php';
 
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 use AhmCho\Telegram\Keyboard\Button;
-use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Bot\TelegramBot;
 
 // Load environment variables (done automatically by TelegramBot constructor)
@@ -232,13 +231,10 @@ function handleUpdate(TelegramBot $bot, array $update): void
             $queryId = $callbackQuery['id'];
 
             // Answer the callback query to remove loading state
-            $bot->api()->call(
-                ApiMethod::ANSWER_CALLBACK_QUERY,
-                ['callback_query_id' => $queryId]
-            );
+            $bot->chats()->answerCallbackQuery(['callback_query_id' => $queryId]);
 
             $parts = explode(':', $data);
-            $action = $parts[1] ?? '';
+            $action = $parts[0] ?? '';
 
             switch ($action) {
                 case 'help':
@@ -273,7 +269,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
                         ]);
 
                     } catch (Exception $e) {
-                        $bot->answerCallbackQuery([
+                        $bot->chats()->answerCallbackQuery([
                             'callback_query_id' => $queryId,
                             'text' => 'Error getting stats: ' . $e->getMessage(),
                             'show_alert' => true
