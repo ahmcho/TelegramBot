@@ -38,6 +38,7 @@ enum ApiMethod: string
     case STOP_POLL = 'stopPoll';
     case CLOSE_POLL = 'closePoll';
     case SEND_DICE = 'sendDice';
+    case GET_CUSTOM_EMOJI_STICKERS = 'getCustomEmojiStickers';
 
         // Chat actions
     case SEND_CHAT_ACTION = 'sendChatAction';

@@ -134,4 +134,18 @@ class MediaService
     {
         return $this->apiService->call(ApiMethod::SEND_DICE, $params);
     }
+
+    /**
+     * Get information about custom emoji stickers
+     *
+     * @param array{custom_emoji_ids: array<string>} $params
+     * @return array<string, mixed>
+     */
+    public function getCustomEmojiStickers(array $params): array
+    {
+        return $this->apiService->call(
+            ApiMethod::GET_CUSTOM_EMOJI_STICKERS,
+            $params
+        );
+    }
 }
