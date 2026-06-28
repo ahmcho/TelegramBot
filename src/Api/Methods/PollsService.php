@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Api\Methods;
 
 use AhmCho\Telegram\Api\ApiService;
+use AhmCho\Telegram\Enums\ApiMethod;
 
 /**
  * Poll Service

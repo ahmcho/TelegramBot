@@ -162,4 +162,15 @@ class ChatService
             $params
         );
     }
+
+    /**
+     * Answer a callback query sent from an inline keyboard
+     *
+     * @param array{callback_query_id: string, text?: string, show_alert?: bool, url?: string, cache_time?: int} $params
+     * @return mixed
+     */
+    public function answerCallbackQuery(array $params): mixed
+    {
+        return $this->apiService->call(ApiMethod::ANSWER_CALLBACK_QUERY, $params);
+    }
 }

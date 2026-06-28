@@ -190,4 +190,30 @@ final class ChatServiceTest extends TestCase
 
         $this->assertTrue($result);
     }
+
+    public function test_answerCallbackQuery_returns_true(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->answerCallbackQuery(['callback_query_id' => 'cq123']);
+
+        $this->assertTrue($result);
+        $this->assertSame(1, $this->mockClient->getRequestCount());
+    }
+
+    public function test_answerCallbackQuery_with_alert(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->answerCallbackQuery([
+            'callback_query_id' => 'cq456',
+            'text' => 'Action completed!',
+            'show_alert' => true,
+        ]);
+
+        $this->assertTrue($result);
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame('cq456', $lastRequest['params']['callback_query_id']);
+        $this->assertTrue($lastRequest['params']['show_alert']);
+    }
 }

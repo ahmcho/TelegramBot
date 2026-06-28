@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Api\Methods;
 
 use AhmCho\Telegram\Api\ApiService;
+use AhmCho\Telegram\Enums\ApiMethod;
 
 /**
  * Inline Service
@@ -22,9 +23,9 @@ class InlineService
      * Answer an inline query
      *
      * @param array{inline_query_id: string, results: array<array>, cache_time?: int, is_personal?: bool, next_offset?: string, switch_pm_text?: string, switch_pm_parameter?: string} $params
-     * @return array<string, mixed>
+     * @return mixed
      */
-    public function answer(array $params): array
+    public function answer(array $params): mixed
     {
         return $this->apiService->call(
             ApiMethod::ANSWER_INLINE_QUERY,

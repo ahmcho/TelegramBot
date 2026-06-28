@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Tests\Unit\Command;
 
 use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Bulk\BulkOperationManager;
 use AhmCho\Telegram\Command\CommandHandler;
+use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Tests\Helpers\MockHttpClient;
 use PHPUnit\Framework\TestCase;
 
@@ -262,12 +264,11 @@ class CommandHandlerTest extends TestCase
         $this->assertCount(3, $this->commandHandler->getRegisteredCommands());
     }
 
-    /**
-     * Create a PHPUnit mock of TelegramBot for testing
-     */
     private function createMockBot(): TelegramBot
     {
-        return $this->createMock(TelegramBot::class);
+        $mockClient = new MockHttpClient();
+        $config = new BotConfig('test_token');
+        return new TelegramBot(null, $config, $mockClient);
     }
 
     /**

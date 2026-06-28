@@ -125,10 +125,8 @@ final class RateLimitHandlingTest extends TestCase
     /**
      * @dataProvider rateLimitFormatsProvider
      */
-    public function testRateLimitFormatHandling(array $data): void
+    public function testRateLimitFormatHandling(array $response, int $expectedDelay): void
     {
-        $response = $data['response'];
-        $expectedDelay = $data['expected_delay'];
 
         $isRateLimit = $response['error_code'] === 429;
         $retryAfter = $response['parameters']['retry_after'] ?? 1;
