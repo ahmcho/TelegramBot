@@ -42,13 +42,14 @@ final class CurlHttpClient implements HttpClientInterface
     ): mixed {
         $ch = curl_init();
 
+        $verifySsl = $this->config->shouldVerifySsl();
         $options = [
             CURLOPT_URL => $url,
             CURLOPT_POST => $method === HttpMethod::POST,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->config->getTimeout(),
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => $verifySsl,
+            CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
         ];
 
         $hasFile = $this->hasFileUpload($params);
@@ -143,13 +144,14 @@ final class CurlHttpClient implements HttpClientInterface
     ) {
         $ch = curl_init();
 
+        $verifySsl = $this->config->shouldVerifySsl();
         $options = [
             CURLOPT_URL => $url,
             CURLOPT_POST => $method === HttpMethod::POST,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->config->getTimeout(),
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => $verifySsl,
+            CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
         ];
 
         $hasFile = $this->hasFileUpload($params);
@@ -177,6 +179,9 @@ final class CurlHttpClient implements HttpClientInterface
         $delayMs = $options['delay_ms'];
 
         $handleKeys = array_keys($handles);
+        if (empty($handleKeys)) {
+            return [];
+        }
         $batchSize = min($maxConcurrent, count($handleKeys));
         $batches = array_chunk($handleKeys, $batchSize);
 

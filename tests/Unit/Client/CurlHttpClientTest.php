@@ -111,35 +111,25 @@ final class CurlHttpClientTest extends TestCase
         $configWithSsl = new BotConfig('token', verifySsl: true);
         $configWithoutSsl = new BotConfig('token', verifySsl: false);
 
-        $clientWithSsl = new CurlHttpClient($configWithSsl);
-        $clientWithoutSsl = new CurlHttpClient($configWithoutSsl);
-
-        // Verify both clients can be created with different SSL settings
-        $this->assertInstanceOf(CurlHttpClient::class, $clientWithSsl);
-        $this->assertInstanceOf(CurlHttpClient::class, $clientWithoutSsl);
-
-        // Verify the config values are different
         $this->assertTrue($configWithSsl->shouldVerifySsl());
         $this->assertFalse($configWithoutSsl->shouldVerifySsl());
+
+        // Clients should be constructable with both settings
+        $this->assertInstanceOf(CurlHttpClient::class, new CurlHttpClient($configWithSsl));
+        $this->assertInstanceOf(CurlHttpClient::class, new CurlHttpClient($configWithoutSsl));
     }
 
     public function test_requestMulti_returns_empty_result_for_empty_input(): void
     {
         $client = new CurlHttpClient($this->config);
 
-        // Test with empty array - the implementation has a bug with array_chunk
-        // We'll test that it at least doesn't crash
-        try {
-            $result = $client->requestMulti(
-                HttpMethod::POST,
-                'https://api.telegram.org/bottest/test',
-                []
-            );
-            $this->fail('Expected ValueError for empty array');
-        } catch (\ValueError $e) {
-            // Expected - array_chunk doesn't accept length 0
-            $this->assertStringContainsString('array_chunk', $e->getMessage());
-        }
+        $result = $client->requestMulti(
+            HttpMethod::POST,
+            'https://api.telegram.org/bottest/test',
+            []
+        );
+
+        $this->assertSame([], $result);
     }
 
     public function test_requestMulti_with_single_request(): void
