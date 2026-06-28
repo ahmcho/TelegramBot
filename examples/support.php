@@ -163,7 +163,7 @@ $bot->commands()
         ]);
     }, 'Check ticket status')
 
-    ->setCommand('help', function ($bot, $chatId, $args) {
+    ->register('help', function ($bot, $chatId, $args) {
         $text = "❓ Help\n\n";
         $text .= "Available Commands:\n";
         $text .= "/start - Start the bot\n";

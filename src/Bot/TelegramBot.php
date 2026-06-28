@@ -261,7 +261,7 @@ final class TelegramBot
         array $messagesArray,
         array $bulkOptions = [],
         array $retryOptions = []
-    ): array {
+    ): mixed {
         return $this->executeWithRetry(
             fn() => $this->messages->sendBulk($messagesArray, $bulkOptions),
             $retryOptions
