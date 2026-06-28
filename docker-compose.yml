@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    working_dir: /app
+    command: php -f public/webhook.php
+
+  bot-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: telegram-bot-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    working_dir: /app
+    command: php examples/echo.php
+    profiles:
+      - dev
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telegram-bot-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    working_dir: /app
+    command: php examples/bulk-test.php
+    profiles:
+      - worker
