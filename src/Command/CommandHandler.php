@@ -31,8 +31,10 @@ class CommandHandler
 
     /**
      * Default callback for unknown commands
+     *
+     * @var callable|null
      */
-    private ?callable $defaultCallback = null;
+    private $defaultCallback = null;
 
     /**
      * Command callback type
