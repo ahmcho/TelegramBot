@@ -30,8 +30,9 @@
         "php": ">=8.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.5",
+        "phpdocumentor/phpdocumentor": "^3.4",
         "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.5",
         "squizlabs/php_codesniffer": "^3.7"
     },
     "autoload": {
@@ -53,7 +54,8 @@
         "quality": [
             "@analyze",
             "@lint"
-        ]
+        ],
+        "docs": "phpdoc --config=phpdoc.xml"
     },
     "scripts-descriptions": {
         "test": "Run all tests with PHPUnit",
@@ -61,7 +63,8 @@
         "analyze": "Run static analysis with PHPStan",
         "lint": "Check code style with PHPCS",
         "lint-fix": "Fix code style issues automatically",
-        "quality": "Run all quality checks (analyze + lint)"
+        "quality": "Run all quality checks (analyze + lint)",
+        "docs": "Generate API documentation"
     },
     "config": {
         "optimize-autoloader": true,
