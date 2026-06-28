@@ -48,16 +48,11 @@ $bot->commands()
         $welcome .= "/mytickets - View your tickets\n";
         $welcome .= "/status <id> - Check ticket status\n";
 
-        $keyboard = ReplyKeyboardBuilder::create()
-            ->addButton('🎫 New Ticket')
-            ->addButton('📋 My Tickets')
-            ->nextRow()
-            ->addButton('❓ Help')
-            ->setOptions(
-                ReplyKeyboardOptions::create()
-                    ->resize()
-                    ->oneTime()
+        $keyboard = ReplyKeyboardBuilder::create(
+                new ReplyKeyboardOptions(resizeKeyboard: true, oneTimeKeyboard: true)
             )
+            ->addRow(Button::text('🎫 New Ticket'), Button::text('📋 My Tickets'))
+            ->addRow(Button::text('❓ Help'))
             ->build();
 
         $bot->messages()->send([
@@ -218,10 +213,7 @@ while (true) {
                             'text' => "✅ Selected: {$categories[$category]}\n\nPlease enter a brief subject for your ticket:"
                         ]);
 
-                        $bot->api()->call(
-                            \AhmCho\Telegram\Enums\ApiMethod::ANSWER_CALLBACK_QUERY,
-                            ['callback_query_id' => $query['id']]
-                        );
+                        $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                     }
                 }
             }

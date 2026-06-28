@@ -221,16 +221,11 @@ $bot->commands()
         $text .= "/help - {$translator->get('cmd_help')}";
 
         // Create localized menu
-        $keyboard = ReplyKeyboardBuilder::create()
-            ->addButton($translator->get('menu_features'))
-            ->addButton($translator->get('menu_settings'))
-            ->nextRow()
-            ->addButton($translator->get('menu_about'))
-            ->setOptions(
-                ReplyKeyboardOptions::create()
-                    ->resize()
-                    ->oneTime()
+        $keyboard = ReplyKeyboardBuilder::create(
+                new ReplyKeyboardOptions(resizeKeyboard: true, oneTimeKeyboard: true)
             )
+            ->addRow(Button::text($translator->get('menu_features')), Button::text($translator->get('menu_settings')))
+            ->addRow(Button::text($translator->get('menu_about')))
             ->build();
 
         $bot->messages()->send([
@@ -306,10 +301,7 @@ while (true) {
                         'text' => $translator->get('language_changed')
                     ]);
 
-                    $bot->api()->call(
-                        \AhmCho\Telegram\Enums\ApiMethod::ANSWER_CALLBACK_QUERY,
-                        ['callback_query_id' => $query['id']]
-                    );
+                    $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                 }
             }
 
