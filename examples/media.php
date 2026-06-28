@@ -15,7 +15,6 @@ declare(strict_types=1);
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;
-use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 
@@ -90,10 +89,7 @@ function handleStart(TelegramBot $bot, int $chatId): void
 function handlePhoto(TelegramBot $bot, int $chatId, bool $fromUrl = true): void
 {
     try {
-        $bot->api()->call(
-            ApiMethod::SEND_CHAT_ACTION,
-            ['chat_id' => $chatId, 'action' => 'upload_photo']
-        );
+        $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => 'upload_photo']);
 
         if ($fromUrl) {
             // Send photo from URL - caption auto-escaped!
@@ -130,10 +126,7 @@ function handlePhoto(TelegramBot $bot, int $chatId, bool $fromUrl = true): void
 function handleVideo(TelegramBot $bot, int $chatId): void
 {
     try {
-        $bot->api()->call(
-            ApiMethod::SEND_CHAT_ACTION,
-            ['chat_id' => $chatId, 'action' => 'upload_video']
-        );
+        $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => 'upload_video']);
 
         // Send video from URL - caption auto-escaped!
         $result = $bot->media()->sendVideo([
@@ -166,10 +159,7 @@ function handleVideo(TelegramBot $bot, int $chatId): void
 function handleAudio(TelegramBot $bot, int $chatId): void
 {
     try {
-        $bot->api()->call(
-            ApiMethod::SEND_CHAT_ACTION,
-            ['chat_id' => $chatId, 'action' => 'upload_audio']
-        );
+        $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => 'upload_audio']);
 
         // Send audio from URL - caption auto-escaped!
         $result = $bot->media()->sendAudio([
@@ -199,10 +189,7 @@ function handleAudio(TelegramBot $bot, int $chatId): void
 function handleVoice(TelegramBot $bot, int $chatId): void
 {
     try {
-        $bot->api()->call(
-            ApiMethod::SEND_CHAT_ACTION,
-            ['chat_id' => $chatId, 'action' => 'upload_voice']
-        );
+        $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => 'upload_voice']);
 
         // Send voice from URL (using an audio file as voice)
         $result = $bot->media()->sendVoice([
@@ -230,10 +217,7 @@ function handleVoice(TelegramBot $bot, int $chatId): void
 function handleDocument(TelegramBot $bot, int $chatId): void
 {
     try {
-        $bot->api()->call(
-            ApiMethod::SEND_CHAT_ACTION,
-            ['chat_id' => $chatId, 'action' => 'upload_document']
-        );
+        $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => 'upload_document']);
 
         // Create a simple text file
         $content = "Sample Document\n\nThis is a sample document file created by the Media Bot.\n";
@@ -270,10 +254,7 @@ function handleDocument(TelegramBot $bot, int $chatId): void
 function handleAnimation(TelegramBot $bot, int $chatId): void
 {
     try {
-        $bot->api()->call(
-            ApiMethod::SEND_CHAT_ACTION,
-            ['chat_id' => $chatId, 'action' => 'upload_video']
-        );
+        $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => 'upload_video']);
 
         // Send GIF from URL - caption auto-escaped!
         $result = $bot->media()->sendAnimation([
@@ -442,13 +423,7 @@ function handleChatAction(TelegramBot $bot, int $chatId): void
 
     foreach ($actions as $action => $message) {
         try {
-            $bot->api()->call(
-                ApiMethod::SEND_CHAT_ACTION,
-                [
-                    'chat_id' => $chatId,
-                    'action' => $action
-                ]
-            );
+            $bot->chats()->sendAction(['chat_id' => $chatId, 'action' => $action]);
 
             $bot->messages()->send([
                 'chat_id' => $chatId,
@@ -542,10 +517,7 @@ try {
                     $data = $callbackQuery['data'];
                     $queryId = $callbackQuery['id'];
 
-                    $bot->api()->call(
-                        ApiMethod::ANSWER_CALLBACK_QUERY,
-                        ['callback_query_id' => $queryId]
-                    );
+                    $bot->chats()->answerCallbackQuery(['callback_query_id' => $queryId]);
 
                     $parts = explode(':', $data);
                     $mediaType = $parts[1] ?? '';
