@@ -193,36 +193,21 @@ while (true) {
                         'text' => "✅ Added {$product['name']} to cart!"
                     ]);
 
-                    $bot->api()->call(
-                        \AhmCho\Telegram\Enums\ApiMethod::ANSWER_CALLBACK_QUERY,
-                        [
-                            'callback_query_id' => $query['id']
-                        ]
-                    );
+                    $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                 }
 
                 // Checkout
                 elseif ($data === 'checkout') {
                     $bot->commands()->execute('checkout', $chatId);
 
-                    $bot->api()->call(
-                        \AhmCho\Telegram\Enums\ApiMethod::ANSWER_CALLBACK_QUERY,
-                        [
-                            'callback_query_id' => $query['id']
-                        ]
-                    );
+                    $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                 }
 
                 // Clear cart
                 elseif ($data === 'clear_cart') {
                     $bot->commands()->execute('clear', $chatId);
 
-                    $bot->api()->call(
-                        \AhmCho\Telegram\Enums\ApiMethod::ANSWER_CALLBACK_QUERY,
-                        [
-                            'callback_query_id' => $query['id']
-                        ]
-                    );
+                    $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                 }
             }
 

@@ -17,7 +17,6 @@ declare(strict_types=1);
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;
-use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 
@@ -561,10 +560,7 @@ try {
                     $data = $callbackQuery['data'];
                     $queryId = $callbackQuery['id'];
 
-                    $bot->api()->call(
-                        ApiMethod::ANSWER_CALLBACK_QUERY,
-                        ['callback_query_id' => $queryId]
-                    );
+                    $bot->chats()->answerCallbackQuery(['callback_query_id' => $queryId]);
 
                     $parts = explode(':', $data);
                     $action = $parts[1] ?? '';

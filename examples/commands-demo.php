@@ -73,7 +73,7 @@ try {
         }, 'Echo back your message')
 
         ->register('info', function ($bot, $chatId, $args) {
-            $me = $bot->api()->call(\AhmCho\Telegram\Enums\ApiMethod::GET_ME);
+            $me = $bot->getMe();
             $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "ℹ️ *Bot Information*\n\n"

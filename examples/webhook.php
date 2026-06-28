@@ -16,7 +16,6 @@ declare(strict_types=1);
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;
-use AhmCho\Telegram\Enums\ApiMethod;
 use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 
@@ -89,13 +88,10 @@ class CommandRouter
         $queryId = $callbackQuery['id'];
 
         // Answer the callback query
-        $this->bot->api()->call(
-            ApiMethod::ANSWER_CALLBACK_QUERY,
-            [
-                'callback_query_id' => $queryId,
-                'text' => 'Processing...'
-            ]
-        );
+        $this->bot->chats()->answerCallbackQuery([
+            'callback_query_id' => $queryId,
+            'text' => 'Processing...',
+        ]);
 
         // Parse callback data as command
         $parts = explode(':', $data);
