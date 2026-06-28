@@ -40,7 +40,7 @@ class RetryHelperTraitTest extends TestCase
         $callback = function () {
             $this->callCount++;
             if ($this->callCount < 3) {
-                throw new ApiException('API Error', 500, null);
+                throw new ApiException('API Error', 500, 500);
             }
             return ['result' => 'success'];
         };
@@ -58,7 +58,7 @@ class RetryHelperTraitTest extends TestCase
 
         $callback = function () use (&$lastException) {
             $this->callCount++;
-            $lastException = new ApiException('API Error', 500, null);
+            $lastException = new ApiException('API Error', 500, 500);
             throw $lastException;
         };
 
@@ -77,7 +77,7 @@ class RetryHelperTraitTest extends TestCase
 
         $callback = function () {
             $this->callCount++;
-            throw new ApiException('Client Error', 400, null);
+            throw new ApiException('Client Error', 400, 400);
         };
 
         try {
@@ -99,7 +99,7 @@ class RetryHelperTraitTest extends TestCase
                 $response = [
                     'parameters' => ['retry_after' => 1]
                 ];
-                throw new ApiException('Too Many Requests', 429, $response);
+                throw new ApiException('Too Many Requests', 429, 429, $response);
             }
             return ['result' => 'success'];
         };
@@ -116,7 +116,7 @@ class RetryHelperTraitTest extends TestCase
 
         $callback = function () {
             $this->callCount++;
-            throw new ApiException('API Error', 500, null);
+            throw new ApiException('API Error', 500, 500);
         };
 
         try {
@@ -135,7 +135,7 @@ class RetryHelperTraitTest extends TestCase
         $callback = function () use (&$delays) {
             $this->callCount++;
             if ($this->callCount < 3) {
-                throw new ApiException('API Error', 500, null);
+                throw new ApiException('API Error', 500, 500);
             }
             return ['result' => 'success'];
         };
@@ -161,7 +161,7 @@ class RetryHelperTraitTest extends TestCase
         $callback = function () {
             $this->callCount++;
             if ($this->callCount < 2) {
-                throw new ApiException('API Error', 500, null);
+                throw new ApiException('API Error', 500, 500);
             }
             return ['result' => 'success'];
         };
@@ -188,7 +188,7 @@ class RetryHelperTraitTest extends TestCase
         $callback = function () use (&$delays) {
             $this->callCount++;
             if ($this->callCount < 4) {
-                throw new ApiException('API Error', 500, null);
+                throw new ApiException('API Error', 500, 500);
             }
             return ['result' => 'success'];
         };
@@ -218,7 +218,7 @@ class RetryHelperTraitTest extends TestCase
         $callback = function () use (&$lastDelay) {
             $this->callCount++;
             if ($this->callCount < 4) {
-                throw new ApiException('API Error', 500, null);
+                throw new ApiException('API Error', 500, 500);
             }
             return ['result' => 'success'];
         };

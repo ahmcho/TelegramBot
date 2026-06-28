@@ -19,7 +19,6 @@ class CommandHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        // Create a mock bot for testing
         $this->mockBot = $this->createMockBot();
         $this->commandHandler = new CommandHandler($this->mockBot);
     }
@@ -264,21 +263,11 @@ class CommandHandlerTest extends TestCase
     }
 
     /**
-     * Create a mock TelegramBot for testing
+     * Create a PHPUnit mock of TelegramBot for testing
      */
     private function createMockBot(): TelegramBot
     {
-        // We'll create a partial mock or use a test double
-        // For now, we'll create a real instance but won't use actual API calls
-        return new class {
-            public function messages() {
-                return new class {
-                    public function send() {
-                        return ['message_id' => 123];
-                    }
-                };
-            }
-        };
+        return $this->createMock(TelegramBot::class);
     }
 
     /**

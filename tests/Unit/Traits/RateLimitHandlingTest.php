@@ -91,9 +91,9 @@ final class RateLimitHandlingTest extends TestCase
     }
 
     /**
-     * Test different rate limit error formats
+     * Data provider for different rate limit error formats
      */
-    public function testDifferentRateLimitFormats(): array
+    public static function rateLimitFormatsProvider(): array
     {
         return [
             'with_retry_after' => [
@@ -123,7 +123,7 @@ final class RateLimitHandlingTest extends TestCase
     }
 
     /**
-     * @dataProvider testDifferentRateLimitFormats
+     * @dataProvider rateLimitFormatsProvider
      */
     public function testRateLimitFormatHandling(array $data): void
     {
@@ -240,8 +240,8 @@ final class RateLimitHandlingTest extends TestCase
         $delayHours = $delayMinutes / 60;
 
         $this->assertSame(86400, $delaySeconds);
-        $this->assertSame(1440.0, $delayMinutes);
-        $this->assertSame(24.0, $delayHours);
+        $this->assertEqualsWithDelta(1440.0, $delayMinutes, 0.0001);
+        $this->assertEqualsWithDelta(24.0, $delayHours, 0.0001);
     }
 
     /**
