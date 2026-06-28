@@ -1,79 +1,92 @@
-.PHONY: help test lint lint-fix analyze quality clean install setup
+.PHONY: help install update test test-coverage analyze lint lint-fix quality clean docker-build docker-up docker-down docs
 
+# Default target
 help:
 	@echo "Available commands:"
-	@echo "  make test          - Run PHPUnit tests"
-	@echo "  make test-coverage  - Run tests with coverage report"
-	@echo "  make lint          - Check code style with PHPCS"
-	@echo "  make lint-fix      - Fix code style issues automatically"
-	@echo "  make analyze       - Run static analysis with PHPStan"
-	@echo "  make quality        - Run all quality checks (analyze + lint)"
-	@echo "  make clean         - Clean generated files"
-	@echo "  make install       - Install composer dependencies"
-	@echo "  make setup         - Setup development environment"
-	@echo "  make examples      - Check syntax of all example files"
+	@echo "  make install          - Install dependencies"
+	@echo "  make update           - Update dependencies"
+	@echo "  make test             - Run tests"
+	@echo "  make test-coverage    - Run tests with coverage"
+	@echo "  make analyze          - Run static analysis"
+	@echo "  make lint             - Check code style"
+	@echo "  make lint-fix         - Fix code style issues"
+	@echo "  make quality          - Run all quality checks"
+	@echo "  make clean            - Clean cache and generated files"
+	@echo "  make docker-build     - Build Docker containers"
+	@echo "  make docker-up        - Start Docker containers"
+	@echo "  make docker-down      - Stop Docker containers"
+	@echo "  make docs             - Generate documentation"
 
+# Composer commands
+install:
+	@echo "Installing dependencies..."
+	@php composer.phar install
+
+update:
+	@echo "Updating dependencies..."
+	@php composer.phar update
+
+# Testing
 test:
 	@echo "Running tests..."
-	phpunit
+	@php composer.phar test
 
 test-coverage:
 	@echo "Running tests with coverage..."
-	phpunit --coverage-html coverage
+	@php composer.phar test-coverage
+
+# Code quality
+analyze:
+	@echo "Running static analysis..."
+	@php composer.phar analyze
 
 lint:
 	@echo "Checking code style..."
-	phpcs --standard=PSR12 src/
+	@php composer.phar lint
 
 lint-fix:
 	@echo "Fixing code style..."
-	phpcbf --standard=PSR12 src/
+	@php composer.phar lint-fix
 
-analyze:
-	@echo "Running static analysis..."
-	phpstan analyse
+quality:
+	@echo "Running all quality checks..."
+	@php composer.phar quality
 
-quality: analyze lint
-
+# Cleanup
 clean:
-	@echo "Cleaning generated files..."
+	@echo "Cleaning cache and generated files..."
+	@rm -rf vendor/ composer.lock
 	@rm -rf coverage/
-	@rm -rf vendor/
-	@composer clean-cache
+	@rm -rf .phpunit.result.cache
+	@rm -rf logs/*.log
 
-install:
-	@echo "Installing dependencies..."
-	composer install --prefer-dist
+# Docker
+docker-build:
+	@echo "Building Docker containers..."
+	@docker-compose build
 
-setup:
-	@echo "Setting up development environment..."
-	@cp .env.example .env 2>/dev/null || echo ".env.example not found, skipping..."
-	@composer install --prefer-dist
-	@echo "Development environment ready!"
+docker-up:
+	@echo "Starting Docker containers..."
+	@docker-compose up -d
 
-examples:
-	@echo "Checking syntax of example files..."
-	@for file in examples/*.php; do \
-		php -l "$file" || exit 1; \
-	done
-	@echo "All example files are syntactically correct."
-
-validate: examples
-	@echo "All validation checks passed!"
-
-# Development helpers
-run-example:
-	@if [ -z "$(FILE)" ]; then \
-		echo "Usage: make run-example FILE=example.php"; \
-		exit 1; \
-	fi
-	@php examples/$(FILE)
-
-# Git helpers
-pre-commit: lint
-	@echo "Pre-commit checks passed!"
+docker-down:
+	@echo "Stopping Docker containers..."
+	@docker-compose down
 
 # Documentation
-docs-check:
-	@echo "Checking documentation links..."
-	@echo "TODO: Add documentation link checker"
+docs:
+	@echo "Generating documentation..."
+	@php composer.phar require --dev phpdocumentor/phpdocumentor
+	@vendor/bin/phpdoc -d src/ -t docs/api/
+
+# CI (for local testing)
+ci: install quality test
+
+# Development helpers
+dev-install: install
+	@echo "Setting up development environment..."
+	@cp .env.example .env || true
+	@mkdir -p logs
+
+# Quick check before commit
+pre-commit: lint test
