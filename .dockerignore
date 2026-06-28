@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+CHANGELOG.md
+LICENSE
+README.md
+
+# CI/CD
+.github
+
+# Tests
+tests
+phpunit.xml
+.phpunit.result.cache
+
+# Code quality
+phpcs.xml
+phpstan.neon
+
+# Docker
+Dockerfile*
+docker-compose.yml
+.dockerignore
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Cache
+vendor/
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
