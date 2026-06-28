@@ -68,6 +68,22 @@ enum ApiMethod: string
     case DELETE_CHAT_PHOTO = 'deleteChatPhoto';
     case SET_CHAT_PERMISSIONS = 'setChatPermissions';
 
+        // Forum topics
+    case CREATE_FORUM_TOPIC = 'createForumTopic';
+    case EDIT_FORUM_TOPIC = 'editForumTopic';
+    case CLOSE_FORUM_TOPIC = 'closeForumTopic';
+    case REOPEN_FORUM_TOPIC = 'reopenForumTopic';
+    case DELETE_FORUM_TOPIC = 'deleteForumTopic';
+    case UNPIN_ALL_FORUM_TOPIC_MESSAGES = 'unpinAllForumTopicMessages';
+    case EDIT_GENERAL_FORUM_TOPIC = 'editGeneralForumTopic';
+    case CLOSE_GENERAL_FORUM_TOPIC = 'closeGeneralForumTopic';
+    case REOPEN_GENERAL_FORUM_TOPIC = 'reopenGeneralForumTopic';
+    case HIDE_GENERAL_FORUM_TOPIC = 'hideGeneralForumTopic';
+    case UNHIDE_GENERAL_FORUM_TOPIC = 'unhideGeneralForumTopic';
+    case GET_FORUM_TOPIC = 'getForumTopic';
+    case GET_FORUM_TOPICS = 'getForumTopics';
+    case GET_FORUM_TOPIC_ICON_STICKERS = 'getForumTopicIconStickers';
+
         // Webhook management
     case SET_WEBHOOK = 'setWebhook';
     case GET_WEBHOOK_INFO = 'getWebhookInfo';
