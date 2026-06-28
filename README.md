@@ -372,10 +372,11 @@ $results = $bot->messages()->sendBulk([
     ['chat_id' => 789, 'text' => 'Hello User 3']
 ]);
 
-echo "Sent {$results['successful']}/{$results['total']}\n";
+echo "Sent {$results->successful}/{$results->total}\n";
+echo "Success rate: " . $results->getSuccessRate() . "%\n";
 
 // Check individual results
-foreach ($results['results'] as $result) {
+foreach ($results->results as $result) {
     if ($result['success']) {
         echo "✓ Sent to {$result['chat_id']}\n";
     } else {
@@ -395,25 +396,25 @@ $results = $bot->messages()->broadcast(
 );
 ```
 
-**Return Structure:**
+**`BulkResult` object** (readonly class, not an array):
 ```php
-[
-    'success' => bool,           // All messages succeeded
-    'total' => int,              // Total attempted
-    'successful' => int,         // Count of successful sends
-    'failed' => int,             // Count of failed sends
-    'results' => [               // Individual results
-        [
-            'success' => bool,
-            'chat_id' => int|string,
-            'message_id' => int|null,
-            'data' => array|null,
-            'error' => string|null
-        ],
-        ...
-    ]
-]
+$result->total;             // int — total attempted
+$result->successful;        // int — count of successful sends
+$result->failed;            // int — count of failed sends
+$result->results;           // array of per-request results (see below)
+$result->errors;            // array of error strings
+$result->isSuccess();       // bool — true if failed === 0
+$result->hasFailures();     // bool
+$result->getSuccessRate();  // float — percentage (0–100)
+$result->getFailedResults();
+$result->getSuccessfulResults();
+count($result);             // Countable
+
+// Each entry in $result->results:
+// ['success' => bool, 'chat_id' => int|string, 'message_id' => int|null, 'error' => string|null]
 ```
+
+Throws `BulkSendException` (which carries the `BulkResult`) if any request fails and `throwExceptions` is enabled (default). Use `BotConfig(throwExceptions: false)` to suppress.
 
 ---
 
@@ -446,20 +447,15 @@ $bot->messages()->send([
 ### Reply Keyboard
 
 ```php
+use AhmCho\Telegram\Keyboard\Button;
 use AhmCho\Telegram\Keyboard\ReplyKeyboardBuilder;
 use AhmCho\Telegram\Keyboard\ReplyKeyboardOptions;
 
-$keyboard = ReplyKeyboardBuilder::create()
-    ->addButton('Option 1')
-    ->addButton('Option 2')
-    ->nextRow()
-    ->addButton('Option 3')
-    ->setOptions(
-        ReplyKeyboardOptions::create()
-            ->resize()
-            ->oneTime()
-            ->inputPlaceholder('Select an option')
-    )
+$keyboard = ReplyKeyboardBuilder::create(
+    new ReplyKeyboardOptions(resizeKeyboard: true, oneTimeKeyboard: true)
+)
+    ->addRow(Button::text('Option 1'), Button::text('Option 2'))
+    ->addRow(Button::text('Option 3'))
     ->build();
 ```
 
@@ -735,13 +731,17 @@ The framework disables SSL verification by default. If you encounter errors:
 ### Service Accessors
 
 ```php
-$bot->messages()   // MessageService - Text messages
-$bot->media()       // MediaService - Photos, videos, documents
-$bot->chats()       // ChatService - Group administration
-$bot->webhooks()    // WebhookService - Webhook management
-$bot->commands()    // CommandHandler - Command routing
-$bot->api()         // ApiService - Direct API calls
-$bot->formatter()   // TextFormatterInterface - Text formatting
+$bot->messages()      // MessageService - Text messages + auto-escaping
+$bot->media()         // MediaService - Photos, videos, documents, audio
+$bot->chats()         // ChatService - Group administration
+$bot->webhooks()      // WebhookService - Webhook management
+$bot->polls()         // PollsService - Polls and quizzes
+$bot->inline()        // InlineService - Inline query responses
+$bot->topics()        // TopicsService - Forum topic management
+$bot->inviteLinks()   // InviteLinksService - Chat invite links
+$bot->commands()      // CommandHandler - Command routing + middleware
+$bot->api()           // ApiService - Direct API calls
+$bot->formatter()     // TextFormatterInterface - Text formatting
 ```
 
 ### Common Methods

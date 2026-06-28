@@ -222,7 +222,7 @@ $result->getSuccessfulResults();
 count($result);            // Countable
 ```
 
-Throws `BulkSendException` (carries the `BulkResult`) if all requests fail and `throwExceptions` is enabled.
+Throws `BulkSendException` (carries the `BulkResult`) if any requests fail and `throwExceptions` is enabled.
 
 **Configuration options** (passed as second arg to `sendBulk`/`broadcast`):
 
