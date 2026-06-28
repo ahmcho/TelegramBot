@@ -33,7 +33,7 @@ final class ApiExceptionTest extends TestCase
     public function test_exception_with_previous_exception(): void
     {
         $previous = new \Exception('Previous error');
-        $exception = new ApiException('API error', 500, $previous);
+        $exception = new ApiException('API error', 500, 500, [], $previous);
 
         $this->assertSame(500, $exception->getErrorCode());
         $this->assertSame($previous, $exception->getPrevious());

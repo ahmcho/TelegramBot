@@ -26,8 +26,9 @@ final class BotFactoryTest extends TestCase
         // Save original env value
         $this->envToken = getenv('TELEGRAM_BOT_TOKEN');
 
-        // Set test token
+        // Set test token in both putenv and $_ENV for EnvLoader
         putenv('TELEGRAM_BOT_TOKEN=test_token_123456');
+        $_ENV['TELEGRAM_BOT_TOKEN'] = 'test_token_123456';
     }
 
     protected function tearDown(): void
@@ -37,8 +38,10 @@ final class BotFactoryTest extends TestCase
         // Restore original env value
         if ($this->envToken === false) {
             putenv('TELEGRAM_BOT_TOKEN');
+            unset($_ENV['TELEGRAM_BOT_TOKEN']);
         } else {
             putenv('TELEGRAM_BOT_TOKEN=' . $this->envToken);
+            $_ENV['TELEGRAM_BOT_TOKEN'] = $this->envToken;
         }
     }
 
