@@ -244,11 +244,18 @@ final class MarkdownV2FormatterTest extends TestCase
         $this->assertSame("```\npre formatted\n```", $result);
     }
 
-    public function test_pre_does_not_escape_content(): void
+    public function test_pre_does_not_escape_regular_special_chars(): void
     {
         $result = $this->formatter->pre('var _test = "value";');
 
         $this->assertSame("```\nvar _test = \"value\";\n```", $result);
+    }
+
+    public function test_pre_escapes_backticks_and_backslashes(): void
+    {
+        $result = $this->formatter->pre('echo `hello`; path\\file');
+
+        $this->assertSame("```\necho \\`hello\\`; path\\\\file\n```", $result);
     }
 
     public function test_link_creates_markdown_link(): void
@@ -299,8 +306,14 @@ final class MarkdownV2FormatterTest extends TestCase
     {
         $result = $this->formatter->hashtag('###test');
 
-        // ltrim only removes one character, so multiple hashes are preserved
         $this->assertSame('#test', $result);
+    }
+
+    public function test_hashtag_escapes_special_chars_in_tag(): void
+    {
+        $result = $this->formatter->hashtag('my_tag');
+
+        $this->assertSame('#my\_tag', $result);
     }
 
     public function test_chaining_multiple_formatting_methods(): void

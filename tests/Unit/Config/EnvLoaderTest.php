@@ -293,4 +293,15 @@ final class EnvLoaderTest extends TestCase
         $this->assertSame('https://example.com/webhook.php', $this->loader->require('WEBHOOK_URL'));
         $this->assertSame('/var/www/bot/logs/bot.log', $this->loader->require('LOG_FILE_PATH'));
     }
+
+    public function test_load_handles_spaces_around_equals(): void
+    {
+        $this->createEnvFile("TEST_VAR_1 = spaced_value\nTEST_VAR_2=normal");
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('spaced_value', $this->loader->get('TEST_VAR_1'));
+        $this->assertSame('normal', $this->loader->get('TEST_VAR_2'));
+    }
 }
