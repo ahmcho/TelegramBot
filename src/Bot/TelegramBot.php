@@ -8,6 +8,7 @@ use AhmCho\Telegram\Api\ApiService;
 use AhmCho\Telegram\Api\Methods\ChatService;
 use AhmCho\Telegram\Api\Methods\MessageService;
 use AhmCho\Telegram\Api\Methods\MediaService;
+use AhmCho\Telegram\Api\Methods\PollsService;
 use AhmCho\Telegram\Api\Methods\WebhookService;
 use AhmCho\Telegram\Bulk\BulkOperationManager;
 use AhmCho\Telegram\Client\HttpClientFactory;
@@ -36,6 +37,7 @@ final class TelegramBot
     private readonly MediaService $media;
     private readonly ChatService $chats;
     private readonly WebhookService $webhooks;
+    private readonly PollsService $polls;
     private readonly MarkdownV2Formatter $formatter;
     private readonly ?LoggerInterface $logger;
     private readonly CommandHandler $commands;
@@ -78,6 +80,7 @@ final class TelegramBot
         $this->media = new MediaService($this->apiService);
         $this->chats = new ChatService($this->apiService);
         $this->webhooks = new WebhookService($this->apiService);
+        $this->polls = new PollsService($this->apiService);
         $this->formatter = new MarkdownV2Formatter();
         $this->commands = new CommandHandler($this);
     }
@@ -102,6 +105,11 @@ final class TelegramBot
     public function webhooks(): WebhookService
     {
         return $this->webhooks;
+    }
+
+    public function polls(): PollsService
+    {
+        return $this->polls;
     }
 
     public function formatter(): TextFormatterInterface
