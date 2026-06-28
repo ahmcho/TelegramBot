@@ -238,7 +238,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
             switch ($action) {
                 case 'help':
-                    $bot->editMessageText([
+                    $bot->messages()->editTextRaw([
                         'chat_id' => $chatId,
                         'message_id' => $callbackQuery['message']['message_id'],
                         'text' => "ℹ️ *Help*\n\n"
@@ -261,7 +261,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
                             $stats .= "Name: {$chat['title']}\n";
                         }
 
-                        $bot->editMessageText([
+                        $bot->messages()->editTextRaw([
                             'chat_id' => $chatId,
                             'message_id' => $callbackQuery['message']['message_id'],
                             'text' => $stats,

@@ -123,7 +123,9 @@ final class FileLogHandler
      */
     public function clear(): void
     {
-        file_put_contents($this->logFilePath, '');
+        if (file_put_contents($this->logFilePath, '') === false) {
+            throw new \RuntimeException("Failed to clear log file: {$this->logFilePath}");
+        }
     }
 
     /**
@@ -150,42 +152,11 @@ final class FileLogHandler
             return [];
         }
 
-        $handle = fopen($this->logFilePath, 'r');
-        if ($handle === false) {
+        $content = file($this->logFilePath, FILE_IGNORE_NEW_LINES);
+        if ($content === false) {
             return [];
         }
 
-        $buffer = [];
-        $lineCount = 0;
-
-        try {
-            // Seek to end of file
-            fseek($handle, 0, SEEK_END);
-
-            // Read backwards line by line
-            $pos = ftell($handle) - 1;
-
-            while ($pos >= 0 && $lineCount < $lines) {
-                $char = fgetc($handle);
-                if ($char === "\n") {
-                    $lineCount++;
-                    $pos--;
-                    fseek($handle, $pos);
-                    continue;
-                }
-
-                fseek($handle, $pos);
-                $pos--;
-            }
-
-            // Read remaining lines
-            while (!feof($handle)) {
-                $buffer[] = fgets($handle);
-            }
-        } finally {
-            fclose($handle);
-        }
-
-        return array_filter(array_reverse($buffer));
+        return array_values(array_slice($content, -$lines));
     }
 }
