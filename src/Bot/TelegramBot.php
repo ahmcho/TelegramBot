@@ -6,6 +6,7 @@ namespace AhmCho\Telegram\Bot;
 
 use AhmCho\Telegram\Api\ApiService;
 use AhmCho\Telegram\Api\Methods\ChatService;
+use AhmCho\Telegram\Api\Methods\InlineService;
 use AhmCho\Telegram\Api\Methods\MessageService;
 use AhmCho\Telegram\Api\Methods\MediaService;
 use AhmCho\Telegram\Api\Methods\PollsService;
@@ -38,6 +39,7 @@ final class TelegramBot
     private readonly ChatService $chats;
     private readonly WebhookService $webhooks;
     private readonly PollsService $polls;
+    private readonly InlineService $inline;
     private readonly MarkdownV2Formatter $formatter;
     private readonly ?LoggerInterface $logger;
     private readonly CommandHandler $commands;
@@ -81,6 +83,7 @@ final class TelegramBot
         $this->chats = new ChatService($this->apiService);
         $this->webhooks = new WebhookService($this->apiService);
         $this->polls = new PollsService($this->apiService);
+        $this->inline = new InlineService($this->apiService);
         $this->formatter = new MarkdownV2Formatter();
         $this->commands = new CommandHandler($this);
     }
@@ -110,6 +113,11 @@ final class TelegramBot
     public function polls(): PollsService
     {
         return $this->polls;
+    }
+
+    public function inline(): InlineService
+    {
+        return $this->inline;
     }
 
     public function formatter(): TextFormatterInterface
