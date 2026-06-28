@@ -35,6 +35,8 @@ enum ApiMethod: string
     case SEND_VENUE = 'sendVenue';
     case SEND_CONTACT = 'sendContact';
     case SEND_POLL = 'sendPoll';
+    case STOP_POLL = 'stopPoll';
+    case CLOSE_POLL = 'closePoll';
     case SEND_DICE = 'sendDice';
 
         // Chat actions
