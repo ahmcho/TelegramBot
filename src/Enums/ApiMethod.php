@@ -70,6 +70,16 @@ enum ApiMethod: string
     case GET_CHAT_MENU_BUTTON = 'getChatMenuButton';
     case SET_CHAT_MENU_BUTTON = 'setChatMenuButton';
 
+        // Invite links
+    case CREATE_CHAT_INVITE_LINK = 'createChatInviteLink';
+    case EDIT_CHAT_INVITE_LINK = 'editChatInviteLink';
+    case REVOKE_CHAT_INVITE_LINK = 'revokeChatInviteLink';
+    case EXPORT_CHAT_INVITE_LINK = 'exportChatInviteLink';
+    case GET_CHAT_INVITE_LINK = 'getChatInviteLink';
+    case GET_CHAT_INVITE_LINK_COUNTS = 'getChatInviteLinkCounts';
+    case GET_CHAT_INVITE_LINK_MEMBERS = 'getChatInviteLinkMembers';
+    case EDIT_CHAT_SUBSCRIPTION_INVITE_LINK = 'editChatSubscriptionInviteLink';
+
         // Forum topics
     case CREATE_FORUM_TOPIC = 'createForumTopic';
     case EDIT_FORUM_TOPIC = 'editForumTopic';
