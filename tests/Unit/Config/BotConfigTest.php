@@ -23,7 +23,7 @@ final class BotConfigTest extends TestCase
         $this->assertSame('https://api.telegram.org/', $config->getApiUrl());
         $this->assertSame(30, $config->getTimeout());
         $this->assertTrue($config->shouldThrowExceptions());
-        $this->assertFalse($config->shouldVerifySsl());
+        $this->assertTrue($config->shouldVerifySsl());
     }
 
     public function test_can_create_config_with_all_parameters(): void
@@ -139,21 +139,56 @@ final class BotConfigTest extends TestCase
         $this->assertSame($originalTimeout, $config->getTimeout());
     }
 
+    public function test_withVerifySsl_returns_new_instance_with_updated_setting(): void
+    {
+        $config = new BotConfig('token');
+        $this->assertTrue($config->shouldVerifySsl(), 'Default should be true');
+
+        $disabled = $config->withVerifySsl(false);
+        $this->assertNotSame($config, $disabled);
+        $this->assertTrue($config->shouldVerifySsl(), 'Original config should be unchanged');
+        $this->assertFalse($disabled->shouldVerifySsl());
+
+        $reenabled = $disabled->withVerifySsl(true);
+        $this->assertTrue($reenabled->shouldVerifySsl());
+    }
+
+    public function test_withVerifySsl_preserves_other_properties(): void
+    {
+        $config = new BotConfig(
+            token: 'test_token',
+            apiUrl: 'https://custom.api/',
+            timeout: 60,
+            throwExceptions: false,
+            verifySsl: true
+        );
+        $newConfig = $config->withVerifySsl(false);
+
+        $this->assertSame('test_token', $newConfig->getToken());
+        $this->assertSame('https://custom.api/', $newConfig->getApiUrl());
+        $this->assertSame(60, $newConfig->getTimeout());
+        $this->assertFalse($newConfig->shouldThrowExceptions());
+        $this->assertFalse($newConfig->shouldVerifySsl());
+    }
+
     public function test_multiple_with_methods_chain_correctly(): void
     {
         $config = new BotConfig('token');
 
         $newConfig = $config
             ->withTimeout(90)
-            ->withThrowExceptions(false);
+            ->withThrowExceptions(false)
+            ->withVerifySsl(false);
 
         $this->assertSame('token', $newConfig->getToken());
         $this->assertSame(90, $newConfig->getTimeout());
         $this->assertFalse($newConfig->shouldThrowExceptions());
+        $this->assertFalse($newConfig->shouldVerifySsl());
 
         // Original config remains unchanged
         $this->assertSame(30, $config->getTimeout());
         $this->assertTrue($config->shouldThrowExceptions());
+        $this->assertTrue($config->shouldVerifySsl());
     }
 
     /**
@@ -201,8 +236,8 @@ final class BotConfigTest extends TestCase
         // Default should throw exceptions (fail-fast behavior)
         $this->assertTrue($config->shouldThrowExceptions());
 
-        // Default should not verify SSL (for easier development)
-        $this->assertFalse($config->shouldVerifySsl());
+        // Default should verify SSL (secure by default; disable in dev via verifySsl: false)
+        $this->assertTrue($config->shouldVerifySsl());
     }
 
     public function test_timeout_accepts_various_values(): void
@@ -233,5 +268,59 @@ final class BotConfigTest extends TestCase
         foreach ($properties as $property) {
             $this->assertTrue($property->isReadOnly(), "Property {$property->getName()} should be readonly");
         }
+    }
+
+    public function test_log_max_bytes_defaults_to_zero(): void
+    {
+        $config = new BotConfig('token');
+        $this->assertSame(0, $config->getLogMaxBytes());
+    }
+
+    public function test_log_max_bytes_can_be_set(): void
+    {
+        $config = new BotConfig('token', logMaxBytes: 5_000_000);
+        $this->assertSame(5_000_000, $config->getLogMaxBytes());
+    }
+
+    public function test_withLogMaxBytes_returns_new_instance(): void
+    {
+        $config = new BotConfig('token');
+        $updated = $config->withLogMaxBytes(10_000_000);
+
+        $this->assertNotSame($config, $updated);
+        $this->assertSame(0, $config->getLogMaxBytes());
+        $this->assertSame(10_000_000, $updated->getLogMaxBytes());
+    }
+
+    public function test_withLogMaxBytes_preserves_other_properties(): void
+    {
+        $config = new BotConfig('token', timeout: 60, logLevel: 'DEBUG');
+        $updated = $config->withLogMaxBytes(1024);
+
+        $this->assertSame('token', $updated->getToken());
+        $this->assertSame(60, $updated->getTimeout());
+        $this->assertSame('DEBUG', $updated->getLogLevel());
+        $this->assertSame(1024, $updated->getLogMaxBytes());
+    }
+
+    public function test_get_log_config_includes_log_max_bytes(): void
+    {
+        $config = new BotConfig('token', logMaxBytes: 2048);
+        $logConfig = $config->getLogConfig();
+
+        $this->assertArrayHasKey('log_max_bytes', $logConfig);
+        $this->assertSame(2048, $logConfig['log_max_bytes']);
+    }
+
+    public function test_with_methods_preserve_log_max_bytes(): void
+    {
+        $config = (new BotConfig('token'))->withLogMaxBytes(999);
+
+        $this->assertSame(999, $config->withTimeout(60)->getLogMaxBytes());
+        $this->assertSame(999, $config->withLogLevel('DEBUG')->getLogMaxBytes());
+        $this->assertSame(999, $config->withLogFilePath('other.log')->getLogMaxBytes());
+        $this->assertSame(999, $config->withLoggingEnabled(false)->getLogMaxBytes());
+        $this->assertSame(999, $config->withThrowExceptions(false)->getLogMaxBytes());
+        $this->assertSame(999, $config->withVerifySsl(false)->getLogMaxBytes());
     }
 }

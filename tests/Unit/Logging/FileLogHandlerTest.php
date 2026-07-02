@@ -26,6 +26,11 @@ final class FileLogHandlerTest extends TestCase
         if (file_exists($this->testLogFile)) {
             unlink($this->testLogFile);
         }
+        // Clean up any rotated file left by rotation tests
+        $rotated = $this->testLogFile . '.1';
+        if (file_exists($rotated)) {
+            unlink($rotated);
+        }
     }
 
     public function test_constructor_creates_log_file(): void
@@ -209,5 +214,84 @@ final class FileLogHandlerTest extends TestCase
         $this->assertFileExists($testFile);
         unlink($testFile);
         rmdir(dirname($testFile));
+    }
+
+    public function test_get_max_bytes_returns_zero_by_default(): void
+    {
+        $this->assertSame(0, $this->handler->getMaxBytes());
+    }
+
+    public function test_get_max_bytes_returns_configured_value(): void
+    {
+        $handler = new FileLogHandler($this->testLogFile, false, 1024);
+        $this->assertSame(1024, $handler->getMaxBytes());
+    }
+
+    public function test_rotation_renames_file_when_limit_exceeded(): void
+    {
+        $rotatedPath = $this->testLogFile . '.1';
+
+        // Set a tiny limit so any write triggers rotation
+        $handler = new FileLogHandler($this->testLogFile, false, 10);
+
+        // Write enough to exceed 10 bytes
+        $handler->write("first entry that is long\n");
+
+        // Second write should trigger rotation
+        $handler->write("second entry\n");
+
+        $this->assertFileExists($rotatedPath);
+
+        // New log file contains only the second entry
+        $content = file_get_contents($this->testLogFile);
+        $this->assertStringContainsString('second entry', $content);
+        $this->assertStringNotContainsString('first entry', $content);
+
+        // Rotated file contains the first entry
+        $rotatedContent = file_get_contents($rotatedPath);
+        $this->assertStringContainsString('first entry', $rotatedContent);
+
+        unlink($rotatedPath);
+    }
+
+    public function test_rotation_overwrites_previous_rotated_file(): void
+    {
+        $rotatedPath = $this->testLogFile . '.1';
+
+        // maxBytes = 10; each entry is 6 bytes ("run N\n")
+        // Two entries accumulate to 12 bytes before rotation fires on the third write
+        $handler = new FileLogHandler($this->testLogFile, false, 10);
+
+        $handler->write("run 1\n");  // 0 → 6B, no rotate
+        $handler->write("run 2\n");  // 6B < 10, no rotate; file now 12B
+        $handler->write("run 3\n");  // 12B >= 10: rotate → .1 gets "run1+run2", write run3 (6B)
+        $handler->write("run 4\n");  // 6B < 10, no rotate; file now 12B
+        $handler->write("run 5\n");  // 12B >= 10: rotate → .1 overwritten with "run3+run4", write run5
+
+        $this->assertFileExists($rotatedPath);
+        $rotatedContent = file_get_contents($rotatedPath);
+
+        // Second rotation replaced the first .1 contents
+        $this->assertStringContainsString('run 3', $rotatedContent);
+        $this->assertStringContainsString('run 4', $rotatedContent);
+        $this->assertStringNotContainsString('run 1', $rotatedContent);
+        $this->assertStringNotContainsString('run 2', $rotatedContent);
+
+        $currentContent = file_get_contents($this->testLogFile);
+        $this->assertStringContainsString('run 5', $currentContent);
+        $this->assertStringNotContainsString('run 3', $currentContent);
+        $this->assertStringNotContainsString('run 4', $currentContent);
+    }
+
+    public function test_no_rotation_when_max_bytes_is_zero(): void
+    {
+        $rotatedPath = $this->testLogFile . '.1';
+
+        // Default: maxBytes = 0, no rotation regardless of size
+        $bigEntry = str_repeat('X', 1000) . "\n";
+        $this->handler->write($bigEntry);
+        $this->handler->write($bigEntry);
+
+        $this->assertFileDoesNotExist($rotatedPath);
     }
 }
