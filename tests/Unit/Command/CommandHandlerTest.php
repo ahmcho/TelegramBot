@@ -284,6 +284,55 @@ class CommandHandlerTest extends TestCase
         $this->assertCount(3, $this->commandHandler->getRegisteredCommands());
     }
 
+    public function testCommandExceptionSendsGenericMessageNotExceptionDetail(): void
+    {
+        $mockClient = new MockHttpClient();
+        $config = new BotConfig('test_token');
+        $bot = new TelegramBot(null, $config, $mockClient);
+        $handler = new CommandHandler($bot);
+
+        $sensitiveDetail = 'DB password: hunter2 at host db.internal:5432';
+        $handler->register('fail', function () use ($sensitiveDetail): void {
+            throw new \RuntimeException($sensitiveDetail);
+        });
+
+        // Provide a response for the sendMessage call the handler will make
+        $mockClient->setResponse(['message_id' => 1, 'chat' => ['id' => 123]]);
+
+        $result = $handler->handleUpdate($this->createUpdate(123, '/fail'));
+
+        $this->assertTrue($result, 'handleUpdate must still return true after an exception');
+
+        $lastRequest = $mockClient->getLastRequest();
+        $this->assertNotNull($lastRequest);
+        $sentText = $lastRequest['params']['text'] ?? '';
+
+        $this->assertSame('An error occurred. Please try again.', $sentText);
+        $this->assertStringNotContainsString($sensitiveDetail, $sentText);
+        $this->assertStringNotContainsString('RuntimeException', $sentText);
+    }
+
+    public function testCommandExceptionDoesNotContainExceptionClassInUserMessage(): void
+    {
+        $mockClient = new MockHttpClient();
+        $config = new BotConfig('test_token');
+        $bot = new TelegramBot(null, $config, $mockClient);
+        $handler = new CommandHandler($bot);
+
+        $handler->register('boom', function (): void {
+            throw new \InvalidArgumentException('internal: token=abc secret=xyz');
+        });
+
+        $mockClient->setResponse(['message_id' => 2, 'chat' => ['id' => 456]]);
+
+        $handler->handleUpdate($this->createUpdate(456, '/boom'));
+
+        $sentText = $mockClient->getLastRequest()['params']['text'] ?? '';
+        $this->assertStringNotContainsString('InvalidArgumentException', $sentText);
+        $this->assertStringNotContainsString('internal:', $sentText);
+        $this->assertStringNotContainsString('token=', $sentText);
+    }
+
     private function createMockBot(): TelegramBot
     {
         $mockClient = new MockHttpClient();
