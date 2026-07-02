@@ -26,12 +26,12 @@ final class Logger implements LoggerInterface
 
     public function emergency($message, array $context = []): void
     {
-        $this->log(LogLevel::CRITICAL, $message, $context);
+        $this->log(LogLevel::EMERGENCY, $message, $context);
     }
 
     public function alert($message, array $context = []): void
     {
-        $this->log(LogLevel::CRITICAL, $message, $context);
+        $this->log(LogLevel::ALERT, $message, $context);
     }
 
     public function critical($message, array $context = []): void
@@ -51,7 +51,7 @@ final class Logger implements LoggerInterface
 
     public function notice($message, array $context = []): void
     {
-        $this->log(LogLevel::INFO, $message, $context);
+        $this->log(LogLevel::NOTICE, $message, $context);
     }
 
     public function info($message, array $context = []): void

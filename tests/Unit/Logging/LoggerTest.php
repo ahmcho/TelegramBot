@@ -32,22 +32,24 @@ final class LoggerTest extends TestCase
         }
     }
 
-    public function test_emergency_logs_with_critical_level(): void
+    public function test_emergency_logs_with_emergency_level(): void
     {
         $this->logger->emergency('Emergency message');
 
         $content = file_get_contents($this->testLogFile);
-        $this->assertStringContainsString('CRITICAL', $content);
+        $this->assertStringContainsString('EMERGENCY', $content);
         $this->assertStringContainsString('Emergency message', $content);
+        $this->assertStringNotContainsString('CRITICAL', $content);
     }
 
-    public function test_alert_logs_with_critical_level(): void
+    public function test_alert_logs_with_alert_level(): void
     {
         $this->logger->alert('Alert message');
 
         $content = file_get_contents($this->testLogFile);
-        $this->assertStringContainsString('CRITICAL', $content);
+        $this->assertStringContainsString('ALERT', $content);
         $this->assertStringContainsString('Alert message', $content);
+        $this->assertStringNotContainsString('CRITICAL', $content);
     }
 
     public function test_critical_logs_with_critical_level(): void
@@ -77,13 +79,14 @@ final class LoggerTest extends TestCase
         $this->assertStringContainsString('Warning message', $content);
     }
 
-    public function test_notice_logs_with_info_level(): void
+    public function test_notice_logs_with_notice_level(): void
     {
         $this->logger->notice('Notice message');
 
         $content = file_get_contents($this->testLogFile);
-        $this->assertStringContainsString('INFO', $content);
+        $this->assertStringContainsString('NOTICE', $content);
         $this->assertStringContainsString('Notice message', $content);
+        $this->assertStringNotContainsString('[INFO]', $content);
     }
 
     public function test_info_logs_with_info_level(): void
@@ -304,5 +307,60 @@ final class LoggerTest extends TestCase
         foreach ($levels as $level) {
             $this->assertStringContainsString("{$level} message", $content, "Level {$level} not found in log");
         }
+    }
+
+    public function test_log_level_weights_follow_rfc5424_severity_order(): void
+    {
+        $this->assertLessThan(LogLevel::INFO->weight(), LogLevel::DEBUG->weight());
+        $this->assertLessThan(LogLevel::NOTICE->weight(), LogLevel::INFO->weight());
+        $this->assertLessThan(LogLevel::WARNING->weight(), LogLevel::NOTICE->weight());
+        $this->assertLessThan(LogLevel::ERROR->weight(), LogLevel::WARNING->weight());
+        $this->assertLessThan(LogLevel::CRITICAL->weight(), LogLevel::ERROR->weight());
+        $this->assertLessThan(LogLevel::ALERT->weight(), LogLevel::CRITICAL->weight());
+        $this->assertLessThan(LogLevel::EMERGENCY->weight(), LogLevel::ALERT->weight());
+    }
+
+    public function test_from_psr3_maps_notice_to_notice(): void
+    {
+        $this->assertSame(LogLevel::NOTICE, LogLevel::fromPsr3('notice'));
+        $this->assertSame(LogLevel::NOTICE, LogLevel::fromPsr3('NOTICE'));
+    }
+
+    public function test_from_psr3_maps_alert_to_alert(): void
+    {
+        $this->assertSame(LogLevel::ALERT, LogLevel::fromPsr3('alert'));
+        $this->assertSame(LogLevel::ALERT, LogLevel::fromPsr3('ALERT'));
+    }
+
+    public function test_from_psr3_maps_emergency_to_emergency(): void
+    {
+        $this->assertSame(LogLevel::EMERGENCY, LogLevel::fromPsr3('emergency'));
+        $this->assertSame(LogLevel::EMERGENCY, LogLevel::fromPsr3('EMERGENCY'));
+    }
+
+    public function test_notice_is_filtered_when_min_level_is_warning(): void
+    {
+        $logger = new Logger($this->handler, LogLevel::WARNING);
+
+        $logger->notice('Should not appear');
+        $logger->warning('Should appear');
+
+        $content = file_get_contents($this->testLogFile);
+        $this->assertStringNotContainsString('Should not appear', $content);
+        $this->assertStringContainsString('Should appear', $content);
+    }
+
+    public function test_emergency_and_alert_survive_critical_min_level_filter(): void
+    {
+        $logger = new Logger($this->handler, LogLevel::CRITICAL);
+
+        $logger->critical('Critical message');
+        $logger->alert('Alert message');
+        $logger->emergency('Emergency message');
+
+        $content = file_get_contents($this->testLogFile);
+        $this->assertStringContainsString('Critical message', $content);
+        $this->assertStringContainsString('Alert message', $content);
+        $this->assertStringContainsString('Emergency message', $content);
     }
 }
