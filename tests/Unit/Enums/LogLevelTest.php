@@ -16,26 +16,35 @@ final class LogLevelTest extends TestCase
     {
         $this->assertSame('DEBUG', LogLevel::DEBUG->value);
         $this->assertSame('INFO', LogLevel::INFO->value);
+        $this->assertSame('NOTICE', LogLevel::NOTICE->value);
         $this->assertSame('WARNING', LogLevel::WARNING->value);
         $this->assertSame('ERROR', LogLevel::ERROR->value);
         $this->assertSame('CRITICAL', LogLevel::CRITICAL->value);
+        $this->assertSame('ALERT', LogLevel::ALERT->value);
+        $this->assertSame('EMERGENCY', LogLevel::EMERGENCY->value);
     }
 
     public function test_weight_returns_correct_values(): void
     {
         $this->assertSame(100, LogLevel::DEBUG->weight());
         $this->assertSame(200, LogLevel::INFO->weight());
+        $this->assertSame(250, LogLevel::NOTICE->weight());
         $this->assertSame(300, LogLevel::WARNING->weight());
         $this->assertSame(400, LogLevel::ERROR->weight());
         $this->assertSame(500, LogLevel::CRITICAL->weight());
+        $this->assertSame(550, LogLevel::ALERT->weight());
+        $this->assertSame(600, LogLevel::EMERGENCY->weight());
     }
 
     public function test_weight_increases_with_severity(): void
     {
         $this->assertLessThan(LogLevel::INFO->weight(), LogLevel::DEBUG->weight());
-        $this->assertLessThan(LogLevel::WARNING->weight(), LogLevel::INFO->weight());
+        $this->assertLessThan(LogLevel::NOTICE->weight(), LogLevel::INFO->weight());
+        $this->assertLessThan(LogLevel::WARNING->weight(), LogLevel::NOTICE->weight());
         $this->assertLessThan(LogLevel::ERROR->weight(), LogLevel::WARNING->weight());
         $this->assertLessThan(LogLevel::CRITICAL->weight(), LogLevel::ERROR->weight());
+        $this->assertLessThan(LogLevel::ALERT->weight(), LogLevel::CRITICAL->weight());
+        $this->assertLessThan(LogLevel::EMERGENCY->weight(), LogLevel::ALERT->weight());
     }
 
     public function test_should_log_with_same_level(): void
@@ -75,7 +84,7 @@ final class LogLevelTest extends TestCase
     public function test_from_psr3_notice(): void
     {
         $level = LogLevel::fromPsr3('notice');
-        $this->assertSame(LogLevel::INFO, $level); // NOTICE maps to INFO
+        $this->assertSame(LogLevel::NOTICE, $level);
     }
 
     public function test_from_psr3_warning(): void
@@ -105,13 +114,13 @@ final class LogLevelTest extends TestCase
     public function test_from_psr3_alert(): void
     {
         $level = LogLevel::fromPsr3('alert');
-        $this->assertSame(LogLevel::CRITICAL, $level); // ALERT maps to CRITICAL
+        $this->assertSame(LogLevel::ALERT, $level);
     }
 
     public function test_from_psr3_emergency(): void
     {
         $level = LogLevel::fromPsr3('emergency');
-        $this->assertSame(LogLevel::CRITICAL, $level); // EMERGENCY maps to CRITICAL
+        $this->assertSame(LogLevel::EMERGENCY, $level);
     }
 
     public function test_from_psr3_case_insensitive(): void
@@ -135,11 +144,14 @@ final class LogLevelTest extends TestCase
     public function test_cases_method_returns_all_enum_cases(): void
     {
         $cases = LogLevel::cases();
-        $this->assertCount(5, $cases);
+        $this->assertCount(8, $cases);
         $this->assertContains(LogLevel::DEBUG, $cases);
         $this->assertContains(LogLevel::INFO, $cases);
+        $this->assertContains(LogLevel::NOTICE, $cases);
         $this->assertContains(LogLevel::WARNING, $cases);
         $this->assertContains(LogLevel::ERROR, $cases);
         $this->assertContains(LogLevel::CRITICAL, $cases);
+        $this->assertContains(LogLevel::ALERT, $cases);
+        $this->assertContains(LogLevel::EMERGENCY, $cases);
     }
 }
