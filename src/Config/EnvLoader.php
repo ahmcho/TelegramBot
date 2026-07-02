@@ -80,7 +80,8 @@ class EnvLoader
 
     private function parseValue(string $value): string
     {
-        // Remove surrounding quotes if present
+        // Quoted values: strip surrounding quotes and preserve content verbatim
+        // (# inside quotes is not a comment)
         if (strlen($value) > 1) {
             $first = $value[0];
             $last = $value[strlen($value) - 1];
@@ -90,7 +91,12 @@ class EnvLoader
             }
         }
 
-        return $value;
+        // Unquoted values: strip inline comment (whitespace followed by #)
+        // e.g. "abc123 # my token" → "abc123"
+        // "#FF0000" is left alone because there is no whitespace before the #
+        $value = (string) preg_replace('/\s+#.*$/', '', $value);
+
+        return rtrim($value);
     }
 
     private function findEnvFile(): string|null

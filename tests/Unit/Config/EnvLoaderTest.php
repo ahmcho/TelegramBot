@@ -32,11 +32,15 @@ final class EnvLoaderTest extends TestCase
         parent::tearDown();
 
         // Clean up test environment variables
-        putenv('TEST_VAR_1');
-        putenv('TEST_VAR_2');
-        putenv('TEST_VAR_QUOTED');
-        putenv('TEST_VAR_EMPTY');
-        unset($_ENV['TEST_VAR_1'], $_ENV['TEST_VAR_2'], $_ENV['TEST_VAR_QUOTED'], $_ENV['TEST_VAR_EMPTY']);
+        $vars = [
+            'TEST_VAR_1', 'TEST_VAR_2', 'TEST_VAR_QUOTED', 'TEST_VAR_EMPTY',
+            'IC_TOKEN', 'IC_COLOR', 'IC_QUOTED_D', 'IC_QUOTED_S',
+            'IC_TRAILING', 'IC_MULTI', 'IC_TAB', 'IC_NO_SPACE',
+        ];
+        foreach ($vars as $var) {
+            putenv($var);
+            unset($_ENV[$var]);
+        }
 
         // Remove test file if it exists
         if (file_exists($this->testEnvFile)) {
@@ -303,5 +307,89 @@ final class EnvLoaderTest extends TestCase
 
         $this->assertSame('spaced_value', $this->loader->get('TEST_VAR_1'));
         $this->assertSame('normal', $this->loader->get('TEST_VAR_2'));
+    }
+
+    // --- Inline comment stripping tests ---
+
+    public function test_inline_comment_stripped_from_unquoted_value(): void
+    {
+        $this->createEnvFile("IC_TOKEN=abc123 # my token\nIC_COLOR=#FF0000");
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('abc123', $this->loader->get('IC_TOKEN'));
+    }
+
+    public function test_hash_without_preceding_whitespace_not_treated_as_comment(): void
+    {
+        // #FF0000 must be preserved; # is only a comment delimiter when preceded by whitespace
+        $this->createEnvFile('IC_COLOR=#FF0000');
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('#FF0000', $this->loader->get('IC_COLOR'));
+    }
+
+    public function test_inline_comment_not_stripped_from_double_quoted_value(): void
+    {
+        $this->createEnvFile('IC_QUOTED_D="abc123 # not a comment"');
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('abc123 # not a comment', $this->loader->get('IC_QUOTED_D'));
+    }
+
+    public function test_inline_comment_not_stripped_from_single_quoted_value(): void
+    {
+        $this->createEnvFile("IC_QUOTED_S='abc123 # not a comment'");
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('abc123 # not a comment', $this->loader->get('IC_QUOTED_S'));
+    }
+
+    public function test_trailing_whitespace_stripped_from_unquoted_value(): void
+    {
+        $this->createEnvFile("IC_TRAILING=value   ");
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('value', $this->loader->get('IC_TRAILING'));
+    }
+
+    public function test_multiple_hashes_in_inline_comment_stripped(): void
+    {
+        $this->createEnvFile("IC_MULTI=abc # first # second");
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('abc', $this->loader->get('IC_MULTI'));
+    }
+
+    public function test_tab_before_hash_treated_as_comment_delimiter(): void
+    {
+        $this->createEnvFile("IC_TAB=value\t# comment");
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('value', $this->loader->get('IC_TAB'));
+    }
+
+    public function test_hash_immediately_after_equals_not_treated_as_comment(): void
+    {
+        // TOKEN=#secret has no whitespace before the #, it's a literal value
+        $this->createEnvFile('IC_NO_SPACE=#secret');
+
+        $this->loader = new EnvLoader();
+        $this->loader->load($this->testEnvFile);
+
+        $this->assertSame('#secret', $this->loader->get('IC_NO_SPACE'));
     }
 }
