@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Tests\Unit\Traits;
 
 use AhmCho\Telegram\Exception\ApiException;
+use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Tests\Helpers\MockHttpClient;
 use PHPUnit\Framework\TestCase;
 
@@ -236,6 +237,73 @@ class RetryHelperTraitTest extends TestCase
         $this->assertLessThanOrEqual(200, $lastDelay);
     }
 
+    public function testExecuteWithRetryRetriesOnHttpClientException(): void
+    {
+        $this->callCount = 0;
+
+        $callback = function () {
+            $this->callCount++;
+            if ($this->callCount < 3) {
+                throw new HttpClientException('Connection timed out');
+            }
+            return ['result' => 'success'];
+        };
+
+        $result = $this->executeWithRetry($callback, ['initial_delay_ms' => 10]);
+
+        $this->assertSame(['result' => 'success'], $result);
+        $this->assertSame(3, $this->callCount); // 1 initial + 2 retries
+    }
+
+    public function testExecuteWithRetryThrowsHttpClientExceptionAfterAllRetries(): void
+    {
+        $this->callCount = 0;
+
+        $callback = function () {
+            $this->callCount++;
+            throw new HttpClientException('DNS resolution failed');
+        };
+
+        $this->expectException(HttpClientException::class);
+        $this->expectExceptionMessage('DNS resolution failed');
+
+        try {
+            $this->executeWithRetry($callback, ['max_retries' => 2, 'initial_delay_ms' => 10]);
+        } finally {
+            $this->assertSame(3, $this->callCount); // 1 initial + 2 retries
+        }
+    }
+
+    public function testExecuteWithRetryCallsOnRetryCallbackOnHttpClientException(): void
+    {
+        $this->callCount = 0;
+        $retryCallbackCalled = false;
+        $receivedExceptionType = null;
+
+        $callback = function () {
+            $this->callCount++;
+            if ($this->callCount < 2) {
+                throw new HttpClientException('Network unreachable');
+            }
+            return ['result' => 'success'];
+        };
+
+        $this->executeWithRetry($callback, [
+            'max_retries' => 3,
+            'initial_delay_ms' => 10,
+            'on_retry' => function ($attempt, $error, $delayMs) use (&$retryCallbackCalled, &$receivedExceptionType) {
+                $retryCallbackCalled = true;
+                $receivedExceptionType = get_class($error);
+                $this->assertIsInt($attempt);
+                $this->assertIsInt($delayMs);
+            }
+        ]);
+
+        $this->assertTrue($retryCallbackCalled);
+        $this->assertSame(HttpClientException::class, $receivedExceptionType);
+        $this->assertSame(2, $this->callCount);
+    }
+
     /**
      * Execute callback with retry logic
      */
@@ -260,7 +328,6 @@ class RetryHelperTraitTest extends TestCase
                     throw $e;
                 }
 
-                // Don't retry if this was the last attempt
                 if ($attempt === $maxRetries) {
                     break;
                 }
@@ -273,15 +340,24 @@ class RetryHelperTraitTest extends TestCase
                     }
                 }
 
-                // Call retry callback
                 if ($onRetry !== null && is_callable($onRetry)) {
                     $onRetry($attempt + 1, $e, $delayMs);
                 }
 
-                // Wait before retry
                 usleep($delayMs * 1000);
+                $delayMs = min($delayMs * 2, $maxDelayMs);
+            } catch (HttpClientException $e) {
+                $lastException = $e;
 
-                // Exponential backoff
+                if ($attempt === $maxRetries) {
+                    break;
+                }
+
+                if ($onRetry !== null && is_callable($onRetry)) {
+                    $onRetry($attempt + 1, $e, $delayMs);
+                }
+
+                usleep($delayMs * 1000);
                 $delayMs = min($delayMs * 2, $maxDelayMs);
             }
         }
