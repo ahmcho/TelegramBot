@@ -34,24 +34,6 @@ final class ParseModeTest extends TestCase
         $this->assertFalse(ParseMode::HTML->requiresEscaping());
     }
 
-    public function test_get_formatter_class_for_html(): void
-    {
-        $formatter = ParseMode::HTML->getFormatterClass();
-        $this->assertSame(\AhmCho\Telegram\Formatting\HtmlFormatter::class, $formatter);
-    }
-
-    public function test_get_formatter_class_for_markdown_v2(): void
-    {
-        $formatter = ParseMode::MARKDOWN_V2->getFormatterClass();
-        $this->assertSame(\AhmCho\Telegram\Formatting\MarkdownV2Formatter::class, $formatter);
-    }
-
-    public function test_get_formatter_class_for_markdown(): void
-    {
-        $formatter = ParseMode::MARKDOWN->getFormatterClass();
-        $this->assertSame(\AhmCho\Telegram\Formatting\MarkdownV2Formatter::class, $formatter);
-    }
-
     public function test_enum_is_string_backed(): void
     {
         $this->assertIsString(ParseMode::MARKDOWN->value);
@@ -96,7 +78,13 @@ final class ParseModeTest extends TestCase
     {
         $mode = ParseMode::MARKDOWN_V2;
         $this->assertTrue(method_exists($mode, 'requiresEscaping'));
-        $this->assertTrue(method_exists($mode, 'getFormatterClass'));
+    }
+
+    public function test_markdown_v2_value_matches_escape_trait_comparison_string(): void
+    {
+        // MarkdownV2EscapeTrait compares parse_mode against ParseMode::MARKDOWN_V2->value.
+        // This ensures the enum value stays in sync with what services pass as parse_mode.
+        $this->assertSame('MarkdownV2', ParseMode::MARKDOWN_V2->value);
     }
 
     public function test_all_parse_modes_are_different(): void

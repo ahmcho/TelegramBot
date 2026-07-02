@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AhmCho\Telegram\Traits;
 
+use AhmCho\Telegram\Enums\ParseMode;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
 
 /**
@@ -22,7 +23,7 @@ trait MarkdownV2EscapeTrait
      */
     private function escapeForMarkdownV2(array $params): array
     {
-        if (!isset($params['parse_mode']) || $params['parse_mode'] !== 'MarkdownV2') {
+        if (!isset($params['parse_mode']) || $params['parse_mode'] !== ParseMode::MARKDOWN_V2->value) {
             return $params;
         }
 
