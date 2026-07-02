@@ -306,7 +306,6 @@ final class TelegramBot
             } catch (\AhmCho\Telegram\Exception\ApiException $e) {
                 $lastException = $e;
 
-                // Log the error
                 if ($this->logger !== null) {
                     $this->logger->warning('API request failed', [
                         'attempt' => $attempt + 1,
@@ -320,12 +319,11 @@ final class TelegramBot
                     throw $e;
                 }
 
-                // Don't retry if this was the last attempt
                 if ($attempt === $maxRetries) {
                     break;
                 }
 
-                // Handle rate limit (429)
+                // Handle rate limit: honour Telegram's retry_after
                 if ($e->getHttpCode() === 429) {
                     $response = $e->getResponseBody();
                     $retryAfter = 1;
@@ -343,15 +341,32 @@ final class TelegramBot
                     }
                 }
 
-                // Call retry callback
                 if ($onRetry !== null && is_callable($onRetry)) {
                     $onRetry($attempt + 1, $e, $delayMs);
                 }
 
-                // Wait before retry
                 usleep($delayMs * 1000);
+                $delayMs = min($delayMs * 2, $maxDelayMs);
+            } catch (\AhmCho\Telegram\Exception\HttpClientException $e) {
+                $lastException = $e;
 
-                // Exponential backoff
+                // Network/transport failures are always transient — retry all of them
+                if ($this->logger !== null) {
+                    $this->logger->warning('HTTP transport failure, will retry', [
+                        'attempt' => $attempt + 1,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                if ($attempt === $maxRetries) {
+                    break;
+                }
+
+                if ($onRetry !== null && is_callable($onRetry)) {
+                    $onRetry($attempt + 1, $e, $delayMs);
+                }
+
+                usleep($delayMs * 1000);
                 $delayMs = min($delayMs * 2, $maxDelayMs);
             }
         }
