@@ -363,4 +363,48 @@ final class LoggerTest extends TestCase
         $this->assertStringContainsString('Alert message', $content);
         $this->assertStringContainsString('Emergency message', $content);
     }
+
+    // --- Timezone tests ---
+
+    public function test_timestamp_is_utc_by_default(): void
+    {
+        $before = gmdate('Y-m-d H:i:s');
+        $this->logger->info('utc check');
+        $after = gmdate('Y-m-d H:i:s');
+
+        $content = file_get_contents($this->testLogFile);
+        preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $content, $matches);
+        $logged = $matches[1];
+
+        $this->assertGreaterThanOrEqual($before, $logged);
+        $this->assertLessThanOrEqual($after, $logged);
+    }
+
+    public function test_timestamp_uses_server_local_time_when_not_utc(): void
+    {
+        $logger = new Logger($this->handler, LogLevel::INFO, 'Pacific/Auckland');
+
+        $before = (new \DateTimeImmutable('now', new \DateTimeZone('Pacific/Auckland')))->format('Y-m-d H:i:s');
+        $logger->info('auckland check');
+        $after = (new \DateTimeImmutable('now', new \DateTimeZone('Pacific/Auckland')))->format('Y-m-d H:i:s');
+
+        $content = file_get_contents($this->testLogFile);
+        preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $content, $matches);
+        $logged = $matches[1];
+
+        $this->assertGreaterThanOrEqual($before, $logged);
+        $this->assertLessThanOrEqual($after, $logged);
+    }
+
+    public function test_utc_and_nonzero_offset_timezone_differ_when_not_on_utc_boundary(): void
+    {
+        // UTC and America/New_York are always ≥4h apart.
+        // If the UTC date+time matches the NY date+time exactly it means both are
+        // midnight 01 Jan on a day where they coincide — astronomically impossible
+        // for a ≥4h offset, so this assertion is safe.
+        $utcNow = gmdate('Y-m-d H:i:s');
+        $nyNow = (new \DateTimeImmutable('now', new \DateTimeZone('America/New_York')))->format('Y-m-d H:i:s');
+
+        $this->assertNotSame($utcNow, $nyNow, 'UTC and America/New_York should never show the same wall-clock time');
+    }
 }

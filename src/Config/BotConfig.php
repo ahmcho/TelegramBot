@@ -20,7 +20,8 @@ final class BotConfig
         private readonly bool $loggingEnabled = true,
         private readonly string $logFilePath = 'bot.log',
         private readonly string $logLevel = 'INFO',
-        private readonly int $logMaxBytes = 0
+        private readonly int $logMaxBytes = 0,
+        private readonly string $logTimezone = 'UTC'
     ) {
     }
 
@@ -87,9 +88,17 @@ final class BotConfig
     }
 
     /**
+     * Get the IANA timezone name used for log timestamps
+     */
+    public function getLogTimezone(): string
+    {
+        return $this->logTimezone;
+    }
+
+    /**
      * Get all logging configuration as an array
      *
-     * @return array{log_file_path: string, log_level: string, log_max_bytes: int}
+     * @return array{log_file_path: string, log_level: string, log_max_bytes: int, log_timezone: string}
      */
     public function getLogConfig(): array
     {
@@ -97,124 +106,85 @@ final class BotConfig
             'log_file_path' => $this->logFilePath,
             'log_level' => $this->logLevel,
             'log_max_bytes' => $this->logMaxBytes,
+            'log_timezone' => $this->logTimezone,
         ];
     }
 
     public function withVerifySsl(bool $verify): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $this->timeout,
-            $this->throwExceptions,
-            $verify,
-            $this->loggingEnabled,
-            $this->logFilePath,
-            $this->logLevel,
-            $this->logMaxBytes
+            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
+            $verify, $this->loggingEnabled, $this->logFilePath,
+            $this->logLevel, $this->logMaxBytes, $this->logTimezone
         );
     }
 
     public function withTimeout(int $timeout): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $timeout,
-            $this->throwExceptions,
-            $this->verifySsl,
-            $this->loggingEnabled,
-            $this->logFilePath,
-            $this->logLevel,
-            $this->logMaxBytes
+            $this->token, $this->apiUrl, $timeout, $this->throwExceptions,
+            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
+            $this->logLevel, $this->logMaxBytes, $this->logTimezone
         );
     }
 
     public function withThrowExceptions(bool $throw): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $this->timeout,
-            $throw,
-            $this->verifySsl,
-            $this->loggingEnabled,
-            $this->logFilePath,
-            $this->logLevel,
-            $this->logMaxBytes
+            $this->token, $this->apiUrl, $this->timeout, $throw,
+            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
+            $this->logLevel, $this->logMaxBytes, $this->logTimezone
         );
     }
 
-    /**
-     * Create a new config with logging enabled/disabled
-     */
     public function withLoggingEnabled(bool $enabled): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $this->timeout,
-            $this->throwExceptions,
-            $this->verifySsl,
-            $enabled,
-            $this->logFilePath,
-            $this->logLevel,
-            $this->logMaxBytes
+            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
+            $this->verifySsl, $enabled, $this->logFilePath,
+            $this->logLevel, $this->logMaxBytes, $this->logTimezone
         );
     }
 
-    /**
-     * Create a new config with a different log file path
-     */
     public function withLogFilePath(string $path): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $this->timeout,
-            $this->throwExceptions,
-            $this->verifySsl,
-            $this->loggingEnabled,
-            $path,
-            $this->logLevel,
-            $this->logMaxBytes
+            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
+            $this->verifySsl, $this->loggingEnabled, $path,
+            $this->logLevel, $this->logMaxBytes, $this->logTimezone
         );
     }
 
-    /**
-     * Create a new config with a different log level
-     */
     public function withLogLevel(string $level): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $this->timeout,
-            $this->throwExceptions,
-            $this->verifySsl,
-            $this->loggingEnabled,
-            $this->logFilePath,
-            $level,
-            $this->logMaxBytes
+            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
+            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
+            $level, $this->logMaxBytes, $this->logTimezone
         );
     }
 
     /**
-     * Create a new config with a log rotation threshold
-     * Set to 0 to disable rotation (default)
+     * Create a new config with a log rotation threshold (0 = disabled)
      */
     public function withLogMaxBytes(int $maxBytes): self
     {
         return new self(
-            $this->token,
-            $this->apiUrl,
-            $this->timeout,
-            $this->throwExceptions,
-            $this->verifySsl,
-            $this->loggingEnabled,
-            $this->logFilePath,
-            $this->logLevel,
-            $maxBytes
+            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
+            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
+            $this->logLevel, $maxBytes, $this->logTimezone
+        );
+    }
+
+    /**
+     * Create a new config with a different log timestamp timezone
+     */
+    public function withLogTimezone(string $timezone): self
+    {
+        return new self(
+            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
+            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
+            $this->logLevel, $this->logMaxBytes, $timezone
         );
     }
 }

@@ -323,4 +323,59 @@ final class BotConfigTest extends TestCase
         $this->assertSame(999, $config->withThrowExceptions(false)->getLogMaxBytes());
         $this->assertSame(999, $config->withVerifySsl(false)->getLogMaxBytes());
     }
+
+    public function test_log_timezone_defaults_to_utc(): void
+    {
+        $config = new BotConfig('token');
+        $this->assertSame('UTC', $config->getLogTimezone());
+    }
+
+    public function test_log_timezone_can_be_set_in_constructor(): void
+    {
+        $config = new BotConfig('token', logTimezone: 'America/New_York');
+        $this->assertSame('America/New_York', $config->getLogTimezone());
+    }
+
+    public function test_withLogTimezone_returns_new_instance(): void
+    {
+        $config = new BotConfig('token');
+        $updated = $config->withLogTimezone('Europe/Berlin');
+
+        $this->assertNotSame($config, $updated);
+        $this->assertSame('UTC', $config->getLogTimezone());
+        $this->assertSame('Europe/Berlin', $updated->getLogTimezone());
+    }
+
+    public function test_withLogTimezone_preserves_other_properties(): void
+    {
+        $config = new BotConfig('token', timeout: 60, logMaxBytes: 1024);
+        $updated = $config->withLogTimezone('Asia/Tokyo');
+
+        $this->assertSame('token', $updated->getToken());
+        $this->assertSame(60, $updated->getTimeout());
+        $this->assertSame(1024, $updated->getLogMaxBytes());
+        $this->assertSame('Asia/Tokyo', $updated->getLogTimezone());
+    }
+
+    public function test_get_log_config_includes_log_timezone(): void
+    {
+        $config = new BotConfig('token', logTimezone: 'Asia/Tokyo');
+        $logConfig = $config->getLogConfig();
+
+        $this->assertArrayHasKey('log_timezone', $logConfig);
+        $this->assertSame('Asia/Tokyo', $logConfig['log_timezone']);
+    }
+
+    public function test_with_methods_preserve_log_timezone(): void
+    {
+        $config = (new BotConfig('token'))->withLogTimezone('Europe/Paris');
+
+        $this->assertSame('Europe/Paris', $config->withTimeout(60)->getLogTimezone());
+        $this->assertSame('Europe/Paris', $config->withLogLevel('DEBUG')->getLogTimezone());
+        $this->assertSame('Europe/Paris', $config->withLogFilePath('other.log')->getLogTimezone());
+        $this->assertSame('Europe/Paris', $config->withLoggingEnabled(false)->getLogTimezone());
+        $this->assertSame('Europe/Paris', $config->withThrowExceptions(false)->getLogTimezone());
+        $this->assertSame('Europe/Paris', $config->withVerifySsl(false)->getLogTimezone());
+        $this->assertSame('Europe/Paris', $config->withLogMaxBytes(512)->getLogTimezone());
+    }
 }

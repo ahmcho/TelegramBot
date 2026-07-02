@@ -23,16 +23,13 @@ final class LoggerFactory
             return null;
         }
 
-        return self::create([
-            'log_file_path' => $config->getLogFilePath(),
-            'log_level' => $config->getLogLevel(),
-        ]);
+        return self::create($config->getLogConfig());
     }
 
     /**
      * Create a logger from array configuration
      *
-     * @param array{log_file_path?: string, log_level?: string} $config Configuration array
+     * @param array{log_file_path?: string, log_level?: string, log_max_bytes?: int, log_timezone?: string} $config
      * @return LoggerInterface The logger instance
      */
     public static function create(array $config = []): LoggerInterface
@@ -40,11 +37,12 @@ final class LoggerFactory
         $logFilePath = $config['log_file_path'] ?? 'bot.log';
         $logLevel = $config['log_level'] ?? 'INFO';
         $logMaxBytes = (int) ($config['log_max_bytes'] ?? 0);
+        $logTimezone = $config['log_timezone'] ?? 'UTC';
 
         $handler = new FileLogHandler($logFilePath, true, $logMaxBytes);
         $level = LogLevel::fromPsr3($logLevel);
 
-        return new Logger($handler, $level);
+        return new Logger($handler, $level, $logTimezone);
     }
 
     /**

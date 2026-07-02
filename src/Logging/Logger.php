@@ -16,10 +16,12 @@ final class Logger implements LoggerInterface
     /**
      * @param FileLogHandler $handler The file handler for writing logs
      * @param LogLevel $minLevel Minimum log level to record
+     * @param string $timezone IANA timezone name for log timestamps (default: UTC)
      */
     public function __construct(
         private readonly FileLogHandler $handler,
-        LogLevel $minLevel = LogLevel::INFO
+        LogLevel $minLevel = LogLevel::INFO,
+        private readonly string $timezone = 'UTC'
     ) {
         $this->minLevel = $minLevel;
     }
@@ -154,7 +156,7 @@ final class Logger implements LoggerInterface
      */
     private function formatEntry(LogLevel $level, string $message, string $context): string
     {
-        $timestamp = date('Y-m-d H:i:s');
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone($this->timezone)))->format('Y-m-d H:i:s');
         $context = $context !== '' ? "\nContext: {$context}" : '';
 
         return "[{$timestamp}] [{$level->value}] {$message}{$context}" . PHP_EOL;
