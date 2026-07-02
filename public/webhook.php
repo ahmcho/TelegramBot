@@ -97,7 +97,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
                 )
                 ->build();
 
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "👋 Welcome to the bot!\n\n"
                     . "I'm running on webhook mode, which is faster than long polling.\n\n"
@@ -110,7 +110,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
         // Handle /help command
         if (isset($message['text']) && $message['text'] === '/help') {
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "ℹ️ *Help*\n\n"
                     . "Available commands:\n"
@@ -128,7 +128,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
         // Handle /echo command
         if (isset($message['text']) && strpos($message['text'], '/echo ') === 0) {
             $text = substr($message['text'], 6);
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "📢 $text"
             ]);
@@ -157,14 +157,14 @@ function handleUpdate(TelegramBot $bot, array $update): void
                     }
                 }
 
-                $bot->sendMessage([
+                $bot->messages()->send([
                     'chat_id' => $chatId,
                     'text' => $info,
                     'parse_mode' => 'Markdown'
                 ]);
 
             } catch (Exception $e) {
-                $bot->sendMessage([
+                $bot->messages()->send([
                     'chat_id' => $chatId,
                     'text' => "❌ Error getting info: " . $e->getMessage()
                 ]);
@@ -178,7 +178,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
             $text = $message['text'];
 
             // Simple echo for non-command messages
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "You said: *$text*\n\nType /help to see available commands.",
                 'parse_mode' => 'Markdown'
@@ -189,7 +189,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
         // Handle photos
         if (isset($message['photo'])) {
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "📷 Thanks for the photo!"
             ]);
@@ -204,7 +204,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
                 'sticker' => $message['sticker']['file_id']
             ]);
 
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "😃 Nice sticker!"
             ]);
@@ -214,7 +214,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
 
         // Handle voice messages
         if (isset($message['voice'])) {
-            $bot->sendMessage([
+            $bot->messages()->send([
                 'chat_id' => $chatId,
                 'text' => "🎤 Voice message received!"
             ]);
@@ -288,7 +288,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
         // Try to notify user
         if (isset($chatId)) {
             try {
-                $bot->sendMessage([
+                $bot->messages()->send([
                     'chat_id' => $chatId,
                     'text' => "❌ An error occurred. Please try again later."
                 ]);
@@ -312,52 +312,24 @@ try {
         exit;
     }
 
-    // Get POST input
-    $input = file_get_contents('php://input');
-
-    if (empty($input)) {
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Empty request body']);
-        exit;
-    }
-
-    // Parse JSON
-    $update = json_decode($input, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Invalid JSON', 'json_error' => json_last_error_msg()]);
-        exit;
-    }
-
-    // Validate update structure
-    if (!isset($update['update_id'])) {
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Invalid update structure']);
-        exit;
-    }
-
-    // Optional: Validate secret token if configured
-    // $secretToken = getenv('TELEGRAM_WEBHOOK_SECRET');
-    // if ($secretToken) {
-    //     $receivedToken = $_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? '';
-    //     if ($receivedToken !== $secretToken) {
-    //         http_response_code(403);
-    //         exit;
-    //     }
-    // }
-
-    // Log the update (disable in production for performance)
-    // logUpdate($update);
-
-    // Create bot instance
+    // Create bot instance (also loads .env via EnvLoader)
     $bot = new TelegramBot();
 
-    // Handle the update
-    handleUpdate($bot, $update);
+    // Validate secret token if configured (recommended for production)
+    $secretToken = $_ENV['TELEGRAM_WEBHOOK_SECRET'] ?? (getenv('TELEGRAM_WEBHOOK_SECRET') ?: null);
+    if ($secretToken !== null && $secretToken !== '') {
+        $receivedToken = $_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? '';
+        if (!hash_equals($secretToken, $receivedToken)) {
+            http_response_code(403);
+            exit;
+        }
+    } else {
+        error_log('Warning: TELEGRAM_WEBHOOK_SECRET is not set. Webhook endpoint is unauthenticated.');
+    }
+
+    $bot->processWebhook(function (array $update) use ($bot): void {
+        handleUpdate($bot, $update);
+    });
 
     // Send success response
     http_response_code(200);
