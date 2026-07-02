@@ -7,6 +7,7 @@ namespace AhmCho\Telegram\Tests\Unit\Client;
 use PHPUnit\Framework\TestCase;
 use AhmCho\Telegram\Client\StreamHttpClient;
 use AhmCho\Telegram\Config\BotConfig;
+use AhmCho\Telegram\Exception\ApiException;
 use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
 
@@ -142,34 +143,77 @@ final class StreamHttpClientTest extends TestCase
         $this->assertFalse($configWithoutSsl->shouldVerifySsl());
     }
 
-    public function test_requestMulti_throws_exception(): void
+    public function test_requestMulti_falls_back_to_serial_execution(): void
     {
         $client = new StreamHttpClient($this->config);
 
-        $this->expectException(HttpClientException::class);
-        $this->expectExceptionMessage('does not support parallel requests');
-
-        $client->requestMulti(
+        // localhost:9999 will refuse connection — verify requestMulti returns results not throws
+        $result = $client->requestMulti(
             HttpMethod::POST,
-            'https://api.telegram.org/',
-            [['chat_id' => 123]]
+            'http://localhost:9999/invalid',
+            [['chat_id' => 123], ['chat_id' => 456]]
         );
+
+        $this->assertIsArray($result);
+        $this->assertCount(2, $result);
     }
 
-    public function test_requestMulti_exception_message_suggests_curl_client(): void
+    public function test_requestMulti_serial_result_has_correct_structure(): void
     {
         $client = new StreamHttpClient($this->config);
 
-        try {
-            $client->requestMulti(
-                HttpMethod::POST,
-                'https://api.telegram.org/',
-                [['chat_id' => 123]]
-            );
-            $this->fail('Expected exception was not thrown');
-        } catch (HttpClientException $e) {
-            $this->assertStringContainsString('CurlHttpClient', $e->getMessage());
+        $result = $client->requestMulti(
+            HttpMethod::POST,
+            'http://localhost:9999/invalid',
+            [['chat_id' => 123]]
+        );
+
+        $this->assertArrayHasKey(0, $result);
+        $entry = $result[0];
+        $this->assertArrayHasKey('success', $entry);
+        $this->assertArrayHasKey('chat_id', $entry);
+        $this->assertArrayHasKey('message_id', $entry);
+        $this->assertArrayHasKey('data', $entry);
+        $this->assertArrayHasKey('error', $entry);
+    }
+
+    public function test_requestMulti_captures_individual_failures_without_throwing(): void
+    {
+        $client = new StreamHttpClient($this->config);
+
+        // All requests will fail — must still return array not throw
+        $result = $client->requestMulti(
+            HttpMethod::POST,
+            'http://localhost:9999/invalid',
+            [
+                ['chat_id' => 111],
+                ['chat_id' => 222],
+                ['chat_id' => 333],
+            ]
+        );
+
+        $this->assertIsArray($result);
+        $this->assertCount(3, $result);
+
+        foreach ($result as $entry) {
+            $this->assertFalse($entry['success']);
+            $this->assertNull($entry['message_id']);
+            $this->assertNull($entry['data']);
+            $this->assertNotEmpty($entry['error']);
         }
+    }
+
+    public function test_requestMulti_preserves_chat_id_in_failure_result(): void
+    {
+        $client = new StreamHttpClient($this->config);
+
+        $result = $client->requestMulti(
+            HttpMethod::POST,
+            'http://localhost:9999/invalid',
+            [['chat_id' => 12345]]
+        );
+
+        $this->assertSame(12345, $result[0]['chat_id']);
     }
 
     public function test_request_handles_get_method(): void
@@ -232,16 +276,49 @@ final class StreamHttpClientTest extends TestCase
         $method->invoke($client, $badJson);
     }
 
-    public function test_api_error_response_throws_exception(): void
+    public function test_api_error_response_throws_api_exception(): void
     {
         $client = new StreamHttpClient($this->config);
-        $errorResponse = '{"ok": false, "description": "Bad Request: invalid chat ID"}';
+        $errorResponse = '{"ok": false, "description": "Bad Request: invalid chat ID", "error_code": 400}';
 
-        $this->expectException(HttpClientException::class);
-        $this->expectExceptionMessage('Telegram API error: Bad Request: invalid chat ID');
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('Bad Request: invalid chat ID');
 
         $method = new \ReflectionMethod($client, 'parseResponse');
         $method->invoke($client, $errorResponse);
+    }
+
+    public function test_api_error_response_carries_error_code(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $errorResponse = '{"ok": false, "description": "Forbidden: bot was blocked by the user", "error_code": 403}';
+
+        $method = new \ReflectionMethod($client, 'parseResponse');
+
+        try {
+            $method->invoke($client, $errorResponse);
+            $this->fail('Expected ApiException was not thrown');
+        } catch (ApiException $e) {
+            $this->assertSame(403, $e->getErrorCode());
+            $this->assertSame('Forbidden: bot was blocked by the user', $e->getMessage());
+        }
+    }
+
+    public function test_api_error_is_not_http_client_exception(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $errorResponse = '{"ok": false, "description": "Bad Request", "error_code": 400}';
+
+        $method = new \ReflectionMethod($client, 'parseResponse');
+
+        try {
+            $method->invoke($client, $errorResponse);
+            $this->fail('Expected ApiException was not thrown');
+        } catch (HttpClientException $e) {
+            $this->fail('Should have thrown ApiException, not HttpClientException');
+        } catch (ApiException $e) {
+            $this->assertInstanceOf(ApiException::class, $e);
+        }
     }
 
     public function test_successful_response_parses_correctly(): void
