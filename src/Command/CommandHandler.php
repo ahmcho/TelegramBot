@@ -161,12 +161,19 @@ class CommandHandler
                 ($this->commands[$command])($this->bot, $chatId, $args);
                 return true;
             } catch (\Throwable $e) {
-                // Send error message to user
                 $this->bot->messages()->send([
                     'chat_id' => $chatId,
-                    'text' => "⚠️ Error executing command: {$e->getMessage()}"
+                    'text' => 'An error occurred. Please try again.'
                 ]);
-                error_log("Command '$command' error: {$e->getMessage()}");
+                error_log(sprintf(
+                    "Command '%s' threw %s: %s in %s:%d\n%s",
+                    $command,
+                    get_class($e),
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine(),
+                    $e->getTraceAsString()
+                ));
                 return true;
             }
         }
