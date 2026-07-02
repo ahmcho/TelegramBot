@@ -112,7 +112,7 @@ class BulkOperationManagerTest extends TestCase
         $this->assertEquals(2, $result->failed);
     }
 
-    public function test_sendBulk_with_throw_exceptions_enabled_throws_on_failure(): void
+    public function test_sendBulk_does_not_throw_on_partial_failure_when_throw_exceptions_enabled(): void
     {
         $configWithThrow = new BotConfig(token: 'test:token', throwExceptions: true);
         $manager = new BulkOperationManager($this->mockClient, $configWithThrow);
@@ -127,8 +127,33 @@ class BulkOperationManagerTest extends TestCase
             ['chat_id' => 456, 'text' => 'Hello'],
         ];
 
+        // Partial failure (1 success, 1 failure) must NOT throw — only total failure throws
+        $result = $manager->sendBulk(ApiMethod::SEND_MESSAGE, $requests);
+
+        $this->assertInstanceOf(BulkResult::class, $result);
+        $this->assertFalse($result->isSuccess());
+        $this->assertEquals(2, $result->total);
+        $this->assertEquals(1, $result->successful);
+        $this->assertEquals(1, $result->failed);
+    }
+
+    public function test_sendBulk_throws_on_total_failure_when_throw_exceptions_enabled(): void
+    {
+        $configWithThrow = new BotConfig(token: 'test:token', throwExceptions: true);
+        $manager = new BulkOperationManager($this->mockClient, $configWithThrow);
+
+        $this->mockClient->setResponses([
+            ['response' => null, 'exception' => new \Exception('Chat not found'), 'http_code' => 0],
+            ['response' => null, 'exception' => new \Exception('Forbidden'), 'http_code' => 0],
+        ]);
+
+        $requests = [
+            ['chat_id' => 123, 'text' => 'Hello'],
+            ['chat_id' => 456, 'text' => 'Hello'],
+        ];
+
         $this->expectException(BulkSendException::class);
-        $this->expectExceptionMessage('Bulk operation completed with 1 failures out of 2');
+        $this->expectExceptionMessage('Bulk operation failed completely: all 2 requests failed');
 
         $manager->sendBulk(ApiMethod::SEND_MESSAGE, $requests);
     }
@@ -157,7 +182,7 @@ class BulkOperationManagerTest extends TestCase
         $this->assertCount(2, $result->results);
     }
 
-    public function test_sendBulk_exception_contains_bulk_result(): void
+    public function test_sendBulk_partial_failure_returns_result_not_throws(): void
     {
         $configWithThrow = new BotConfig(token: 'test:token', throwExceptions: true);
         $manager = new BulkOperationManager($this->mockClient, $configWithThrow);
@@ -174,6 +199,33 @@ class BulkOperationManagerTest extends TestCase
             ['chat_id' => 789, 'text' => 'Hello'],
         ];
 
+        // 1 success + 2 failures = partial failure, must NOT throw
+        $result = $manager->sendBulk(ApiMethod::SEND_MESSAGE, $requests);
+
+        $this->assertInstanceOf(BulkResult::class, $result);
+        $this->assertEquals(3, $result->total);
+        $this->assertEquals(1, $result->successful);
+        $this->assertEquals(2, $result->failed);
+        $this->assertTrue($result->hasFailures());
+    }
+
+    public function test_sendBulk_total_failure_exception_contains_bulk_result(): void
+    {
+        $configWithThrow = new BotConfig(token: 'test:token', throwExceptions: true);
+        $manager = new BulkOperationManager($this->mockClient, $configWithThrow);
+
+        $this->mockClient->setResponses([
+            ['response' => null, 'exception' => new \Exception('Forbidden'), 'http_code' => 0],
+            ['response' => null, 'exception' => new \Exception('Not found'), 'http_code' => 0],
+            ['response' => null, 'exception' => new \Exception('Blocked'), 'http_code' => 0],
+        ]);
+
+        $requests = [
+            ['chat_id' => 123, 'text' => 'Hello'],
+            ['chat_id' => 456, 'text' => 'Hello'],
+            ['chat_id' => 789, 'text' => 'Hello'],
+        ];
+
         try {
             $manager->sendBulk(ApiMethod::SEND_MESSAGE, $requests);
             $this->fail('Expected BulkSendException to be thrown');
@@ -181,8 +233,8 @@ class BulkOperationManagerTest extends TestCase
             $result = $e->getResult();
             $this->assertInstanceOf(BulkResult::class, $result);
             $this->assertEquals(3, $result->total);
-            $this->assertEquals(1, $result->successful);
-            $this->assertEquals(2, $result->failed);
+            $this->assertEquals(0, $result->successful);
+            $this->assertEquals(3, $result->failed);
             $this->assertTrue($result->hasFailures());
         }
     }

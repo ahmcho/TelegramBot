@@ -73,10 +73,10 @@ final class BulkOperationManager
             'success_rate' => $result->total > 0 ? round(($result->successful / $result->total) * 100, 2) . '%' : 'N/A'
         ]);
 
-        // Throw exception if configured and there are failures
-        if ($this->config->shouldThrowExceptions() && $result->hasFailures()) {
+        // Only throw on total failure — partial failure is normal for bulk (e.g. some users blocked the bot)
+        if ($this->config->shouldThrowExceptions() && $result->successful === 0) {
             $exception = new BulkSendException(
-                "Bulk operation completed with {$result->failed} failures out of {$result->total}",
+                "Bulk operation failed completely: all {$result->total} requests failed",
                 $result
             );
             $this->logExceptionIfEnabled($exception);
