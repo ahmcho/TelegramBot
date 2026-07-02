@@ -39,8 +39,9 @@ final class LoggerFactory
     {
         $logFilePath = $config['log_file_path'] ?? 'bot.log';
         $logLevel = $config['log_level'] ?? 'INFO';
+        $logMaxBytes = (int) ($config['log_max_bytes'] ?? 0);
 
-        $handler = new FileLogHandler($logFilePath);
+        $handler = new FileLogHandler($logFilePath, true, $logMaxBytes);
         $level = LogLevel::fromPsr3($logLevel);
 
         return new Logger($handler, $level);

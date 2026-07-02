@@ -16,10 +16,13 @@ final class FileLogHandler
     /**
      * @param string $logFilePath Path to the log file
      * @param bool $createDirectory If true, create directory if it doesn't exist
+     * @param int $maxBytes Rotate when file exceeds this size; 0 = disabled
      */
-    public function __construct(string $logFilePath, bool $createDirectory = true)
-    {
-        // Validate log file path
+    public function __construct(
+        string $logFilePath,
+        bool $createDirectory = true,
+        private readonly int $maxBytes = 0
+    ) {
         if ($logFilePath === '' || $logFilePath === '0') {
             throw new \InvalidArgumentException("Log file path cannot be empty");
         }
@@ -39,6 +42,10 @@ final class FileLogHandler
      */
     public function write(string $entry): void
     {
+        if ($this->maxBytes > 0 && $this->getSize() >= $this->maxBytes) {
+            $this->rotate();
+        }
+
         $attempt = 0;
         $lastError = null;
 
@@ -138,6 +145,29 @@ final class FileLogHandler
         }
 
         return filesize($this->logFilePath);
+    }
+
+    /**
+     * Get the configured rotation threshold in bytes (0 = disabled)
+     */
+    public function getMaxBytes(): int
+    {
+        return $this->maxBytes;
+    }
+
+    /**
+     * Rotate the log file: rename current file to .1, start fresh
+     */
+    private function rotate(): void
+    {
+        $rotatedPath = $this->logFilePath . '.1';
+
+        // Overwrite any existing .1 file
+        if (file_exists($rotatedPath)) {
+            @unlink($rotatedPath);
+        }
+
+        @rename($this->logFilePath, $rotatedPath);
     }
 
     /**

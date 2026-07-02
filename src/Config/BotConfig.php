@@ -16,10 +16,11 @@ final class BotConfig
         private readonly string $apiUrl = 'https://api.telegram.org/',
         private readonly int $timeout = 30,
         private readonly bool $throwExceptions = true,
-        private readonly bool $verifySsl = false,
+        private readonly bool $verifySsl = true,
         private readonly bool $loggingEnabled = true,
         private readonly string $logFilePath = 'bot.log',
-        private readonly string $logLevel = 'INFO'
+        private readonly string $logLevel = 'INFO',
+        private readonly int $logMaxBytes = 0
     ) {
     }
 
@@ -78,16 +79,40 @@ final class BotConfig
     }
 
     /**
+     * Get log rotation threshold in bytes (0 = disabled)
+     */
+    public function getLogMaxBytes(): int
+    {
+        return $this->logMaxBytes;
+    }
+
+    /**
      * Get all logging configuration as an array
      *
-     * @return array{log_file_path: string, log_level: string}
+     * @return array{log_file_path: string, log_level: string, log_max_bytes: int}
      */
     public function getLogConfig(): array
     {
         return [
             'log_file_path' => $this->logFilePath,
             'log_level' => $this->logLevel,
+            'log_max_bytes' => $this->logMaxBytes,
         ];
+    }
+
+    public function withVerifySsl(bool $verify): self
+    {
+        return new self(
+            $this->token,
+            $this->apiUrl,
+            $this->timeout,
+            $this->throwExceptions,
+            $verify,
+            $this->loggingEnabled,
+            $this->logFilePath,
+            $this->logLevel,
+            $this->logMaxBytes
+        );
     }
 
     public function withTimeout(int $timeout): self
@@ -100,7 +125,8 @@ final class BotConfig
             $this->verifySsl,
             $this->loggingEnabled,
             $this->logFilePath,
-            $this->logLevel
+            $this->logLevel,
+            $this->logMaxBytes
         );
     }
 
@@ -114,7 +140,8 @@ final class BotConfig
             $this->verifySsl,
             $this->loggingEnabled,
             $this->logFilePath,
-            $this->logLevel
+            $this->logLevel,
+            $this->logMaxBytes
         );
     }
 
@@ -131,7 +158,8 @@ final class BotConfig
             $this->verifySsl,
             $enabled,
             $this->logFilePath,
-            $this->logLevel
+            $this->logLevel,
+            $this->logMaxBytes
         );
     }
 
@@ -148,7 +176,8 @@ final class BotConfig
             $this->verifySsl,
             $this->loggingEnabled,
             $path,
-            $this->logLevel
+            $this->logLevel,
+            $this->logMaxBytes
         );
     }
 
@@ -165,7 +194,27 @@ final class BotConfig
             $this->verifySsl,
             $this->loggingEnabled,
             $this->logFilePath,
-            $level
+            $level,
+            $this->logMaxBytes
+        );
+    }
+
+    /**
+     * Create a new config with a log rotation threshold
+     * Set to 0 to disable rotation (default)
+     */
+    public function withLogMaxBytes(int $maxBytes): self
+    {
+        return new self(
+            $this->token,
+            $this->apiUrl,
+            $this->timeout,
+            $this->throwExceptions,
+            $this->verifySsl,
+            $this->loggingEnabled,
+            $this->logFilePath,
+            $this->logLevel,
+            $maxBytes
         );
     }
 }
