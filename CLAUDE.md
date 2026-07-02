@@ -4,6 +4,8 @@
 
 Modern, dependency-free PHP 8.1+ Telegram Bot Framework with a clean, service-oriented interface. Zero external dependencies required.
 
+Namespace root: `AhmCho\Telegram`
+
 ---
 
 ## Architecture Overview
@@ -18,7 +20,7 @@ Facade Layer (TelegramBot)
          ↓
 Service Layer
   - MessageService (auto-escaping)
-  - MediaService
+  - MediaService (auto-escaping captions)
   - ChatService
   - WebhookService
   - PollsService
@@ -67,6 +69,7 @@ tg-bots/
 ├── .env.example
 ├── src/
 │   ├── Api/
+│   │   ├── ApiService.php
 │   │   └── Methods/
 │   │       ├── MessageService.php
 │   │       ├── MediaService.php
@@ -80,14 +83,54 @@ tg-bots/
 │   │   ├── TelegramBot.php
 │   │   └── BotFactory.php
 │   ├── Bulk/
+│   │   ├── BulkOperationManager.php
+│   │   ├── BulkResult.php
+│   │   └── BulkSendException.php
 │   ├── Client/
+│   │   ├── CurlHttpClient.php
+│   │   ├── StreamHttpClient.php
+│   │   ├── HttpClientFactory.php
+│   │   ├── HttpClientInterface.php
+│   │   └── Traits/ResponseParserTrait.php
 │   ├── Command/
+│   │   └── CommandHandler.php
 │   ├── Config/
+│   │   ├── BotConfig.php
+│   │   └── EnvLoader.php
 │   ├── Enums/
+│   │   ├── ApiMethod.php
+│   │   ├── HttpMethod.php
+│   │   ├── ParseMode.php
+│   │   ├── ChatAction.php
+│   │   └── LogLevel.php
 │   ├── Exception/
+│   │   ├── TelegramException.php
+│   │   ├── ApiException.php
+│   │   └── HttpClientException.php
 │   ├── Formatting/
+│   │   ├── TextFormatterInterface.php
+│   │   ├── MarkdownV2Formatter.php
+│   │   └── HtmlFormatter.php
 │   ├── Keyboard/
-│   └── Logging/
+│   │   ├── Button.php
+│   │   ├── InlineKeyboardBuilder.php
+│   │   ├── ReplyKeyboardBuilder.php
+│   │   ├── ReplyKeyboardOptions.php
+│   │   └── KeyboardBuilderInterface.php
+│   ├── Logging/
+│   │   ├── Logger.php
+│   │   ├── NullLogger.php
+│   │   ├── LoggerFactory.php
+│   │   ├── LoggerInterface.php
+│   │   ├── LogLevel.php
+│   │   ├── FileLogHandler.php
+│   │   ├── Context/ExceptionContext.php
+│   │   └── Traits/LoggerHelperTrait.php
+│   ├── Traits/
+│   │   └── MarkdownV2EscapeTrait.php
+│   ├── Psr/Log/
+│   │   └── LoggerInterface.php
+│   └── dotenv.php
 ├── public/
 │   └── webhook.php
 ├── examples/
@@ -100,7 +143,7 @@ tg-bots/
 
 ### TelegramBot (`src/Bot/TelegramBot.php`)
 
-Main facade providing unified access to all framework functionality.
+Main facade — `final class`. All services are wired here.
 
 **Service Accessors:**
 
@@ -115,43 +158,68 @@ Main facade providing unified access to all framework functionality.
 - `commands()` → CommandHandler
 - `api()` → ApiService
 - `formatter()` → TextFormatterInterface (default: MarkdownV2Formatter)
+- `getLogger()` → `?LoggerInterface` (null when logging disabled)
+
+**Convenience Methods (backward compatibility):**
+
+- `sendMessage(array $params): array` — delegates to `messages()->send()`
+- `sendPhoto(array $params): array` — delegates to `media()->sendPhoto()`
+- `getMe(): array`
+- `getUpdates(array $params = []): array`
 
 **Webhook Methods:**
 
-- `getWebhookUpdates()` - Parse webhook input
-- `processWebhook(callable)` - Process updates via handler
-- `setInputSource(string)` - Override input (testing)
+- `getWebhookUpdates(): ?array` — parses `php://input`
+- `processWebhook(callable $handler): void` — calls handler if update is non-null
+- `setInputSource(string $source): void` — override `php://input` (for testing)
 
 **Retry Methods:**
 
-- `sendMessageWithRetry(array $params, array $options)` - Exponential backoff, rate-limit aware
-- `sendBulkWithRetry(array $messages, array $bulkOptions, array $retryOptions)`
-- `executeWithRetry(callable $callback, array $options)` - Generic retry wrapper
+- `sendMessageWithRetry(array $params, array $options = []): array`
+- `sendBulkWithRetry(array $messages, array $bulkOptions = [], array $retryOptions = []): mixed`
+- `executeWithRetry(callable $callback, array $options = []): mixed` — generic retry wrapper
 
-Retry options: `max_retries` (default 3), `initial_delay_ms` (default 1000), `max_delay_ms` (default 10000), `on_retry` (callable).
+Retry `$options` keys: `max_retries` (default 3), `initial_delay_ms` (default 1000), `max_delay_ms` (default 10000), `on_retry` (callable: `fn(int $attempt, Exception $e, int $delayMs)`).
+
+Retry behaviour: no retry on 4xx except 429; honours `retry_after` from Telegram on 429; exponential backoff otherwise.
+
+### BotFactory (`src/Bot/BotFactory.php`)
+
+Static factory for common construction patterns.
+
+- `BotFactory::create(?string $token): TelegramBot`
+- `BotFactory::createWithConfig(BotConfig $config): TelegramBot`
+- `BotFactory::createWithHttpClient(?string $token, HttpClientInterface $client): TelegramBot`
 
 ### MessageService (`src/Api/Methods/MessageService.php`)
 
 **Core Feature: Auto-escaping for MarkdownV2**
 
-When `parse_mode => 'MarkdownV2'` is set, `text` and `caption` are automatically escaped.
+When `parse_mode => 'MarkdownV2'` is set, the `text` and `caption` fields are automatically escaped. Use `*Raw()` methods to bypass this (when text is already formatted with MarkdownV2 syntax).
 
 **Methods:**
 
-- `send()` / `sendRaw()` — with / without auto-escape
-- `editText()` / `editTextRaw()` — edit message text
-- `editCaption()` / `editCaptionRaw()` — edit caption
-- `delete()`, `forward()`, `copy()`
-- `sendBulk(array $messages, array $options)` / `sendBulkRaw()` — batch send, returns `BulkResult`
-- `broadcast(array $chatIds, string $text, array $params, array $options)` / `broadcastRaw()` — returns `BulkResult`
-
-Use `*Raw()` methods when text is already formatted with MarkdownV2 syntax.
+- `send(array $params): array` — auto-escapes
+- `sendRaw(array $params): array`
+- `editText(array $params): array` — auto-escapes
+- `editTextRaw(array $params): array`
+- `editCaption(array $params): array` — auto-escapes
+- `editCaptionRaw(array $params): array`
+- `delete(array $params): mixed`
+- `forward(array $params): array`
+- `copy(array $params): array`
+- `sendBulk(array $messages, array $options = []): BulkResult` — auto-escapes each message
+- `sendBulkRaw(array $messages, array $options = []): BulkResult`
+- `broadcast(array $chatIds, string $text, array $commonParams = [], array $options = []): BulkResult` — auto-escapes
+- `broadcastRaw(array $chatIds, string $text, array $commonParams = [], array $options = []): BulkResult`
 
 ### MediaService (`src/Api/Methods/MediaService.php`)
 
+Auto-escaping applies to captioned methods (`sendPhoto`, `sendDocument`, `sendVideo`, `sendAudio`, `sendVoice`, `sendAnimation`) when `parse_mode => 'MarkdownV2'` is set.
+
 **Methods:** `sendPhoto()`, `sendDocument()`, `sendVideo()`, `sendAudio()`, `sendVoice()`, `sendAnimation()`, `sendSticker()`, `sendLocation()`, `sendVenue()`, `sendContact()`, `sendPoll()`, `sendDice()`, `getCustomEmojiStickers()`
 
-**Input types:** File ID (string), URL (string), CURLFile (local upload)
+**Input types:** File ID (string), URL (string), `CURLFile` (local upload)
 
 ### ChatService (`src/Api/Methods/ChatService.php`)
 
@@ -183,30 +251,37 @@ Built-in command routing system, accessible via `$bot->commands()`.
 
 **Methods:**
 
-- `register(string $command, callable $callback, string $description): self`
-- `registerCommands(array $commands): self`
-- `setDefault(callable): self` — handles unknown commands
-- `addMiddleware(string $name, callable): self` — runs before command; return false to halt
+- `register(string $command, callable $callback, string $description = ''): self`
+- `registerCommands(array $commands): self` — accepts `['cmd' => callable]` or `['cmd' => ['callback' => callable, 'description' => string]]`
+- `setDefault(callable $callback): self` — handles unknown commands; signature: `function(TelegramBot $bot, int $chatId, string $command, array $args): void`
+- `addMiddleware(string $name, callable $middleware): self` — runs before commands; signature: `function(TelegramBot $bot, int $chatId, string $command, array $args): bool` — return `false` to halt
 - `handleUpdate(array $update): bool`
 - `generateHelp(): string` — builds help text from registered descriptions
-- `sendHelp(int $chatId): void`
-- `hasCommand(string): bool`, `unregister(string): bool`, `clear(): void`
+- `sendHelp(int $chatId): void` — sends MarkdownV2-formatted help message
+- `getRegisteredCommands(): array` — returns list of command name strings
+- `hasCommand(string $command): bool`
+- `unregister(string $command): bool`
+- `clear(): void` — clears commands, descriptions, and middleware
 
-Callback signature: `function(TelegramBot $bot, int $chatId, array $args): void`
+Command callback signature: `function(TelegramBot $bot, int $chatId, array $args): void`
+
+Commands are normalised (lowercased, leading `/` stripped) on register and lookup.
 
 ### ApiService (`src/Api/ApiService.php`)
 
-Core orchestrator for all Telegram API calls.
+Core orchestrator for all Telegram API calls. `final class`.
 
-- `call(ApiMethod $method, array $params): mixed`
+- `call(ApiMethod $method, array $params = []): mixed`
 - `getBulkManager(): BulkOperationManager`
 - `getConfig(): BotConfig`
+
+Sanitises params before logging (removes `token`).
 
 ### Bulk Operations (`src/Bulk/`)
 
 Parallel execution using `curl_multi_exec`. Managed by `BulkOperationManager`, called via service methods.
 
-**`BulkResult`** is a `readonly class` (not an array):
+**`BulkResult`** is a `readonly class` implementing `Countable`:
 
 ```php
 $result->total;            // int
@@ -220,52 +295,62 @@ $result->getSuccessRate(); // float — percentage
 $result->getFailedResults();
 $result->getSuccessfulResults();
 count($result);            // Countable
+
+// Static factories
+BulkResult::fromRawResults(array $rawResults): self
+BulkResult::empty(): self
 ```
 
 Throws `BulkSendException` (carries the `BulkResult`) if any requests fail and `throwExceptions` is enabled.
 
-**Configuration options** (passed as second arg to `sendBulk`/`broadcast`):
+**Configuration options** (second arg to `sendBulk`/`broadcast`):
 
 - `max_concurrent` — default 30
 - `delay_ms` — default 0
 
 ### Configuration (`src/Config/`)
 
-**BotConfig** — Immutable with builder-style mutators:
+**BotConfig** — Immutable with builder-style mutators. Actual defaults:
 
 ```php
 $config = new BotConfig(
     token: '123:ABC',
-    apiUrl: 'https://api.telegram.org/', // Optional
-    timeout: 30,                          // Optional, seconds
-    throwExceptions: true,                // Optional
-    verifySsl: false,                     // Optional (disable for local dev)
-    loggingEnabled: true,                 // Optional
-    logFilePath: 'logs/bot.log',          // Optional
-    logLevel: 'INFO'                      // Optional
+    apiUrl: 'https://api.telegram.org/', // default
+    timeout: 30,                          // default, seconds
+    throwExceptions: true,                // default
+    verifySsl: false,                     // default
+    loggingEnabled: true,                 // default
+    logFilePath: 'bot.log',              // default
+    logLevel: 'INFO'                      // default
 );
 
-// Fluent mutators return new instances:
+// Fluent mutators — each returns a new instance:
 $config->withTimeout(60)
+       ->withThrowExceptions(false)
        ->withLoggingEnabled(false)
        ->withLogFilePath('logs/bot.log')
        ->withLogLevel('DEBUG');
 ```
 
-**EnvLoader** — Loads `.env`, searches multiple paths, supports quoted/unquoted values, skips comments.
+**EnvLoader** (`src/Config/EnvLoader.php`) — Loads `.env`, searches multiple paths, supports quoted/unquoted values, skips comments.
+
+**`src/dotenv.php`** — Thin wrapper that calls `EnvLoader` and auto-loads `.env` on `require`. Included automatically by `autoload.php` is NOT assumed; use `EnvLoader` directly or `require 'src/dotenv.php'` for the auto-load shortcut.
 
 ### Logging System (`src/Logging/`)
 
-PSR-3 compliant, file-based with locking. Auto-created from `BotConfig` by `LoggerFactory`.
+PSR-3 compliant, file-based with `LOCK_EX`. Auto-created from `BotConfig` by `LoggerFactory`.
 
-- **`LoggerFactory::createFromConfig(BotConfig): ?LoggerInterface`** — returns null when logging disabled
-- **`LoggerFactory::create(array): LoggerInterface`** — from config array
+- **`LoggerFactory::createFromConfig(BotConfig): ?LoggerInterface`** — returns `null` when logging disabled
+- **`LoggerFactory::create(array): LoggerInterface`** — from config array with keys `log_file_path`, `log_level`
+- **`LoggerFactory::createDefault(): LoggerInterface`** — uses `bot.log` / `INFO`
 - **`LoggerFactory::createNull(): LoggerInterface`** — no-op (useful in tests)
 - **`Logger`** — writes to file via `FileLogHandler` with retry and `LOCK_EX`
 - **`NullLogger`** — all methods are no-ops; used when logging is off
 - **`LogLevel` enum** — DEBUG, INFO, WARNING, ERROR, CRITICAL (with PSR-3 conversion)
 
 All framework code checks `if ($this->logger !== null)` — logging never throws.
+
+**`LoggerHelperTrait`** (`src/Logging/Traits/LoggerHelperTrait.php`) — used internally by `TelegramBot`, `ApiService`, `CurlHttpClient`. Provides `logIfEnabled()` and `logExceptionIfEnabled()`.
 
 ---
 
@@ -276,7 +361,7 @@ All framework code checks `if ($this->logger !== null)` — logging never throws
 **Service Layer** → Domain-specific business logic
 
 - MessageService: Text formatting, auto-escaping
-- MediaService: File handling
+- MediaService: File handling, caption auto-escaping
 - ChatService: Chat administration
 - WebhookService: Webhook management
 
@@ -345,7 +430,7 @@ $bot = new TelegramBot(null, $config, $httpClient);
 | Constants  | SCREAMING_SNAKE_CASE |
 
 - One class per file, filename matches class name
-- Namespace matches directory structure
+- Namespace matches directory structure under `AhmCho\Telegram`
 - `declare(strict_types=1);` at top of every file
 - Public methods must have type annotations; complex arrays use `@param array<key, type>`
 
@@ -357,7 +442,7 @@ $bot = new TelegramBot(null, $config, $httpClient);
 TelegramException (abstract)
 ├── ApiException          - Telegram API errors (4xx, 5xx)
 ├── HttpClientException   - HTTP layer errors (network, DNS, timeout)
-└── BulkSendException     - Bulk operation total failure (carries BulkResult)
+└── BulkSendException     - Bulk operation failure (carries BulkResult)
 ```
 
 ```php
@@ -376,19 +461,47 @@ try {
 
 ## Formatters
 
-**MarkdownV2Formatter** — auto-escape applied automatically by `MessageService` when `parse_mode = 'MarkdownV2'`. For manual formatting:
+Both formatters implement `TextFormatterInterface`:
 
 ```php
-$formatter = $bot->formatter(); // MarkdownV2Formatter
-$bold = $formatter->bold('Bold');
-$italic = $formatter->italic('Italic');
+interface TextFormatterInterface
+{
+    public function escape(string $text): string;
+    public function bold(string $text): string;
+    public function italic(string $text): string;
+    public function underline(string $text): string;
+    public function strikethrough(string $text): string;
+    public function code(string $text): string;
+    public function pre(string $text): string;
+    public function link(string $text, string $url): string;
+    public function mention(string $text, string $username): string;
+    public function hashtag(string $tag): string;
+}
 ```
 
-**HtmlFormatter** — does not auto-escape; use for manual HTML formatting to avoid conflicts:
+**MarkdownV2Formatter** — escapes all MarkdownV2 special chars. Auto-escape is applied by `MessageService` and `MediaService` when `parse_mode = 'MarkdownV2'`. For manual formatting:
 
 ```php
-$formatter = new HtmlFormatter();
-$bold = $formatter->bold('Bold');
+$f = $bot->formatter(); // MarkdownV2Formatter
+$f->bold('text');         // *text*
+$f->italic('text');       // _text_
+$f->underline('text');    // __text__
+$f->strikethrough('text');// ~text~
+$f->code('text');         // `text`
+$f->pre('text');          // ```\ntext\n```
+$f->link('text', $url);
+$f->mention('name', $userId);
+$f->hashtag('tag');
+```
+
+**HtmlFormatter** — wraps in HTML tags, escapes via `htmlspecialchars`. Does not perform auto-escaping in service methods:
+
+```php
+$f = new HtmlFormatter();
+$f->bold('text');      // <b>text</b>
+$f->italic('text');    // <i>text</i>
+$f->underline('text'); // <u>text</u>
+// ... same interface, HTML output
 ```
 
 ---
@@ -415,7 +528,7 @@ $bot->messages()->send([
 ]);
 ```
 
-**Button types:** `Button::callback()`, `Button::url()`, `Button::switchInline()`, `Button::switchInlineCurrent()`, `Button::text()`
+**Button types:** `Button::callback(text, data)`, `Button::url(text, url)`, `Button::switchInline(text, query)`, `Button::switchInlineCurrent(text, query)`, `Button::text(text)`
 
 ### ReplyKeyboardBuilder
 
@@ -433,7 +546,7 @@ $keyboard = ReplyKeyboardBuilder::create($options)
     ->build();
 ```
 
-Note: `ReplyKeyboardBuilder::addRow()` accepts one or more `Button` objects per row; only the button text is used (actions are ignored for reply keyboards).
+`ReplyKeyboardBuilder::addRow()` accepts one or more `Button` objects; only `text` is used (callback data is ignored for reply keyboards).
 
 ---
 
@@ -514,7 +627,9 @@ vendor/bin/phpunit tests/Unit/Api/    # specific suite
 tests/
 ├── Unit/           # Unit tests (mocked HTTP)
 ├── Integration/    # Integration tests
-├── Helpers/        # MockHttpClient, MockTelegramResponse, TestDataFactory
+├── Benchmark/      # Bulk operation benchmarks
+├── EndToEnd/       # E2E tests
+├── Helpers/        # MockHttpClient, MockTelegramResponse, TestDataFactory, WebhookStreamWrapper
 └── bootstrap.php
 ```
 
@@ -524,21 +639,26 @@ tests/
 
 ## Critical Files Reference
 
-| File                                      | Purpose                       |
-| ----------------------------------------- | ----------------------------- |
-| `autoload.php`                            | PSR-4 autoloader              |
-| `src/Bot/TelegramBot.php`                 | Main facade                   |
-| `src/Config/BotConfig.php`                | Immutable configuration       |
-| `src/Config/EnvLoader.php`                | .env loader                   |
-| `src/Api/Methods/MessageService.php`      | Message ops + auto-escape     |
-| `src/Bulk/BulkOperationManager.php`       | Parallel requests             |
-| `src/Bulk/BulkResult.php`                 | Typed bulk result value object |
-| `src/Command/CommandHandler.php`          | Command routing               |
-| `src/Logging/LoggerFactory.php`           | Logger creation               |
-| `public/webhook.php`                      | Production webhook endpoint   |
+| File                                      | Purpose                              |
+| ----------------------------------------- | ------------------------------------ |
+| `autoload.php`                            | PSR-4 autoloader                     |
+| `src/Bot/TelegramBot.php`                 | Main facade (final)                  |
+| `src/Bot/BotFactory.php`                  | Static construction helpers          |
+| `src/Config/BotConfig.php`                | Immutable configuration              |
+| `src/Config/EnvLoader.php`                | .env loader                          |
+| `src/dotenv.php`                          | Auto-load .env shortcut              |
+| `src/Api/Methods/MessageService.php`      | Message ops + auto-escape            |
+| `src/Api/Methods/MediaService.php`        | Media ops + caption auto-escape      |
+| `src/Bulk/BulkOperationManager.php`       | Parallel requests via curl_multi     |
+| `src/Bulk/BulkResult.php`                 | Typed bulk result value object       |
+| `src/Command/CommandHandler.php`          | Command routing                      |
+| `src/Logging/LoggerFactory.php`           | Logger creation                      |
+| `src/Traits/MarkdownV2EscapeTrait.php`    | Auto-escape logic used by services   |
+| `src/Logging/Traits/LoggerHelperTrait.php`| Null-safe logging helpers            |
+| `public/webhook.php`                      | Production webhook endpoint          |
 
 ---
 
-**Last Updated:** 2026-06-28
+**Last Updated:** 2026-07-02
 **Framework Version:** 1.1
 **PHP Version:** 8.1+
