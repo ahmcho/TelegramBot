@@ -17,6 +17,7 @@ final class StreamHttpClient implements HttpClientInterface
     use ResponseParserTrait;
 
     private int $lastHttpCode = 0;
+    private bool $parallelWarningLogged = false;
 
     public function __construct(
         private readonly BotConfig $config,
@@ -96,9 +97,46 @@ final class StreamHttpClient implements HttpClientInterface
         array $requestsArray,
         array $options = []
     ): array {
-        throw new HttpClientException(
-            'Stream HTTP client does not support parallel requests. Use CurlHttpClient instead.'
-        );
+        if (!$this->parallelWarningLogged) {
+            $this->logIfEnabled(
+                'warning',
+                'StreamHttpClient does not support parallel requests; falling back to serial execution. Use CurlHttpClient for better performance.'
+            );
+            $this->parallelWarningLogged = true;
+        }
+
+        $delayMs = (int) ($options['delay_ms'] ?? 0);
+        $results = [];
+        $lastKey = array_key_last($requestsArray);
+
+        foreach ($requestsArray as $index => $params) {
+            $chatId = $params['chat_id'] ?? 'unknown';
+
+            try {
+                $data = $this->request($method, $url, $params);
+                $results[$index] = [
+                    'success' => true,
+                    'chat_id' => $chatId,
+                    'message_id' => is_array($data) ? ($data['message_id'] ?? null) : null,
+                    'data' => $data,
+                    'error' => null,
+                ];
+            } catch (\Throwable $e) {
+                $results[$index] = [
+                    'success' => false,
+                    'chat_id' => $chatId,
+                    'message_id' => null,
+                    'data' => null,
+                    'error' => $e->getMessage(),
+                ];
+            }
+
+            if ($delayMs > 0 && $index !== $lastKey) {
+                usleep($delayMs * 1000);
+            }
+        }
+
+        return $results;
     }
 
     public function getLastHttpCode(): int
