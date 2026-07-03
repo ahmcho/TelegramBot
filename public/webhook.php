@@ -13,7 +13,8 @@
  *
  * Security considerations:
  * - Use HTTPS (required by Telegram)
- * - Consider adding a secret token validation
+ * - Set TELEGRAM_WEBHOOK_SECRET in .env; this endpoint validates the
+ *   X-Telegram-Bot-Api-Secret-Token header against it (see below)
  * - Implement rate limiting if needed
  */
 
@@ -163,10 +164,11 @@ function handleUpdate(TelegramBot $bot, array $update): void
                     'parse_mode' => 'Markdown'
                 ]);
 
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
+                error_log("Error getting chat info: " . $e->getMessage());
                 $bot->messages()->send([
                     'chat_id' => $chatId,
-                    'text' => "❌ Error getting info: " . $e->getMessage()
+                    'text' => "❌ An error occurred. Please try again."
                 ]);
             }
 
@@ -268,10 +270,11 @@ function handleUpdate(TelegramBot $bot, array $update): void
                             'parse_mode' => 'Markdown'
                         ]);
 
-                    } catch (Exception $e) {
+                    } catch (\Throwable $e) {
+                        error_log("Error getting chat stats: " . $e->getMessage());
                         $bot->chats()->answerCallbackQuery([
                             'callback_query_id' => $queryId,
-                            'text' => 'Error getting stats: ' . $e->getMessage(),
+                            'text' => 'An error occurred. Please try again.',
                             'show_alert' => true
                         ]);
                     }
@@ -281,7 +284,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
             return;
         }
 
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         // Log error
         error_log("Error handling update: " . $e->getMessage());
 
@@ -292,7 +295,7 @@ function handleUpdate(TelegramBot $bot, array $update): void
                     'chat_id' => $chatId,
                     'text' => "❌ An error occurred. Please try again later."
                 ]);
-            } catch (Exception $e2) {
+            } catch (\Throwable $e2) {
                 error_log("Error notifying user: " . $e2->getMessage());
             }
         }
@@ -336,15 +339,14 @@ try {
     header('Content-Type: text/plain');
     echo 'OK';
 
-} catch (Exception $e) {
-    // Log error
-    error_log("Webhook error: " . $e->getMessage());
+} catch (\Throwable $e) {
+    // Log the real error internally; never expose exception details to the caller
+    error_log("Webhook error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
 
-    // Send error response
+    // Send generic error response
     http_response_code(500);
     header('Content-Type: application/json');
     echo json_encode([
-        'error' => 'Internal server error',
-        'message' => $e->getMessage()
+        'error' => 'Internal server error'
     ]);
 }
