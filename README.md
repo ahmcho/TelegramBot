@@ -116,6 +116,15 @@ $result = $bot->sendMessageWithRetry(
 
 ---
 
+## 📚 Full Documentation
+
+This README is a quick pitch. For a complete, example-driven guide to
+every feature — written for developers who've never seen this framework
+before — see **[docs/README.md](docs/README.md)**, starting with
+[Introduction](docs/01-introduction.md) and [Installation](docs/02-installation.md).
+
+---
+
 ## 🏗️ Architecture
 
 ```
