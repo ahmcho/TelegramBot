@@ -3,17 +3,18 @@ FROM php:8.3-cli-alpine
 # Install system dependencies
 RUN apk add --no-cache \
     curl \
+    curl-dev \
     git \
     unzip \
     libzip-dev \
     oniguruma-dev
 
 # Install PHP extensions
+# Note: json is bundled into PHP core since 8.0 and openssl is compiled in
+# by the official php-alpine image, so neither is a buildable ext module.
 RUN docker-php-ext-install \
     curl \
-    json \
     mbstring \
-    openssl \
     zip \
     pdo
 
