@@ -36,6 +36,7 @@ readonly class ExceptionContext
         $additionalData = match ($exception::class) {
             ApiException::class => [
                 'error_code' => $exception->getErrorCode(),
+                'http_code' => $exception->getHttpCode(),
             ],
             HttpClientException::class => [
                 'http_code' => $exception->getHttpCode(),
