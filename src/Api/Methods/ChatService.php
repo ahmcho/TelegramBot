@@ -136,6 +136,61 @@ class ChatService
     }
 
     /**
+     * Change the title of a chat
+     *
+     * @param array{chat_id: int|string, title: string} $params
+     * @return mixed
+     */
+    public function setChatTitle(array $params): mixed
+    {
+        return $this->apiService->call(ApiMethod::SET_CHAT_TITLE, $params);
+    }
+
+    /**
+     * Change the description of a group, supergroup or channel
+     *
+     * @param array{chat_id: int|string, description?: string} $params
+     * @return mixed
+     */
+    public function setChatDescription(array $params): mixed
+    {
+        return $this->apiService->call(ApiMethod::SET_CHAT_DESCRIPTION, $params);
+    }
+
+    /**
+     * Set a new profile photo for the chat
+     *
+     * @param array{chat_id: int|string, photo: mixed} $params
+     * @return mixed
+     */
+    public function setChatPhoto(array $params): mixed
+    {
+        return $this->apiService->call(ApiMethod::SET_CHAT_PHOTO, $params);
+    }
+
+    /**
+     * Delete the chat photo
+     *
+     * @param array{chat_id: int|string} $params
+     * @return mixed
+     */
+    public function deleteChatPhoto(array $params): mixed
+    {
+        return $this->apiService->call(ApiMethod::DELETE_CHAT_PHOTO, $params);
+    }
+
+    /**
+     * Set default chat permissions for all members
+     *
+     * @param array{chat_id: int|string, permissions: array<string, bool>} $params
+     * @return mixed
+     */
+    public function setChatPermissions(array $params): mixed
+    {
+        return $this->apiService->call(ApiMethod::SET_CHAT_PERMISSIONS, $params);
+    }
+
+    /**
      * Get the current menu button
      *
      * @param array{chat_id?: int|string} $params
