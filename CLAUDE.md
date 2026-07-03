@@ -69,6 +69,7 @@ tg-bots/
 ├── CLAUDE.md
 ├── README.md
 ├── .env.example
+├── docs/               # User-facing documentation (see "User Documentation" section below)
 ├── src/
 │   ├── Api/
 │   │   ├── ApiService.php
@@ -676,6 +677,28 @@ tests/
 ```
 
 `MockHttpClient` implements `HttpClientInterface` and records all requests for assertion.
+
+---
+
+## User Documentation
+
+The `docs/` folder is a full, Laravel-style documentation set for people
+using this framework — not for contributors working on its internals
+(that's what this file is for). It's organized as 22 numbered pages plus
+`docs/README.md` as the table-of-contents hub, each ending with
+Previous/Next navigation links, covering: installation, configuration,
+every service (messages, media, chats, polls, inline mode, topics, invite
+links, games, payments), keyboards, formatting, commands, webhooks, bulk
+operations, retry, error handling, logging, HTTP clients, testing, and a
+cookbook of end-to-end recipes.
+
+**When you change public behavior, update the matching `docs/` page in the
+same commit** — the same rule this file already applies to itself. A new
+service needs a new `docs/NN-topic.md` page linked into `docs/README.md`'s
+table of contents and wired into the Previous/Next chain of its neighbors;
+a changed default or signature needs the matching page's examples
+corrected. Stale user-facing docs are worse than none, since they actively
+mislead.
 
 ---
 
