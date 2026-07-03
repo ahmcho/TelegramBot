@@ -27,6 +27,8 @@ Service Layer
   - InlineService
   - InviteLinksService
   - TopicsService
+  - GamesService
+  - PaymentsService
          ↓
 API Layer (ApiService)
   - Method Routing
@@ -78,7 +80,9 @@ tg-bots/
 │   │       ├── PollsService.php
 │   │       ├── InlineService.php
 │   │       ├── InviteLinksService.php
-│   │       └── TopicsService.php
+│   │       ├── TopicsService.php
+│   │       ├── GamesService.php
+│   │       └── PaymentsService.php
 │   ├── Bot/
 │   │   ├── TelegramBot.php
 │   │   └── BotFactory.php
@@ -155,6 +159,8 @@ Main facade — `final class`. All services are wired here.
 - `inline()` → InlineService
 - `topics()` → TopicsService
 - `inviteLinks()` → InviteLinksService
+- `games()` → GamesService
+- `payments()` → PaymentsService
 - `commands()` → CommandHandler
 - `api()` → ApiService
 - `formatter()` → TextFormatterInterface (default: MarkdownV2Formatter)
@@ -263,6 +269,18 @@ Only the first item's `caption` / `parse_mode` is shown in the album notificatio
 ### WebhookService (`src/Api/Methods/WebhookService.php`)
 
 **Methods:** `set(array)`, `getInfo()`, `delete(array)`
+
+### GamesService (`src/Api/Methods/GamesService.php`)
+
+**Methods:** `sendGame(array $params): array`, `setGameScore(array $params): mixed` (Message or `true`), `getGameHighScores(array $params): array`
+
+`setGameScore()` / `getGameHighScores()` require exactly one of `chat_id` + `message_id`, or `inline_message_id`. `InlineService::createGame()` only builds the inline-query result payload (`type: game`) for search results — it does not send a game message.
+
+### PaymentsService (`src/Api/Methods/PaymentsService.php`)
+
+**Methods:** `sendInvoice(array $params): array`
+
+`provider_token` may be omitted (or an empty string) for Telegram Stars payments, using currency `XTR`.
 
 ### CommandHandler (`src/Command/CommandHandler.php`)
 
