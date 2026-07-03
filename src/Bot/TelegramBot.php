@@ -6,10 +6,12 @@ namespace AhmCho\Telegram\Bot;
 
 use AhmCho\Telegram\Api\ApiService;
 use AhmCho\Telegram\Api\Methods\ChatService;
+use AhmCho\Telegram\Api\Methods\GamesService;
 use AhmCho\Telegram\Api\Methods\InlineService;
 use AhmCho\Telegram\Api\Methods\InviteLinksService;
 use AhmCho\Telegram\Api\Methods\MessageService;
 use AhmCho\Telegram\Api\Methods\MediaService;
+use AhmCho\Telegram\Api\Methods\PaymentsService;
 use AhmCho\Telegram\Api\Methods\PollsService;
 use AhmCho\Telegram\Api\Methods\TopicsService;
 use AhmCho\Telegram\Api\Methods\WebhookService;
@@ -44,6 +46,8 @@ final class TelegramBot
     private readonly InlineService $inline;
     private readonly TopicsService $topics;
     private readonly InviteLinksService $inviteLinks;
+    private readonly GamesService $games;
+    private readonly PaymentsService $payments;
     private readonly MarkdownV2Formatter $formatter;
     private readonly ?LoggerInterface $logger;
     private readonly CommandHandler $commands;
@@ -90,6 +94,8 @@ final class TelegramBot
         $this->inline = new InlineService($this->apiService);
         $this->topics = new TopicsService($this->apiService);
         $this->inviteLinks = new InviteLinksService($this->apiService);
+        $this->games = new GamesService($this->apiService);
+        $this->payments = new PaymentsService($this->apiService);
         $this->formatter = new MarkdownV2Formatter();
         $this->commands = new CommandHandler($this);
     }
@@ -134,6 +140,16 @@ final class TelegramBot
     public function inviteLinks(): InviteLinksService
     {
         return $this->inviteLinks;
+    }
+
+    public function games(): GamesService
+    {
+        return $this->games;
+    }
+
+    public function payments(): PaymentsService
+    {
+        return $this->payments;
     }
 
     public function formatter(): TextFormatterInterface

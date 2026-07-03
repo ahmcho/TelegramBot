@@ -100,6 +100,20 @@ final class TelegramBotTest extends TestCase
         $this->assertInstanceOf(\AhmCho\Telegram\Api\Methods\WebhookService::class, $bot->webhooks());
     }
 
+    public function test_games_accessor_returns_service(): void
+    {
+        $bot = new TelegramBot('test_token');
+
+        $this->assertInstanceOf(\AhmCho\Telegram\Api\Methods\GamesService::class, $bot->games());
+    }
+
+    public function test_payments_accessor_returns_service(): void
+    {
+        $bot = new TelegramBot('test_token');
+
+        $this->assertInstanceOf(\AhmCho\Telegram\Api\Methods\PaymentsService::class, $bot->payments());
+    }
+
     public function test_formatter_accessor_returns_formatter(): void
     {
         $bot = new TelegramBot('test_token');
