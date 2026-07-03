@@ -3,21 +3,27 @@ FROM php:8.3-cli-alpine
 # Install system dependencies
 RUN apk add --no-cache \
     curl \
+    curl-dev \
     git \
     unzip \
     libzip-dev \
     oniguruma-dev \
+    linux-headers \
     $PHPIZE_DEPS
 
 # Install PHP extensions
+# Note: json is bundled into PHP core since 8.0 and openssl is compiled in
+# by the official php-alpine image, so neither is a buildable ext module.
 RUN docker-php-ext-install \
     curl \
-    json \
     mbstring \
-    openssl \
     zip \
-    pdo \
-    xdebug
+    pdo
+
+# Xdebug is a PECL-only extension, not one bundled with the PHP source tree,
+# so it must be installed via pecl rather than docker-php-ext-install.
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
 
 # Configure Xdebug for development
 RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \

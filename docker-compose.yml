@@ -1,20 +1,6 @@
-version: '3.8'
-
 services:
-  bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: telegram-bot
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - .:/app
-      - ./logs:/app/logs
-    working_dir: /app
-    command: php -f public/webhook.php
-
+  # Long-polling echo bot — runs by default with `docker compose up` so you
+  # can chat with the bot on Telegram immediately, no public URL required.
   bot-dev:
     build:
       context: .
@@ -28,8 +14,30 @@ services:
       - ./logs:/app/logs
     working_dir: /app
     command: php examples/echo.php
+
+  # Production webhook server. Requires a public HTTPS URL (reverse proxy /
+  # tunnel) registered via $bot->webhooks()->set() before Telegram can reach
+  # it. Opt in explicitly: `docker compose --profile webhook up bot`.
+  # Do NOT run this at the same time as bot-dev against the same bot token —
+  # Telegram returns a 409 Conflict if both getUpdates (long polling) and an
+  # active webhook are used together.
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    working_dir: /app
+    command: php -S 0.0.0.0:8080 -t public
     profiles:
-      - dev
+      - webhook
 
   worker:
     build:
