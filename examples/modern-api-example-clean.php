@@ -42,7 +42,7 @@ $config = $bot->api()->getConfig();
 echo "   Token: " . substr($config->getToken(), 0, 20) . "...\n";
 echo "   API URL: " . $config->getApiUrl() . "\n";
 echo "   Timeout: " . $config->getTimeout() . "s\n";
-echo "   Immutable: " . (new ReflectionProperty($config, 'token')->isReadOnly() ? 'Yes' : 'No') . "\n\n";
+echo "   Immutable: " . ((new ReflectionProperty($config, 'token'))->isReadOnly() ? 'Yes' : 'No') . "\n\n";
 
 // ===== Feature 4: Constructor Property Promotion =====
 echo "4️⃣  Constructor Property Promotion\n";
@@ -83,7 +83,7 @@ echo "7️⃣  Value Objects (Immutable)\n";
 use AhmCho\Telegram\Bulk\BulkResult;
 
 $result = BulkResult::empty();
-echo "   BulkResult is readonly class: " . (new ReflectionClass($result)->isReadOnly() ? 'Yes' : 'No') . "\n";
+echo "   BulkResult is readonly class: " . ((new ReflectionClass($result))->isReadOnly() ? 'Yes' : 'No') . "\n";
 echo "   Total: " . $result->total . "\n";
 echo "   Success rate: " . $result->getSuccessRate() . "%\n\n";
 

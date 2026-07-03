@@ -73,6 +73,49 @@ final class StreamHttpClientTest extends TestCase
         $this->assertSame(0, $client->getLastHttpCode());
     }
 
+    public function test_resolveTimeout_uses_config_timeout_when_no_timeout_param(): void
+    {
+        $config = new BotConfig('token', timeout: 30);
+        $client = new StreamHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(30, $method->invoke($client, ['chat_id' => 123]));
+    }
+
+    public function test_resolveTimeout_extends_beyond_long_poll_timeout_param(): void
+    {
+        // getUpdates(['timeout' => 30]) with the default 30s client timeout
+        // is a guaranteed race: the stream can abort right as Telegram's
+        // long-poll response is due. The client timeout must exceed it.
+        $config = new BotConfig('token', timeout: 30);
+        $client = new StreamHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(40, $method->invoke($client, ['timeout' => 30]));
+    }
+
+    public function test_resolveTimeout_keeps_larger_config_timeout(): void
+    {
+        $config = new BotConfig('token', timeout: 120);
+        $client = new StreamHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(120, $method->invoke($client, ['timeout' => 30]));
+    }
+
+    public function test_resolveTimeout_ignores_non_numeric_timeout_param(): void
+    {
+        $config = new BotConfig('token', timeout: 30);
+        $client = new StreamHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(30, $method->invoke($client, ['timeout' => 'not-a-number']));
+    }
+
     public function test_successful_post_request_returns_array(): void
     {
         // Test that request method signature accepts correct parameters

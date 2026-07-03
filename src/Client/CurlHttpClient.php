@@ -49,7 +49,7 @@ final class CurlHttpClient implements HttpClientInterface
             CURLOPT_URL => $url,
             CURLOPT_POST => $method === HttpMethod::POST,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $this->config->getTimeout(),
+            CURLOPT_TIMEOUT => $this->resolveTimeout($params),
             CURLOPT_SSL_VERIFYPEER => $verifySsl,
             CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
         ];
@@ -151,7 +151,7 @@ final class CurlHttpClient implements HttpClientInterface
             CURLOPT_URL => $url,
             CURLOPT_POST => $method === HttpMethod::POST,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $this->config->getTimeout(),
+            CURLOPT_TIMEOUT => $this->resolveTimeout($params),
             CURLOPT_SSL_VERIFYPEER => $verifySsl,
             CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
         ];
@@ -168,6 +168,28 @@ final class CurlHttpClient implements HttpClientInterface
         curl_setopt_array($ch, $options);
 
         return $ch;
+    }
+
+    /**
+     * Resolve the cURL timeout for a request.
+     *
+     * Telegram's long-poll `timeout` param (used by getUpdates) tells the
+     * server how long it may hold the connection open waiting for updates.
+     * If the HTTP client timeout is not comfortably larger than that, cURL
+     * aborts the connection right around when the long-poll response is
+     * due, surfacing as a spurious "Operation timed out" error.
+     *
+     * @param array<string, mixed> $params
+     */
+    private function resolveTimeout(array $params): int
+    {
+        $configTimeout = $this->config->getTimeout();
+
+        if (!isset($params['timeout']) || !is_numeric($params['timeout'])) {
+            return $configTimeout;
+        }
+
+        return max($configTimeout, (int) $params['timeout'] + 10);
     }
 
     private function executeMultiHandles(

@@ -107,6 +107,51 @@ final class CurlHttpClientTest extends TestCase
         $this->assertSame(30, $config->getTimeout());
     }
 
+    public function test_resolveTimeout_uses_config_timeout_when_no_timeout_param(): void
+    {
+        $config = new BotConfig('token', timeout: 30);
+        $client = new CurlHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(30, $method->invoke($client, ['chat_id' => 123]));
+    }
+
+    public function test_resolveTimeout_extends_beyond_long_poll_timeout_param(): void
+    {
+        // getUpdates(['timeout' => 30]) with the default 30s client timeout
+        // is a guaranteed race: cURL can abort right as Telegram's long-poll
+        // response is due. The client timeout must exceed the poll timeout.
+        $config = new BotConfig('token', timeout: 30);
+        $client = new CurlHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(40, $method->invoke($client, ['timeout' => 30]));
+    }
+
+    public function test_resolveTimeout_keeps_larger_config_timeout(): void
+    {
+        // If the config timeout already comfortably exceeds the poll
+        // timeout plus buffer, don't shrink it.
+        $config = new BotConfig('token', timeout: 120);
+        $client = new CurlHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(120, $method->invoke($client, ['timeout' => 30]));
+    }
+
+    public function test_resolveTimeout_ignores_non_numeric_timeout_param(): void
+    {
+        $config = new BotConfig('token', timeout: 30);
+        $client = new CurlHttpClient($config);
+
+        $method = new \ReflectionMethod($client, 'resolveTimeout');
+
+        $this->assertSame(30, $method->invoke($client, ['timeout' => 'not-a-number']));
+    }
+
     public function test_config_ssl_verification_is_respected(): void
     {
         $configWithSsl = new BotConfig('token', verifySsl: true);
