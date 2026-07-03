@@ -324,4 +324,68 @@ final class MediaServiceTest extends TestCase
         $request = $this->mockClient->getLastRequest();
         $this->assertSame('Audio_with_special_chars', $request['params']['caption']);
     }
+
+    public function test_getFile_returns_file_object(): void
+    {
+        $expectedResponse = [
+            'file_id' => 'BQACAgIAAxkBAAIBY2',
+            'file_unique_id' => 'AQADkgADhZ4xS3I',
+            'file_size' => 14253,
+            'file_path' => 'documents/file_0.pdf',
+        ];
+        $this->mockClient->setResponse($expectedResponse);
+
+        $result = $this->mediaService->getFile(['file_id' => 'BQACAgIAAxkBAAIBY2']);
+
+        $this->assertSame($expectedResponse, $result);
+        $this->assertArrayHasKey('file_path', $result);
+        $this->assertSame('documents/file_0.pdf', $result['file_path']);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame('BQACAgIAAxkBAAIBY2', $lastRequest['params']['file_id']);
+    }
+
+    public function test_getFile_passes_file_id_to_api(): void
+    {
+        $this->mockClient->setResponse(['file_id' => 'abc', 'file_unique_id' => 'xyz']);
+
+        $this->mediaService->getFile(['file_id' => 'abc']);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertStringContainsString('getFile', $lastRequest['url']);
+        $this->assertSame('abc', $lastRequest['params']['file_id']);
+    }
+
+    public function test_getFileDownloadUrl_builds_correct_url(): void
+    {
+        $url = $this->mediaService->getFileDownloadUrl('photos/file_17.jpg');
+
+        $this->assertSame(
+            'https://api.telegram.org/file/bottest_token/photos/file_17.jpg',
+            $url
+        );
+    }
+
+    public function test_getFileDownloadUrl_includes_token(): void
+    {
+        $url = $this->mediaService->getFileDownloadUrl('voice/file_0.oga');
+
+        $this->assertStringContainsString('test_token', $url);
+        $this->assertStringContainsString('voice/file_0.oga', $url);
+    }
+
+    public function test_getFileDownloadUrl_with_custom_api_url(): void
+    {
+        $config = new BotConfig('mytoken', apiUrl: 'https://custom.tg-api.example.com/');
+        $bulkManager = new BulkOperationManager($this->mockClient, $config);
+        $apiService = new ApiService($this->mockClient, $config, $bulkManager);
+        $mediaService = new MediaService($apiService);
+
+        $url = $mediaService->getFileDownloadUrl('documents/report.pdf');
+
+        $this->assertSame(
+            'https://custom.tg-api.example.com/file/botmytoken/documents/report.pdf',
+            $url
+        );
+    }
 }
