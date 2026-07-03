@@ -31,3 +31,6 @@ composer.lock
 #Vendor specific files
 *.phar
 .phpunit.cache/*
+
+# Local task tracking
+Tasks.md

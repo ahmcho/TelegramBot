@@ -7,6 +7,7 @@ namespace AhmCho\Telegram\Tests\Unit\Client;
 use PHPUnit\Framework\TestCase;
 use AhmCho\Telegram\Client\CurlHttpClient;
 use AhmCho\Telegram\Config\BotConfig;
+use AhmCho\Telegram\Exception\ApiException;
 use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Enums\HttpMethod;
 
@@ -300,16 +301,66 @@ final class CurlHttpClientTest extends TestCase
         $method->invoke($client, $badJson);
     }
 
-    public function test_api_error_response_throws_exception(): void
+    public function test_api_error_response_throws_api_exception(): void
     {
         $client = new CurlHttpClient($this->config);
-        $errorResponse = '{"ok": false, "description": "Bad Request: invalid chat ID"}';
+        $errorResponse = '{"ok": false, "description": "Bad Request: invalid chat ID", "error_code": 400}';
 
-        $this->expectException(HttpClientException::class);
-        $this->expectExceptionMessage('Telegram API error: Bad Request: invalid chat ID');
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('Bad Request: invalid chat ID');
 
         $method = new \ReflectionMethod($client, 'parseResponse');
         $method->invoke($client, $errorResponse);
+    }
+
+    public function test_api_error_response_carries_error_code(): void
+    {
+        $client = new CurlHttpClient($this->config);
+        $errorResponse = '{"ok": false, "description": "Forbidden: bot was blocked by the user", "error_code": 403}';
+
+        $method = new \ReflectionMethod($client, 'parseResponse');
+
+        try {
+            $method->invoke($client, $errorResponse);
+            $this->fail('Expected ApiException was not thrown');
+        } catch (ApiException $e) {
+            $this->assertSame(403, $e->getErrorCode());
+            $this->assertSame('Forbidden: bot was blocked by the user', $e->getMessage());
+            $this->assertSame('Forbidden: bot was blocked by the user', $e->getResponseBody()['description']);
+        }
+    }
+
+    public function test_api_error_without_error_code_has_null_error_code(): void
+    {
+        $client = new CurlHttpClient($this->config);
+        $errorResponse = '{"ok": false, "description": "Unknown error"}';
+
+        $method = new \ReflectionMethod($client, 'parseResponse');
+
+        try {
+            $method->invoke($client, $errorResponse);
+            $this->fail('Expected ApiException was not thrown');
+        } catch (ApiException $e) {
+            $this->assertNull($e->getErrorCode());
+            $this->assertSame('Unknown error', $e->getMessage());
+        }
+    }
+
+    public function test_api_error_is_not_http_client_exception(): void
+    {
+        $client = new CurlHttpClient($this->config);
+        $errorResponse = '{"ok": false, "description": "Bad Request", "error_code": 400}';
+
+        $method = new \ReflectionMethod($client, 'parseResponse');
+
+        try {
+            $method->invoke($client, $errorResponse);
+            $this->fail('Expected ApiException was not thrown');
+        } catch (HttpClientException $e) {
+            $this->fail('Should have thrown ApiException, not HttpClientException');
+        } catch (ApiException $e) {
+            $this->assertInstanceOf(ApiException::class, $e);
+        }
     }
 
     public function test_successful_response_parses_correctly(): void

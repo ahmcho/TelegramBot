@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AhmCho\Telegram\Client\Traits;
 
+use AhmCho\Telegram\Exception\ApiException;
 use AhmCho\Telegram\Exception\HttpClientException;
 
 /**
@@ -18,7 +19,8 @@ trait ResponseParserTrait
      *
      * @param string $response Raw response body
      * @return mixed Parsed response data
-     * @throws HttpClientException On invalid JSON or API errors
+     * @throws HttpClientException On transport failures: invalid JSON, non-object response
+     * @throws ApiException On Telegram API errors: ok === false
      */
     private function parseResponse(string $response): mixed
     {
@@ -34,11 +36,22 @@ trait ResponseParserTrait
             throw $exception;
         }
 
-        if (!is_array($data) || !($data['ok'] ?? false)) {
+        if (!is_array($data)) {
             $exception = new HttpClientException(
-                "Telegram API error: " . ($data['description'] ?? 'Unknown error'),
+                'Invalid response structure: expected JSON object',
                 $this->lastHttpCode,
                 $response
+            );
+            $this->logExceptionIfEnabled($exception);
+            throw $exception;
+        }
+
+        if (!($data['ok'] ?? false)) {
+            $exception = new ApiException(
+                $data['description'] ?? 'Unknown Telegram API error',
+                $data['error_code'] ?? null,
+                $this->lastHttpCode,
+                $data
             );
             $this->logExceptionIfEnabled($exception);
             throw $exception;
