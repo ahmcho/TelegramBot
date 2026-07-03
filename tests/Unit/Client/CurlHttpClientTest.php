@@ -256,6 +256,22 @@ final class CurlHttpClientTest extends TestCase
         $this->assertInstanceOf(\CURLFile::class, $params['photo']);
     }
 
+    public function test_hasFileUpload_detects_media_group_attach_field(): void
+    {
+        // Mirrors what MediaService::prepareMediaGroupAttachments() produces:
+        // the CURLFile is hoisted to a top-level key, 'media' becomes a JSON string.
+        $client = new CurlHttpClient($this->config);
+        $method = new \ReflectionMethod($client, 'hasFileUpload');
+
+        $params = [
+            'chat_id' => 123,
+            'media' => json_encode([['type' => 'photo', 'media' => 'attach://media_attach_0']]),
+            'media_attach_0' => new \CURLFile(__FILE__),
+        ];
+
+        $this->assertTrue($method->invoke($client, $params));
+    }
+
     public function test_request_handles_special_characters_in_params(): void
     {
         // Test that special characters are properly JSON encoded

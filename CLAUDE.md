@@ -95,7 +95,9 @@ tg-bots/
 │   │   ├── StreamHttpClient.php
 │   │   ├── HttpClientFactory.php
 │   │   ├── HttpClientInterface.php
-│   │   └── Traits/ResponseParserTrait.php
+│   │   └── Traits/
+│   │       ├── ResponseParserTrait.php
+│   │       └── MultipartRequestTrait.php
 │   ├── Command/
 │   │   └── CommandHandler.php
 │   ├── Config/
@@ -244,7 +246,9 @@ $bot->media()->sendMediaGroup([
 // Returns array of Message objects, one per media item.
 ```
 
-Only the first item's `caption` / `parse_mode` is shown in the album notification. Telegram accepts 2–10 items per group. Local file uploads use `CURLFile` in the `media` field and an `attach://` reference is handled automatically by the HTTP client.
+Only the first item's `caption` / `parse_mode` is shown in the album notification. Telegram accepts 2–10 items per group.
+
+**Local file uploads in a media group:** pass a `CURLFile` as an item's `media` (or `thumbnail`) value. `MediaService::sendMediaGroup()` extracts each `CURLFile` into a top-level `attach://` field (`media_attach_0`, `media_attach_1`, ...) and JSON-encodes the `media` array before the request reaches the HTTP client — this is required by Telegram, which expects `media` as a JSON string plus separate multipart fields for each attached file, not an embedded file object. Both `CurlHttpClient` and `StreamHttpClient` then upload those `attach://`-named fields as real multipart file parts via the shared `MultipartRequestTrait`.
 
 ### ChatService (`src/Api/Methods/ChatService.php`)
 
