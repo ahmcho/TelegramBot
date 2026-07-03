@@ -10,11 +10,13 @@ use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
+use AhmCho\Telegram\Client\Traits\MultipartRequestTrait;
 
 final class CurlHttpClient implements HttpClientInterface
 {
     use LoggerHelperTrait;
     use ResponseParserTrait;
+    use MultipartRequestTrait;
 
     private int $lastHttpCode = 0;
 
@@ -266,16 +268,6 @@ final class CurlHttpClient implements HttpClientInterface
                 'error' => $e->getMessage()
             ];
         }
-    }
-
-    private function hasFileUpload(array $params): bool
-    {
-        foreach ($params as $value) {
-            if ($value instanceof \CURLFile) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }

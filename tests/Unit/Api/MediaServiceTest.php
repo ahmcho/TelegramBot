@@ -450,4 +450,96 @@ final class MediaServiceTest extends TestCase
         $this->assertSame(302, $result[1]['message_id']);
         $this->assertSame(303, $result[2]['message_id']);
     }
+
+    public function test_sendMediaGroup_extracts_local_curlfile_to_attach_field(): void
+    {
+        $this->mockClient->setResponse([['message_id' => 400]]);
+        $file = new \CURLFile(__FILE__);
+
+        $this->mediaService->sendMediaGroup([
+            'chat_id' => 123,
+            'media' => [
+                ['type' => 'photo', 'media' => $file, 'caption' => 'Local upload'],
+            ],
+        ]);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $params = $lastRequest['params'];
+
+        $this->assertArrayHasKey('media_attach_0', $params);
+        $this->assertInstanceOf(\CURLFile::class, $params['media_attach_0']);
+        $this->assertSame($file, $params['media_attach_0']);
+
+        $this->assertIsString($params['media']);
+        $decodedMedia = json_decode($params['media'], true);
+        $this->assertSame('attach://media_attach_0', $decodedMedia[0]['media']);
+        $this->assertSame('Local upload', $decodedMedia[0]['caption']);
+    }
+
+    public function test_sendMediaGroup_extracts_multiple_local_curlfiles_with_unique_names(): void
+    {
+        $this->mockClient->setResponse([['message_id' => 401], ['message_id' => 402]]);
+        $fileA = new \CURLFile(__FILE__);
+        $fileB = new \CURLFile(__FILE__);
+
+        $this->mediaService->sendMediaGroup([
+            'chat_id' => 123,
+            'media' => [
+                ['type' => 'photo', 'media' => $fileA],
+                ['type' => 'video', 'media' => $fileB],
+            ],
+        ]);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $params = $lastRequest['params'];
+
+        $this->assertInstanceOf(\CURLFile::class, $params['media_attach_0']);
+        $this->assertInstanceOf(\CURLFile::class, $params['media_attach_1']);
+
+        $decodedMedia = json_decode($params['media'], true);
+        $this->assertSame('attach://media_attach_0', $decodedMedia[0]['media']);
+        $this->assertSame('attach://media_attach_1', $decodedMedia[1]['media']);
+    }
+
+    public function test_sendMediaGroup_extracts_local_curlfile_from_thumbnail(): void
+    {
+        $this->mockClient->setResponse([['message_id' => 403]]);
+        $video = new \CURLFile(__FILE__);
+        $thumb = new \CURLFile(__FILE__);
+
+        $this->mediaService->sendMediaGroup([
+            'chat_id' => 123,
+            'media' => [
+                ['type' => 'video', 'media' => $video, 'thumbnail' => $thumb],
+            ],
+        ]);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $params = $lastRequest['params'];
+
+        $this->assertInstanceOf(\CURLFile::class, $params['media_attach_0']);
+        $this->assertInstanceOf(\CURLFile::class, $params['media_attach_1']);
+
+        $decodedMedia = json_decode($params['media'], true);
+        $this->assertSame('attach://media_attach_0', $decodedMedia[0]['media']);
+        $this->assertSame('attach://media_attach_1', $decodedMedia[0]['thumbnail']);
+    }
+
+    public function test_sendMediaGroup_without_local_files_leaves_media_as_array(): void
+    {
+        $this->mockClient->setResponse([['message_id' => 404]]);
+
+        $this->mediaService->sendMediaGroup([
+            'chat_id' => 123,
+            'media' => [
+                ['type' => 'photo', 'media' => 'file_id_or_url'],
+            ],
+        ]);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $params = $lastRequest['params'];
+
+        $this->assertIsArray($params['media']);
+        $this->assertArrayNotHasKey('media_attach_0', $params);
+    }
 }

@@ -154,14 +154,60 @@ class MediaService
      * Returns an array of Message objects (one per media item).
      *
      * Each element of $params['media'] must be an InputMedia array:
-     *   ['type' => 'photo'|'video'|'audio'|'document', 'media' => <file_id|url>, ...]
+     *   ['type' => 'photo'|'video'|'audio'|'document', 'media' => <file_id|url|CURLFile>, ...]
+     *
+     * Local uploads: pass a `CURLFile` as an item's `media` (or `thumbnail`) value.
+     * It is extracted into a top-level `attach://` field before the request is sent,
+     * since Telegram requires `media` itself to reference local files by name rather
+     * than embed them inline.
      *
      * @param array{chat_id: int|string, media: array<int, array<string, mixed>>, message_thread_id?: int, disable_notification?: bool, protect_content?: bool, reply_to_message_id?: int} $params
      * @return array<int, array<string, mixed>> Array of sent Message objects
      */
     public function sendMediaGroup(array $params): array
     {
+        $params = $this->prepareMediaGroupAttachments($params);
         return $this->apiService->call(ApiMethod::SEND_MEDIA_GROUP, $params);
+    }
+
+    /**
+     * Extract any `CURLFile` values embedded in $params['media'] items into
+     * top-level `attach://` fields, and JSON-encode the media array once any
+     * local file is found (required by Telegram for multipart requests).
+     *
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
+    private function prepareMediaGroupAttachments(array $params): array
+    {
+        if (!isset($params['media']) || !is_array($params['media'])) {
+            return $params;
+        }
+
+        $hasLocalFile = false;
+        $attachIndex = 0;
+
+        foreach ($params['media'] as &$item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            foreach (['media', 'thumbnail'] as $field) {
+                if (isset($item[$field]) && $item[$field] instanceof \CURLFile) {
+                    $attachName = 'media_attach_' . $attachIndex++;
+                    $params[$attachName] = $item[$field];
+                    $item[$field] = 'attach://' . $attachName;
+                    $hasLocalFile = true;
+                }
+            }
+        }
+        unset($item);
+
+        if ($hasLocalFile) {
+            $params['media'] = json_encode($params['media']);
+        }
+
+        return $params;
     }
 
     /**

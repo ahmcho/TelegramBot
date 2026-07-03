@@ -434,4 +434,85 @@ final class StreamHttpClientTest extends TestCase
         $this->assertSame('test_string', $result);
         $this->assertIsString($result);
     }
+
+    public function test_hasFileUpload_detects_curlfile(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $method = new \ReflectionMethod($client, 'hasFileUpload');
+
+        $this->assertFalse($method->invoke($client, ['chat_id' => 123, 'text' => 'Hello']));
+        $this->assertTrue($method->invoke($client, ['chat_id' => 123, 'photo' => new \CURLFile(__FILE__)]));
+    }
+
+    public function test_buildMultipartBody_includes_file_contents_and_boundary(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $method = new \ReflectionMethod($client, 'buildMultipartBody');
+
+        $result = $method->invoke($client, [
+            'chat_id' => 123,
+            'caption' => 'A test photo',
+            'photo' => new \CURLFile(__FILE__),
+        ]);
+
+        $this->assertArrayHasKey('body', $result);
+        $this->assertArrayHasKey('boundary', $result);
+
+        $body = $result['body'];
+        $boundary = $result['boundary'];
+
+        $this->assertStringContainsString("--{$boundary}", $body);
+        $this->assertStringContainsString("--{$boundary}--\r\n", $body);
+        $this->assertStringContainsString('Content-Disposition: form-data; name="chat_id"', $body);
+        $this->assertStringContainsString("123", $body);
+        $this->assertStringContainsString('Content-Disposition: form-data; name="caption"', $body);
+        $this->assertStringContainsString('A test photo', $body);
+        $this->assertStringContainsString(
+            'Content-Disposition: form-data; name="photo"; filename="' . basename(__FILE__) . '"',
+            $body
+        );
+        $this->assertStringContainsString(file_get_contents(__FILE__), $body);
+    }
+
+    public function test_buildMultipartBody_encodes_bool_and_array_fields(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $method = new \ReflectionMethod($client, 'buildMultipartBody');
+
+        $result = $method->invoke($client, [
+            'disable_notification' => true,
+            'protect_content' => false,
+            'entities' => ['type' => 'bold', 'offset' => 0, 'length' => 4],
+            'skip_me' => null,
+        ]);
+
+        $body = $result['body'];
+
+        $this->assertMatchesRegularExpression(
+            '/name="disable_notification"\r\n\r\n1\r\n/',
+            $body
+        );
+        $this->assertMatchesRegularExpression(
+            '/name="protect_content"\r\n\r\n\r\n/',
+            $body
+        );
+        $this->assertStringContainsString(
+            json_encode(['type' => 'bold', 'offset' => 0, 'length' => 4]),
+            $body
+        );
+        $this->assertStringNotContainsString('name="skip_me"', $body);
+    }
+
+    public function test_buildMultipartBody_throws_for_unreadable_file(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $method = new \ReflectionMethod($client, 'buildMultipartBody');
+
+        $this->expectException(HttpClientException::class);
+        $this->expectExceptionMessage('Unable to read local file for upload');
+
+        $method->invoke($client, [
+            'photo' => new \CURLFile(__DIR__ . '/does-not-exist-' . uniqid() . '.jpg'),
+        ]);
+    }
 }

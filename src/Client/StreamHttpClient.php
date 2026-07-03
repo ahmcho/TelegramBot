@@ -10,11 +10,13 @@ use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
+use AhmCho\Telegram\Client\Traits\MultipartRequestTrait;
 
 final class StreamHttpClient implements HttpClientInterface
 {
     use LoggerHelperTrait;
     use ResponseParserTrait;
+    use MultipartRequestTrait;
 
     private int $lastHttpCode = 0;
     private bool $parallelWarningLogged = false;
@@ -49,11 +51,20 @@ final class StreamHttpClient implements HttpClientInterface
             throw $exception;
         }
 
+        if ($this->hasFileUpload($params)) {
+            $multipart = $this->buildMultipartBody($params);
+            $header = "Content-Type: multipart/form-data; boundary={$multipart['boundary']}";
+            $content = $multipart['body'];
+        } else {
+            $header = 'Content-Type: application/json';
+            $content = json_encode($params);
+        }
+
         $options = [
             'http' => [
                 'method' => $method->value,
-                'header' => 'Content-Type: application/json',
-                'content' => json_encode($params),
+                'header' => $header,
+                'content' => $content,
                 'timeout' => $this->config->getTimeout(),
                 'ignore_errors' => true,
             ],
