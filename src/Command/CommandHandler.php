@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Command;
 
 use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Enums\ParseMode;
 
 /**
  * Command Handler System
@@ -222,7 +223,7 @@ class CommandHandler
         $this->bot->messages()->send([
             'chat_id' => $chatId,
             'text' => $this->generateHelp(),
-            'parse_mode' => 'MarkdownV2'
+            'parse_mode' => ParseMode::MARKDOWN_V2->value
         ]);
     }
 
