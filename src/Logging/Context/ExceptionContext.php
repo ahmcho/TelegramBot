@@ -42,15 +42,7 @@ readonly class ExceptionContext
                 'http_code' => $exception->getHttpCode(),
                 'response_body' => $exception->getResponseBody(),
             ],
-            BulkSendException::class => (function() use ($exception) {
-                $result = $exception->getResult();
-                return [
-                    'bulk_total' => $result->total,
-                    'bulk_successful' => $result->successful,
-                    'bulk_failed' => $result->failed,
-                    'success_rate' => round($result->getSuccessRate(), 2) . '%',
-                ];
-            })(),
+            BulkSendException::class => self::buildBulkContext($exception),
             default => null
         };
 
@@ -91,6 +83,23 @@ readonly class ExceptionContext
         }
 
         return $data;
+    }
+
+    /**
+     * Build additional context data for a BulkSendException
+     *
+     * @return array<string, mixed>
+     */
+    private static function buildBulkContext(BulkSendException $exception): array
+    {
+        $result = $exception->getResult();
+
+        return [
+            'bulk_total' => $result->total,
+            'bulk_successful' => $result->successful,
+            'bulk_failed' => $result->failed,
+            'success_rate' => round($result->getSuccessRate(), 2) . '%',
+        ];
     }
 
     /**
