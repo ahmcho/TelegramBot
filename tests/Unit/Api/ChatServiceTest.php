@@ -216,4 +216,79 @@ final class ChatServiceTest extends TestCase
         $this->assertSame('cq456', $lastRequest['params']['callback_query_id']);
         $this->assertTrue($lastRequest['params']['show_alert']);
     }
+
+    public function test_setChatTitle_returns_true(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->setChatTitle(['chat_id' => 123, 'title' => 'New Title']);
+
+        $this->assertTrue($result);
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame('New Title', $lastRequest['params']['title']);
+    }
+
+    public function test_setChatDescription_returns_true(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->setChatDescription([
+            'chat_id' => 123,
+            'description' => 'A great group',
+        ]);
+
+        $this->assertTrue($result);
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame('A great group', $lastRequest['params']['description']);
+    }
+
+    public function test_setChatDescription_without_description_clears_it(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->setChatDescription(['chat_id' => 123]);
+
+        $this->assertTrue($result);
+        $this->assertSame(1, $this->mockClient->getRequestCount());
+    }
+
+    public function test_setChatPhoto_returns_true(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->setChatPhoto(['chat_id' => 123, 'photo' => 'file_id_xyz']);
+
+        $this->assertTrue($result);
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame('file_id_xyz', $lastRequest['params']['photo']);
+    }
+
+    public function test_deleteChatPhoto_returns_true(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $result = $this->chatService->deleteChatPhoto(['chat_id' => 123]);
+
+        $this->assertTrue($result);
+        $this->assertSame(1, $this->mockClient->getRequestCount());
+    }
+
+    public function test_setChatPermissions_returns_true(): void
+    {
+        $this->mockClient->setBoolResponse(true);
+
+        $permissions = [
+            'can_send_messages' => true,
+            'can_send_polls' => false,
+            'can_invite_users' => true,
+        ];
+        $result = $this->chatService->setChatPermissions([
+            'chat_id' => 123,
+            'permissions' => $permissions,
+        ]);
+
+        $this->assertTrue($result);
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame($permissions, $lastRequest['params']['permissions']);
+    }
 }
