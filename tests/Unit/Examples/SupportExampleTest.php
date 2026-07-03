@@ -69,10 +69,10 @@ final class SupportExampleTest extends TestCase
         $this->assertArrayHasKey('keyboard', $markup);
         $this->assertTrue($markup['resize_keyboard']);
         $this->assertTrue($markup['one_time_keyboard']);
-        // ReplyKeyboardBuilder stores button text as plain strings (Telegram accepts both)
-        $this->assertSame('🎫 New Ticket', $markup['keyboard'][0][0]);
-        $this->assertSame('📋 My Tickets', $markup['keyboard'][0][1]);
-        $this->assertSame('❓ Help', $markup['keyboard'][1][0]);
+        // ReplyKeyboardBuilder stores buttons as {text: string} objects per the Bot API spec
+        $this->assertSame(['text' => '🎫 New Ticket'], $markup['keyboard'][0][0]);
+        $this->assertSame(['text' => '📋 My Tickets'], $markup['keyboard'][0][1]);
+        $this->assertSame(['text' => '❓ Help'], $markup['keyboard'][1][0]);
     }
 
     public function test_new_command_shows_category_selection_keyboard(): void

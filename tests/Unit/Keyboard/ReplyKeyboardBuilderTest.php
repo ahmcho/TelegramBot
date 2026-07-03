@@ -81,7 +81,7 @@ final class ReplyKeyboardBuilderTest extends TestCase
 
         $this->assertCount(1, $array['keyboard']);
         $this->assertCount(1, $array['keyboard'][0]);
-        $this->assertSame('Button 1', $array['keyboard'][0][0]);
+        $this->assertSame(['text' => 'Button 1'], $array['keyboard'][0][0]);
     }
 
     public function test_addRow_adds_multiple_button_texts_in_same_row(): void
@@ -97,7 +97,10 @@ final class ReplyKeyboardBuilderTest extends TestCase
 
         $this->assertCount(1, $array['keyboard']);
         $this->assertCount(3, $array['keyboard'][0]);
-        $this->assertSame(['Button 1', 'Button 2', 'Button 3'], $array['keyboard'][0]);
+        $this->assertSame(
+            [['text' => 'Button 1'], ['text' => 'Button 2'], ['text' => 'Button 3']],
+            $array['keyboard'][0]
+        );
     }
 
     public function test_addRow_returns_self_for_fluent_interface(): void
@@ -253,10 +256,10 @@ final class ReplyKeyboardBuilderTest extends TestCase
 
         $array = $builder->toArray();
 
-        // Reply keyboard should only use button text, not the full button array
-        $this->assertSame('Test', $array['keyboard'][0][0]);
+        // Reply keyboard should only use button text, not callback_data or other Button metadata
+        $this->assertSame(['text' => 'Test'], $array['keyboard'][0][0]);
         $this->assertIsArray($array['keyboard'][0]);
-        $this->assertIsString($array['keyboard'][0][0]);
+        $this->assertArrayNotHasKey('callback_data', $array['keyboard'][0][0]);
     }
 
     public function test_complex_keyboard_structure(): void
@@ -290,8 +293,8 @@ final class ReplyKeyboardBuilderTest extends TestCase
         $json = $builder->build();
         $decoded = json_decode($json, true);
 
-        $this->assertSame('🎉 Celebrate', $decoded['keyboard'][0][0]);
-        $this->assertSame('❌ Cancel', $decoded['keyboard'][0][1]);
+        $this->assertSame(['text' => '🎉 Celebrate'], $decoded['keyboard'][0][0]);
+        $this->assertSame(['text' => '❌ Cancel'], $decoded['keyboard'][0][1]);
     }
 
     public function test_multiple_builders_are_independent(): void
@@ -310,7 +313,7 @@ final class ReplyKeyboardBuilderTest extends TestCase
 
         $this->assertTrue($array1['resize_keyboard']);
         $this->assertFalse($array2['resize_keyboard']);
-        $this->assertSame('Builder 1', $array1['keyboard'][0][0]);
-        $this->assertSame('Builder 2', $array2['keyboard'][0][0]);
+        $this->assertSame(['text' => 'Builder 1'], $array1['keyboard'][0][0]);
+        $this->assertSame(['text' => 'Builder 2'], $array2['keyboard'][0][0]);
     }
 }

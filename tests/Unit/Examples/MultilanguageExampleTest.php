@@ -309,10 +309,10 @@ final class MultilanguageExampleTest extends TestCase
 
         $markup = $builder->toArray();
 
-        // ReplyKeyboardBuilder stores button text as plain strings
-        $this->assertSame('✨ Características', $markup['keyboard'][0][0]);
-        $this->assertSame('⚙️ Configuración', $markup['keyboard'][0][1]);
-        $this->assertSame('ℹ️ Acerca de', $markup['keyboard'][1][0]);
+        // ReplyKeyboardBuilder stores buttons as {text: string} objects per the Bot API spec
+        $this->assertSame(['text' => '✨ Características'], $markup['keyboard'][0][0]);
+        $this->assertSame(['text' => '⚙️ Configuración'], $markup['keyboard'][0][1]);
+        $this->assertSame(['text' => 'ℹ️ Acerca de'], $markup['keyboard'][1][0]);
     }
 
     public function test_language_selection_inline_keyboard_pairs_languages(): void

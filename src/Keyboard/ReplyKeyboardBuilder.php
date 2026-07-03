@@ -12,7 +12,7 @@ namespace AhmCho\Telegram\Keyboard;
 class ReplyKeyboardBuilder implements KeyboardBuilderInterface
 {
     /**
-     * @var array<int, array<int, string>>
+     * @var array<int, array<int, array<string, string>>>
      */
     private array $rows = [];
 
@@ -26,7 +26,7 @@ class ReplyKeyboardBuilder implements KeyboardBuilderInterface
     public function addRow(Button ...$buttons): self
     {
         $this->rows[] = array_map(
-            fn(Button $button) => $button->text,
+            fn(Button $button) => ['text' => $button->text],
             $buttons
         );
 
