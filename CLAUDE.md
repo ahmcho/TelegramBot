@@ -217,13 +217,32 @@ When `parse_mode => 'MarkdownV2'` is set, the `text` and `caption` fields are au
 
 Auto-escaping applies to captioned methods (`sendPhoto`, `sendDocument`, `sendVideo`, `sendAudio`, `sendVoice`, `sendAnimation`) when `parse_mode => 'MarkdownV2'` is set.
 
-**Methods:** `sendPhoto()`, `sendDocument()`, `sendVideo()`, `sendAudio()`, `sendVoice()`, `sendAnimation()`, `sendSticker()`, `sendLocation()`, `sendVenue()`, `sendContact()`, `sendPoll()`, `sendDice()`, `getCustomEmojiStickers()`
+**Methods:** `sendPhoto()`, `sendDocument()`, `sendVideo()`, `sendAudio()`, `sendVoice()`, `sendAnimation()`, `sendSticker()`, `sendLocation()`, `sendVenue()`, `sendContact()`, `sendPoll()`, `sendDice()`, `getCustomEmojiStickers()`, `sendMediaGroup()`, `getFile()`, `getFileDownloadUrl()`
 
 **Input types:** File ID (string), URL (string), `CURLFile` (local upload)
 
+**`sendMediaGroup()` — `media` array structure:**
+
+Each element must be an `InputMedia*` array with at minimum `type` and `media`:
+
+```php
+$bot->media()->sendMediaGroup([
+    'chat_id' => $chatId,
+    'media' => [
+        ['type' => 'photo',    'media' => 'file_id_or_url', 'caption' => 'optional'],
+        ['type' => 'video',    'media' => 'file_id_or_url', 'width' => 1280, 'height' => 720],
+        ['type' => 'audio',    'media' => 'file_id_or_url', 'title' => 'Song', 'performer' => 'Artist'],
+        ['type' => 'document', 'media' => 'file_id_or_url'],
+    ],
+]);
+// Returns array of Message objects, one per media item.
+```
+
+Only the first item's `caption` / `parse_mode` is shown in the album notification. Telegram accepts 2–10 items per group. Local file uploads use `CURLFile` in the `media` field and an `attach://` reference is handled automatically by the HTTP client.
+
 ### ChatService (`src/Api/Methods/ChatService.php`)
 
-**Methods:** `sendAction()`, `getChat()`, `getMember()`, `getAdministrators()`, `getMemberCount()`, `banMember()`, `unbanMember()`, `restrictMember()`, `promoteMember()`, `leave()`, `pinMessage()`, `unpinMessage()`, `unpinAllMessages()`, `getMenuButton()`, `setMenuButton()`, `answerCallbackQuery()`
+**Methods:** `sendAction()`, `getChat()`, `getMember()`, `getAdministrators()`, `getMemberCount()`, `banMember()`, `unbanMember()`, `restrictMember()`, `promoteMember()`, `leave()`, `pinMessage()`, `unpinMessage()`, `unpinAllMessages()`, `setChatTitle()`, `setChatDescription()`, `setChatPhoto()`, `deleteChatPhoto()`, `setChatPermissions()`, `getMenuButton()`, `setMenuButton()`, `answerCallbackQuery()`
 
 ### PollsService (`src/Api/Methods/PollsService.php`)
 
@@ -318,14 +337,15 @@ $config = new BotConfig(
     apiUrl: 'https://api.telegram.org/', // default
     timeout: 30,                          // default, seconds
     throwExceptions: true,                // default
-    verifySsl: false,                     // default
+    verifySsl: true,                      // default — set false only for local dev
     loggingEnabled: true,                 // default
     logFilePath: 'bot.log',              // default
     logLevel: 'INFO'                      // default
 );
 
 // Fluent mutators — each returns a new instance:
-$config->withTimeout(60)
+$config->withVerifySsl(false)        // disable SSL for local dev
+       ->withTimeout(60)
        ->withThrowExceptions(false)
        ->withLoggingEnabled(false)
        ->withLogFilePath('logs/bot.log')

@@ -27,6 +27,7 @@ enum ApiMethod: string
     case GET_FILE = 'getFile';
 
         // Media methods
+    case SEND_MEDIA_GROUP = 'sendMediaGroup';
     case SEND_PHOTO = 'sendPhoto';
     case SEND_DOCUMENT = 'sendDocument';
     case SEND_VIDEO = 'sendVideo';
