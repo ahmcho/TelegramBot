@@ -148,4 +148,31 @@ class MediaService
             $params
         );
     }
+
+    /**
+     * Get basic information about a file and prepare it for downloading.
+     * The returned file_path can be passed to getFileDownloadUrl().
+     *
+     * @param array{file_id: string} $params
+     * @return array{file_id: string, file_unique_id: string, file_size?: int, file_path?: string}
+     */
+    public function getFile(array $params): array
+    {
+        return $this->apiService->call(ApiMethod::GET_FILE, $params);
+    }
+
+    /**
+     * Build the full HTTPS download URL for a file_path returned by getFile().
+     *
+     * @param string $filePath The file_path field from the getFile() response
+     * @return string Full download URL including the bot token
+     */
+    public function getFileDownloadUrl(string $filePath): string
+    {
+        $config = $this->apiService->getConfig();
+        $base = rtrim($config->getApiUrl(), '/');
+        $token = $config->getToken();
+
+        return "{$base}/file/bot{$token}/{$filePath}";
+    }
 }

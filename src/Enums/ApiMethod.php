@@ -23,6 +23,9 @@ enum ApiMethod: string
     case FORWARD_MESSAGE = 'forwardMessage';
     case COPY_MESSAGE = 'copyMessage';
 
+        // File operations
+    case GET_FILE = 'getFile';
+
         // Media methods
     case SEND_PHOTO = 'sendPhoto';
     case SEND_DOCUMENT = 'sendDocument';
