@@ -150,6 +150,21 @@ class MediaService
     }
 
     /**
+     * Send a group of photos, videos, documents, or audios as an album.
+     * Returns an array of Message objects (one per media item).
+     *
+     * Each element of $params['media'] must be an InputMedia array:
+     *   ['type' => 'photo'|'video'|'audio'|'document', 'media' => <file_id|url>, ...]
+     *
+     * @param array{chat_id: int|string, media: array<int, array<string, mixed>>, message_thread_id?: int, disable_notification?: bool, protect_content?: bool, reply_to_message_id?: int} $params
+     * @return array<int, array<string, mixed>> Array of sent Message objects
+     */
+    public function sendMediaGroup(array $params): array
+    {
+        return $this->apiService->call(ApiMethod::SEND_MEDIA_GROUP, $params);
+    }
+
+    /**
      * Get basic information about a file and prepare it for downloading.
      * The returned file_path can be passed to getFileDownloadUrl().
      *

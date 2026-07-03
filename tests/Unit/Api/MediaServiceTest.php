@@ -388,4 +388,66 @@ final class MediaServiceTest extends TestCase
             $url
         );
     }
+
+    public function test_sendMediaGroup_returns_array_of_messages(): void
+    {
+        $expectedResponse = [
+            ['message_id' => 200, 'photo' => [['file_id' => 'ph1']]],
+            ['message_id' => 201, 'photo' => [['file_id' => 'ph2']]],
+        ];
+        $this->mockClient->setResponse($expectedResponse);
+
+        $result = $this->mediaService->sendMediaGroup([
+            'chat_id' => 123,
+            'media' => [
+                ['type' => 'photo', 'media' => 'file_id_1'],
+                ['type' => 'photo', 'media' => 'file_id_2'],
+            ],
+        ]);
+
+        $this->assertSame($expectedResponse, $result);
+        $this->assertIsArray($result);
+        $this->assertCount(2, $result);
+    }
+
+    public function test_sendMediaGroup_passes_media_array_to_api(): void
+    {
+        $this->mockClient->setResponse([['message_id' => 300]]);
+
+        $media = [
+            ['type' => 'photo',    'media' => 'photo_file_id',    'caption' => 'First'],
+            ['type' => 'video',    'media' => 'video_file_id',    'width' => 1280, 'height' => 720],
+            ['type' => 'document', 'media' => 'document_file_id'],
+        ];
+
+        $this->mediaService->sendMediaGroup(['chat_id' => 456, 'media' => $media]);
+
+        $lastRequest = $this->mockClient->getLastRequest();
+        $this->assertSame(456, $lastRequest['params']['chat_id']);
+        $this->assertSame($media, $lastRequest['params']['media']);
+        $this->assertStringContainsString('sendMediaGroup', $lastRequest['url']);
+    }
+
+    public function test_sendMediaGroup_with_mixed_types(): void
+    {
+        $this->mockClient->setResponse([
+            ['message_id' => 301, 'photo' => []],
+            ['message_id' => 302, 'video' => []],
+            ['message_id' => 303, 'audio' => []],
+        ]);
+
+        $result = $this->mediaService->sendMediaGroup([
+            'chat_id' => 789,
+            'media' => [
+                ['type' => 'photo', 'media' => 'ph_id'],
+                ['type' => 'video', 'media' => 'vid_id'],
+                ['type' => 'audio', 'media' => 'aud_id', 'title' => 'Track', 'performer' => 'Artist'],
+            ],
+        ]);
+
+        $this->assertCount(3, $result);
+        $this->assertSame(301, $result[0]['message_id']);
+        $this->assertSame(302, $result[1]['message_id']);
+        $this->assertSame(303, $result[2]['message_id']);
+    }
 }
