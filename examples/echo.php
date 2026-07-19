@@ -15,13 +15,12 @@ declare(strict_types=1);
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;
+use AhmCho\Telegram\Config\EnvLoader;
 
 require_once __DIR__ . '/../autoload.php';
 
-// Load environment variables (using the modern EnvLoader)
-require_once __DIR__ . '/../src/Config/EnvLoader.php';
 
-$loader = new \AhmCho\Telegram\Config\EnvLoader();
+$loader = new EnvLoader();
 $loader->load();
 
 try {
