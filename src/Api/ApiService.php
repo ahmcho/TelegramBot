@@ -37,20 +37,24 @@ final class ApiService
         $url = $this->config->getFullApiUrl() . $method->value;
 
         // Log API call at DEBUG level with sanitized params
-        $this->logIfEnabled('debug', 'API call', [
-            'method' => $method->value,
-            'params' => $this->sanitizeParams($params)
-        ]);
+        if ($this->logger !== null) {
+            $this->logIfEnabled('debug', 'API call', [
+                'method' => $method->value,
+                'params' => $this->sanitizeParams($params)
+            ]);
+        }
 
         try {
             $response = $this->httpClient->request(HttpMethod::POST, $url, $params);
             return $response;
         } catch (\Throwable $e) {
             // Log API call failure at ERROR level
-            $this->logExceptionIfEnabled($e, [
-                'method' => $method->value,
-                'params' => $this->sanitizeParams($params)
-            ]);
+            if ($this->logger !== null) {
+                $this->logExceptionIfEnabled($e, [
+                    'method' => $method->value,
+                    'params' => $this->sanitizeParams($params)
+                ]);
+            }
             throw $e;
         }
     }

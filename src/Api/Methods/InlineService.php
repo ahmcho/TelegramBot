@@ -48,9 +48,7 @@ class InlineService
         string $message_text,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'article',
-            'id' => $id,
+        return $this->buildResult('article', $id, [
             'title' => $title,
             'input_message_content' => [
                 'message_text' => $message_text
@@ -71,9 +69,7 @@ class InlineService
         string $photo_url,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'photo',
-            'id' => $id,
+        return $this->buildResult('photo', $id, [
             'photo_url' => $photo_url
         ], $options);
     }
@@ -97,9 +93,7 @@ class InlineService
         string $title,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'video',
-            'id' => $id,
+        return $this->buildResult('video', $id, [
             'video_url' => $video_url,
             'mime_type' => $mime_type,
             'thumb_url' => $thumb_url,
@@ -122,9 +116,7 @@ class InlineService
         string $title,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'audio',
-            'id' => $id,
+        return $this->buildResult('audio', $id, [
             'audio_url' => $audio_url,
             'title' => $title
         ], $options);
@@ -147,9 +139,7 @@ class InlineService
         string $mime_type,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'document',
-            'id' => $id,
+        return $this->buildResult('document', $id, [
             'document_url' => $document_url,
             'title' => $title,
             'mime_type' => $mime_type
@@ -173,9 +163,7 @@ class InlineService
         string $title,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'location',
-            'id' => $id,
+        return $this->buildResult('location', $id, [
             'latitude' => $latitude,
             'longitude' => $longitude,
             'title' => $title
@@ -201,9 +189,7 @@ class InlineService
         string $address,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'venue',
-            'id' => $id,
+        return $this->buildResult('venue', $id, [
             'latitude' => $latitude,
             'longitude' => $longitude,
             'title' => $title,
@@ -226,9 +212,7 @@ class InlineService
         string $first_name,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'contact',
-            'id' => $id,
+        return $this->buildResult('contact', $id, [
             'phone_number' => $phone_number,
             'first_name' => $first_name
         ], $options);
@@ -247,10 +231,24 @@ class InlineService
         string $game_short_name,
         array $options = []
     ): array {
-        return array_merge([
-            'type' => 'game',
-            'id' => $id,
+        return $this->buildResult('game', $id, [
             'game_short_name' => $game_short_name
         ], $options);
+    }
+
+    /**
+     * Shape a single inline query result: type + id + type-specific fields,
+     * with caller-supplied options merged last so they can override defaults.
+     *
+     * @param array<string, mixed> $fields
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
+     */
+    private function buildResult(string $type, string $id, array $fields, array $options): array
+    {
+        return array_merge([
+            'type' => $type,
+            'id' => $id,
+        ], $fields, $options);
     }
 }

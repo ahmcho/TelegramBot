@@ -11,22 +11,17 @@ namespace AhmCho\Telegram\Formatting;
  */
 final class MarkdownV2Formatter implements TextFormatterInterface
 {
-    private const SPECIAL_CHARS = [
-        // Note: Backslash is handled separately before this loop to avoid double-escaping
-        '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+',
-        '-', '=', '|', '{', '}', '.', '!'
+    // Backslash is included so it escapes itself, same as every other special char
+    private const ESCAPE_MAP = [
+        '\\' => '\\\\', '_' => '\\_', '*' => '\\*', '[' => '\\[', ']' => '\\]',
+        '(' => '\\(', ')' => '\\)', '~' => '\\~', '`' => '\\`', '>' => '\\>',
+        '#' => '\\#', '+' => '\\+', '-' => '\\-', '=' => '\\=', '|' => '\\|',
+        '{' => '\\{', '}' => '\\}', '.' => '\\.', '!' => '\\!',
     ];
 
     public function escape(string $text): string
     {
-        // Escape backslash FIRST to avoid double-escaping
-        $text = str_replace('\\', '\\\\', $text);
-
-        foreach (self::SPECIAL_CHARS as $char) {
-            $text = str_replace($char, '\\' . $char, $text);
-        }
-
-        return $text;
+        return strtr($text, self::ESCAPE_MAP);
     }
 
     public function bold(string $text): string

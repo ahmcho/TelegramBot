@@ -37,11 +37,6 @@ class CommandHandler
      */
     private $defaultCallback = null;
 
-    /**
-     * Command callback type
-     */
-    private const CALLBACK_TYPE = 'callable';
-
     public function __construct(
         private readonly TelegramBot $bot
     ) {}
@@ -152,7 +147,7 @@ class CommandHandler
                 }
             } catch (\Throwable $e) {
                 // Log and continue with other middleware
-                error_log("Middleware '$name' error: {$e->getMessage()}");
+                $this->bot->getLogger()?->error("Middleware '$name' error: {$e->getMessage()}");
             }
         }
 
@@ -166,15 +161,14 @@ class CommandHandler
                     'chat_id' => $chatId,
                     'text' => 'An error occurred. Please try again.'
                 ]);
-                error_log(sprintf(
-                    "Command '%s' threw %s: %s in %s:%d\n%s",
+                $this->bot->getLogger()?->error(sprintf(
+                    "Command '%s' threw %s: %s in %s:%d",
                     $command,
                     get_class($e),
                     $e->getMessage(),
                     $e->getFile(),
-                    $e->getLine(),
-                    $e->getTraceAsString()
-                ));
+                    $e->getLine()
+                ), ['trace' => $e->getTraceAsString()]);
                 return true;
             }
         }
@@ -185,7 +179,7 @@ class CommandHandler
                 ($this->defaultCallback)($this->bot, $chatId, $command, $args);
                 return true;
             } catch (\Throwable $e) {
-                error_log("Default callback error: {$e->getMessage()}");
+                $this->bot->getLogger()?->error("Default callback error: {$e->getMessage()}");
             }
         }
 

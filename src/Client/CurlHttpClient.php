@@ -11,12 +11,14 @@ use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
 use AhmCho\Telegram\Client\Traits\MultipartRequestTrait;
+use AhmCho\Telegram\Client\Traits\TimeoutResolverTrait;
 
 final class CurlHttpClient implements HttpClientInterface
 {
     use LoggerHelperTrait;
     use ResponseParserTrait;
     use MultipartRequestTrait;
+    use TimeoutResolverTrait;
 
     private int $lastHttpCode = 0;
 
@@ -42,28 +44,7 @@ final class CurlHttpClient implements HttpClientInterface
         string $url,
         array $params = []
     ): mixed {
-        $ch = curl_init();
-
-        $verifySsl = $this->config->shouldVerifySsl();
-        $options = [
-            CURLOPT_URL => $url,
-            CURLOPT_POST => $method === HttpMethod::POST,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $this->resolveTimeout($params),
-            CURLOPT_SSL_VERIFYPEER => $verifySsl,
-            CURLOPT_SSL_VERIFYHOST => $verifySsl ? 2 : 0,
-        ];
-
-        $hasFile = $this->hasFileUpload($params);
-
-        if (!$hasFile) {
-            $options[CURLOPT_HTTPHEADER] = ['Content-Type: application/json'];
-            $options[CURLOPT_POSTFIELDS] = json_encode($params);
-        } else {
-            $options[CURLOPT_POSTFIELDS] = $params;
-        }
-
-        curl_setopt_array($ch, $options);
+        $ch = $this->createCurlHandle($method, $url, $params);
 
         $response = curl_exec($ch);
         $this->lastHttpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -168,28 +149,6 @@ final class CurlHttpClient implements HttpClientInterface
         curl_setopt_array($ch, $options);
 
         return $ch;
-    }
-
-    /**
-     * Resolve the cURL timeout for a request.
-     *
-     * Telegram's long-poll `timeout` param (used by getUpdates) tells the
-     * server how long it may hold the connection open waiting for updates.
-     * If the HTTP client timeout is not comfortably larger than that, cURL
-     * aborts the connection right around when the long-poll response is
-     * due, surfacing as a spurious "Operation timed out" error.
-     *
-     * @param array<string, mixed> $params
-     */
-    private function resolveTimeout(array $params): int
-    {
-        $configTimeout = $this->config->getTimeout();
-
-        if (!isset($params['timeout']) || !is_numeric($params['timeout'])) {
-            return $configTimeout;
-        }
-
-        return max($configTimeout, (int) $params['timeout'] + 10);
     }
 
     private function executeMultiHandles(

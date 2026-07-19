@@ -58,12 +58,15 @@ final class TelegramBot
         ?BotConfig $config = null,
         ?HttpClientInterface $httpClient = null
     ) {
-        $loader = new EnvLoader();
-        $loader->load();
+        if ($config === null) {
+            if ($token === null) {
+                $loader = new EnvLoader();
+                $loader->load();
+                $token = $loader->require('TELEGRAM_BOT_TOKEN');
+            }
 
-        $config ??= new BotConfig(
-            token: $token ?? $loader->require('TELEGRAM_BOT_TOKEN')
-        );
+            $config = new BotConfig(token: $token);
+        }
 
         // Create logger from config
         $this->logger = LoggerFactory::createFromConfig($config);
@@ -298,12 +301,10 @@ final class TelegramBot
         $maxDelayMs = $options['max_delay_ms'] ?? 10000;
         $onRetry = $options['on_retry'] ?? null;
 
-        if ($this->logger !== null) {
-            $this->logger->debug('Starting operation with retry', [
-                'max_retries' => $maxRetries,
-                'initial_delay_ms' => $initialDelayMs
-            ]);
-        }
+        $this->logIfEnabled('debug', 'Starting operation with retry', [
+            'max_retries' => $maxRetries,
+            'initial_delay_ms' => $initialDelayMs
+        ]);
 
         $lastException = null;
         $delayMs = $initialDelayMs;
@@ -312,8 +313,8 @@ final class TelegramBot
             try {
                 $result = $callback();
 
-                if ($this->logger !== null && $attempt > 0) {
-                    $this->logger->info('Operation succeeded after retry', [
+                if ($attempt > 0) {
+                    $this->logIfEnabled('info', 'Operation succeeded after retry', [
                         'attempt' => $attempt + 1
                     ]);
                 }
@@ -322,13 +323,11 @@ final class TelegramBot
             } catch (\AhmCho\Telegram\Exception\ApiException $e) {
                 $lastException = $e;
 
-                if ($this->logger !== null) {
-                    $this->logger->warning('API request failed', [
-                        'attempt' => $attempt + 1,
-                        'error' => $e->getMessage(),
-                        'http_code' => $e->getHttpCode()
-                    ]);
-                }
+                $this->logIfEnabled('warning', 'API request failed', [
+                    'attempt' => $attempt + 1,
+                    'error' => $e->getMessage(),
+                    'http_code' => $e->getHttpCode()
+                ]);
 
                 // Don't retry on client errors (4xx) except 429
                 if ($e->getHttpCode() >= 400 && $e->getHttpCode() < 500 && $e->getHttpCode() !== 429) {
@@ -350,11 +349,9 @@ final class TelegramBot
 
                     $delayMs = $retryAfter * 1000;
 
-                    if ($this->logger !== null) {
-                        $this->logger->info('Rate limit detected, waiting', [
-                            'retry_after_seconds' => $retryAfter
-                        ]);
-                    }
+                    $this->logIfEnabled('info', 'Rate limit detected, waiting', [
+                        'retry_after_seconds' => $retryAfter
+                    ]);
                 }
 
                 if ($onRetry !== null && is_callable($onRetry)) {
@@ -367,12 +364,10 @@ final class TelegramBot
                 $lastException = $e;
 
                 // Network/transport failures are always transient — retry all of them
-                if ($this->logger !== null) {
-                    $this->logger->warning('HTTP transport failure, will retry', [
-                        'attempt' => $attempt + 1,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
+                $this->logIfEnabled('warning', 'HTTP transport failure, will retry', [
+                    'attempt' => $attempt + 1,
+                    'error' => $e->getMessage(),
+                ]);
 
                 if ($attempt === $maxRetries) {
                     break;
@@ -387,12 +382,10 @@ final class TelegramBot
             }
         }
 
-        if ($this->logger !== null) {
-            $this->logger->error('Operation failed after all retries', [
-                'max_retries' => $maxRetries,
-                'final_error' => $lastException?->getMessage()
-            ]);
-        }
+        $this->logIfEnabled('error', 'Operation failed after all retries', [
+            'max_retries' => $maxRetries,
+            'final_error' => $lastException?->getMessage()
+        ]);
 
         throw $lastException;
     }
