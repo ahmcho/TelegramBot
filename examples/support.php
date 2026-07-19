@@ -38,6 +38,14 @@ $categories = [
     'other' => '📝 Other'
 ];
 
+// Reply keyboard buttons send their label as plain text, not a command,
+// so map each label to the slash command it stands in for.
+$replyKeyboardCommands = [
+    '🎫 New Ticket' => '/new',
+    '📋 My Tickets' => '/mytickets',
+    '❓ Help' => '/help',
+];
+
 // Register commands
 $bot->commands()
     ->register('start', function ($bot, $chatId, $args) {
@@ -282,6 +290,9 @@ while (true) {
                 }
                 // Handle commands normally
                 else {
+                    if (isset($replyKeyboardCommands[$text])) {
+                        $update['message']['text'] = $replyKeyboardCommands[$text];
+                    }
                     $bot->commands()->handleUpdate($update);
                 }
             }
