@@ -495,7 +495,7 @@ function handleUnpinMessage(TelegramBot $bot, int $chatId, ?int $messageId = nul
 function handleSetChatTitle(TelegramBot $bot, int $chatId, string $title): void
 {
     try {
-        $bot->chats()->setTitle([
+        $bot->chats()->setChatTitle([
             'chat_id' => $chatId,
             'title' => $title
         ]);
@@ -515,7 +515,7 @@ function handleSetChatTitle(TelegramBot $bot, int $chatId, string $title): void
 function handleSetChatDescription(TelegramBot $bot, int $chatId, string $description): void
 {
     try {
-        $bot->chats()->setDescription([
+        $bot->chats()->setChatDescription([
             'chat_id' => $chatId,
             'description' => $description
         ]);

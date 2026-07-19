@@ -67,7 +67,7 @@ try {
                 'max_retries' => 3,
                 'initial_delay_ms' => 500,
                 'on_retry' => function ($attempt, $error, $delayMs) {
-                    echo "  ⏳ Retry attempt $after, error: {$error->getMessage()}\n";
+                    echo "  ⏳ Retry attempt $attempt, error: {$error->getMessage()}\n";
                     echo "     Waiting {$delayMs}ms before retry...\n";
                 }
             ]
@@ -89,7 +89,7 @@ try {
             ['max_concurrent' => 10],  // Bulk options
             ['max_retries' => 2]        // Retry options
         );
-        echo "✓ Bulk sent: {$results['successful']}/{$results['total']} successful\n\n";
+        echo "✓ Bulk sent: {$results->successful}/{$results->total} successful\n\n";
     } catch (\Exception $e) {
         echo "✗ Bulk failed: {$e->getMessage()}\n\n";
     }

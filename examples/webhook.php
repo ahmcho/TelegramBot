@@ -160,7 +160,7 @@ function processWebhook(): void
 
         $keyboard = InlineKeyboardBuilder::create()
             ->addRow(
-                Button::callback('ℹ️ Help', 'help'),
+                Button::callback('ℹ️ Help', 'cb_help'),
                 Button::callback('📊 Stats', 'stats')
             )
             ->addRow(
@@ -265,7 +265,7 @@ function processWebhook(): void
     });
 
     // Callback handlers
-    $router->command('help', function ($bot, $callbackQuery) {
+    $router->command('cb_help', function ($bot, $callbackQuery) {
         $chatId = $callbackQuery['message']['chat']['id'];
 
         $help = $bot->formatter()
@@ -371,7 +371,7 @@ if (php_sapi_name() !== 'cli') {
         echo "Webhook URL not set. Use /setwebhook command.\n";
 
         // Get webhook info
-        $webhookInfo = $bot->webhooks()->getWebhookInfo();
+        $webhookInfo = $bot->webhooks()->getInfo();
         echo "\nCurrent webhook info:\n";
         print_r($webhookInfo);
     }

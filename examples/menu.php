@@ -242,12 +242,11 @@ class MenuSystem
             . "🕐 Business Hours:\n"
             . "Monday - Friday: 9:00 - 18:00";
 
+        // Telegram inline URL buttons only accept http(s):// or tg:// schemes,
+        // so a mailto: button here would fail with BUTTON_URL_INVALID.
         $keyboard = InlineKeyboardBuilder::create()
             ->addRow(
                 Button::url('🌐 Visit Website', 'https://example.com'),
-                Button::url('📧 Email Us', 'mailto:contact@example.com')
-            )
-            ->addRow(
                 Button::callback('🏠 Main Menu', 'menu:main')
             );
 

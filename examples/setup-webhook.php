@@ -87,7 +87,7 @@ try {
                 echo "  Has custom certificate: " . ($info['has_custom_certificate'] ? 'Yes' : 'No') . "\n";
                 echo "  Pending updates: " . $info['pending_update_count'] . "\n";
 
-                if ($info['last_error_date']) {
+                if ($info['last_error_date'] ?? null) {
                     echo "  Last error: " . $info['last_error_message'] . "\n";
                     echo "  Last error date: " . date('Y-m-d H:i:s', $info['last_error_date']) . "\n";
                 }
@@ -125,10 +125,10 @@ try {
             echo "  URL: " . ($info['url'] ?: 'Not set (using long polling)') . "\n";
             echo "  Has custom certificate: " . ($info['has_custom_certificate'] ? 'Yes' : 'No') . "\n";
             echo "  Pending updates: " . $info['pending_update_count'] . "\n";
-            echo "  Max connections: " . ($info['max_connections'] ?: 'Default') . "\n";
+            echo "  Max connections: " . ($info['max_connections'] ?? 'Default') . "\n";
             echo "  Allowed updates: " . (empty($info['allowed_updates']) ? 'All' : implode(', ', $info['allowed_updates'])) . "\n";
 
-            if ($info['last_error_date']) {
+            if ($info['last_error_date'] ?? null) {
                 echo "\nLast Error:\n";
                 echo "  Message: " . $info['last_error_message'] . "\n";
                 echo "  Date: " . date('Y-m-d H:i:s', $info['last_error_date']) . "\n";
