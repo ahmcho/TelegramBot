@@ -22,9 +22,6 @@ use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 
 require_once __DIR__ . '/../autoload.php';
 
-// Load environment variables (using the modern EnvLoader)
-require_once __DIR__ . '/../src/Config/EnvLoader.php';
-
 $loader = new \AhmCho\Telegram\Config\EnvLoader();
 $loader->load();
 
