@@ -14,9 +14,7 @@ use AhmCho\Telegram\Keyboard\InlineKeyboardBuilder;
 use AhmCho\Telegram\Tests\Helpers\MockHttpClient;
 
 /**
- * Tests for examples/modern-api-example.php and examples/modern-api-example-clean.php
- *
- * Verifies the modern service-oriented patterns demonstrated in the examples:
+ * Tests for the modern service-oriented API patterns used across the examples:
  * - Sending messages via $bot->messages()->send()
  * - Sending photos via $bot->media()->sendPhoto()
  * - Using formatters for text styling

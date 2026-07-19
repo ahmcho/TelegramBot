@@ -14,9 +14,9 @@ use AhmCho\Telegram\Logging\NullLogger;
 use AhmCho\Telegram\Tests\Helpers\MockHttpClient;
 
 /**
- * Tests for examples/logger-test.php and examples/logger-syntax-test.php
+ * Tests for examples/logger-test.php
  *
- * Verifies the logging system works as shown in the examples:
+ * Verifies the logging system works as shown in the example:
  * - Logger is created when logging is enabled in BotConfig
  * - NullLogger is used when logging is disabled
  * - Custom log levels and file paths work

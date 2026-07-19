@@ -43,10 +43,8 @@ use AhmCho\Telegram\Logging\NullLogger;
 use AhmCho\Telegram\Tests\Helpers\MockHttpClient;
 
 /**
- * Tests for examples/verify-modernization.php
- *
  * Verifies all key framework classes, enums, and interfaces exist
- * and are correctly structured, matching what the example demonstrates.
+ * and are correctly structured (final classes, readonly value objects, etc.).
  */
 final class VerifyModernizationTest extends TestCase
 {
