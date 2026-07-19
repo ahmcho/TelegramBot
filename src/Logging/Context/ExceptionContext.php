@@ -13,6 +13,9 @@ use AhmCho\Telegram\Bulk\BulkSendException;
  */
 readonly class ExceptionContext
 {
+    /**
+     * @param array<string, mixed>|null $additionalData
+     */
     private function __construct(
         public string $exceptionType,
         public string $exceptionMessage,

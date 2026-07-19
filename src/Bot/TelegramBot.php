@@ -183,6 +183,7 @@ final class TelegramBot
 
     /**
      * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     public function sendMessage(array $params): array
     {
@@ -191,6 +192,7 @@ final class TelegramBot
 
     /**
      * @param array<string, mixed> $params
+     * @return array<string, mixed>
      */
     public function sendPhoto(array $params): array
     {
@@ -206,6 +208,7 @@ final class TelegramBot
     }
 
     /**
+     * @param array<string, mixed> $params
      * @return array<int, array<string, mixed>>
      */
     public function getUpdates(array $params = []): array
@@ -219,7 +222,7 @@ final class TelegramBot
     public function getWebhookUpdates(): ?array
     {
         $input = file_get_contents($this->inputSource);
-        if ($input === false || $input === '' || $input === null) {
+        if ($input === false || $input === '') {
             return null;
         }
 
@@ -343,7 +346,7 @@ final class TelegramBot
                     $response = $e->getResponseBody();
                     $retryAfter = 1;
 
-                    if (is_array($response) && isset($response['parameters']['retry_after'])) {
+                    if (isset($response['parameters']['retry_after'])) {
                         $retryAfter = (int) $response['parameters']['retry_after'];
                     }
 
@@ -386,6 +389,10 @@ final class TelegramBot
             'max_retries' => $maxRetries,
             'final_error' => $lastException?->getMessage()
         ]);
+
+        if ($lastException === null) {
+            throw new \RuntimeException('Retry loop exited without capturing an exception');
+        }
 
         throw $lastException;
     }

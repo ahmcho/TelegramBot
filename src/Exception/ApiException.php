@@ -11,6 +11,9 @@ namespace AhmCho\Telegram\Exception;
  */
 class ApiException extends TelegramException
 {
+    /**
+     * @param array<string, mixed> $responseBody
+     */
     public function __construct(
         string $message = '',
         private readonly ?int $errorCode = null,

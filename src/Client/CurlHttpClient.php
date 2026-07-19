@@ -52,17 +52,17 @@ final class CurlHttpClient implements HttpClientInterface
         $error = curl_error($ch);
         $errno = curl_errno($ch);
 
-        if ($error || $errno) {
+        if ($error !== '' || $errno !== 0) {
             $exception = new HttpClientException(
                 "cURL error ($errno): $error",
                 $this->lastHttpCode,
-                $response ?: null
+                is_string($response) ? $response : null
             );
             $this->logExceptionIfEnabled($exception);
             throw $exception;
         }
 
-        if ($response === false) {
+        if (!is_string($response)) {
             $exception = new HttpClientException(
                 'cURL request failed without error message',
                 $this->lastHttpCode
@@ -74,6 +74,11 @@ final class CurlHttpClient implements HttpClientInterface
         return $this->parseResponse($response);
     }
 
+    /**
+     * @param array<array<string, mixed>> $requestsArray
+     * @param array{max_concurrent?: int, delay_ms?: int} $options
+     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
+     */
     public function requestMulti(
         HttpMethod $method,
         string $url,
@@ -121,12 +126,18 @@ final class CurlHttpClient implements HttpClientInterface
         return function_exists('curl_init') && function_exists('curl_exec');
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     private function createCurlHandle(
         HttpMethod $method,
         string $url,
         array $params
-    ) {
+    ): \CurlHandle {
         $ch = curl_init();
+        if ($ch === false) {
+            throw new HttpClientException('Failed to initialize cURL handle');
+        }
 
         $verifySsl = $this->config->shouldVerifySsl();
         $options = [
@@ -152,8 +163,13 @@ final class CurlHttpClient implements HttpClientInterface
         return $ch;
     }
 
+    /**
+     * @param array<int, array{handle: \CurlHandle, params: array<string, mixed>}> $handles
+     * @param array{max_concurrent: int, delay_ms: int} $options
+     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
+     */
     private function executeMultiHandles(
-        $mh,
+        \CurlMultiHandle $mh,
         array $handles,
         array $options
     ): array {
@@ -163,10 +179,10 @@ final class CurlHttpClient implements HttpClientInterface
         $delayMs = $options['delay_ms'];
 
         $handleKeys = array_keys($handles);
-        if (empty($handleKeys)) {
+        if (count($handleKeys) === 0) {
             return [];
         }
-        $batchSize = min($maxConcurrent, count($handleKeys));
+        $batchSize = max(1, min($maxConcurrent, count($handleKeys)));
         $batches = array_chunk($handleKeys, $batchSize);
 
         foreach ($batches as $batch) {
@@ -203,6 +219,10 @@ final class CurlHttpClient implements HttpClientInterface
         return $results;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     * @return array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}
+     */
     private function processMultiResult(
         ?string $response,
         int $httpCode,
@@ -212,7 +232,7 @@ final class CurlHttpClient implements HttpClientInterface
     ): array {
         $chatId = $params['chat_id'] ?? 'unknown';
 
-        if ($error || $errno) {
+        if ($error !== '' || $errno !== 0) {
             return [
                 'success' => false,
                 'chat_id' => $chatId,
@@ -222,7 +242,7 @@ final class CurlHttpClient implements HttpClientInterface
             ];
         }
 
-        if ($response === false) {
+        if ($response === null) {
             return [
                 'success' => false,
                 'chat_id' => $chatId,

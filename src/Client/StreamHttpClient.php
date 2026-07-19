@@ -89,13 +89,19 @@ final class StreamHttpClient implements HttpClientInterface
 
         // Parse HTTP status code
         if (function_exists('http_get_last_response_headers')) {
-            $headers = http_get_last_response_headers();
+            $headers = http_get_last_response_headers() ?? [];
         } else {
+            // Must stay a null-coalesce read (not a bare fetch): PHP 8.4+ deprecates
+            // any direct read of $http_response_header at compile time, even when
+            // this branch is unreachable. The ?? form is exempt from that check.
+            // PHPStan assumes the variable is always set here, which doesn't hold
+            // for PHP <8.4 or custom stream wrappers that skip populating it.
+            // @phpstan-ignore nullCoalesce.variable
             $headers = $http_response_header ?? [];
         }
 
-        foreach ($headers as $header) {
-            if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/', $header, $matches)) {
+        foreach ($headers as $headerLine) {
+            if (preg_match('/^HTTP\/\d\.\d\s+(\d+)/', $headerLine, $matches) === 1) {
                 $this->lastHttpCode = (int) $matches[1];
                 break;
             }
@@ -104,6 +110,11 @@ final class StreamHttpClient implements HttpClientInterface
         return $this->parseResponse($response);
     }
 
+    /**
+     * @param array<array<string, mixed>> $requestsArray
+     * @param array{max_concurrent?: int, delay_ms?: int} $options
+     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
+     */
     public function requestMulti(
         HttpMethod $method,
         string $url,

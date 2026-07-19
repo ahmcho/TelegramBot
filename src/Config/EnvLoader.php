@@ -27,6 +27,9 @@ class EnvLoader
         }
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return;
+        }
 
         foreach ($lines as $line) {
             $this->parseLine($line);
@@ -66,7 +69,7 @@ class EnvLoader
         }
 
         // Parse KEY=VALUE or KEY = VALUE or KEY="VALUE" or KEY='VALUE'
-        if (!preg_match('/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/', $trimmed, $matches)) {
+        if (preg_match('/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/', $trimmed, $matches) !== 1) {
             return;
         }
 

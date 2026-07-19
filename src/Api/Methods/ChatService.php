@@ -207,7 +207,7 @@ class ChatService
     /**
      * Change the menu button
      *
-     * @param array{chat_id?: int|string, menu_button: array} $params
+     * @param array{chat_id?: int|string, menu_button: array<string, mixed>} $params
      * @return array<string, mixed>
      */
     public function setMenuButton(array $params): array

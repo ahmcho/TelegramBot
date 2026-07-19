@@ -70,7 +70,7 @@ final class Logger implements LoggerInterface
      * Log with arbitrary level
      *
      * @param mixed $level PSR-3 level string or LogLevel enum
-     * @param string $message The log message
+     * @param string|\Stringable $message The log message
      * @param array<string, mixed> $context Context data
      */
     public function log($level, $message, array $context = []): void
@@ -86,12 +86,14 @@ final class Logger implements LoggerInterface
         }
 
         // Interpolate message with context
-        $interpolatedMessage = $this->interpolate($message, $context);
+        $interpolatedMessage = $this->interpolate((string) $message, $context);
 
         // Format context as JSON
-        $contextJson = $context !== []
-            ? json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
-            : '';
+        $contextJson = '';
+        if ($context !== []) {
+            $encodedContext = json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $contextJson = $encodedContext !== false ? $encodedContext : '(unencodable context)';
+        }
 
         // Build log entry
         $entry = $this->formatEntry($logLevel, $interpolatedMessage, $contextJson);
@@ -126,6 +128,8 @@ final class Logger implements LoggerInterface
 
     /**
      * Interpolate message placeholders with context values
+     *
+     * @param array<string, mixed> $context
      */
     private function interpolate(string $message, array $context): string
     {
@@ -141,11 +145,18 @@ final class Logger implements LoggerInterface
             }
 
             // Convert value to string
-            $value = is_object($value) && method_exists($value, '__toString')
-                ? (string) $value
-                : (is_scalar($value) ? (string) $value : json_encode($value));
+            if (is_object($value)) {
+                if (method_exists($value, '__toString')) {
+                    $stringValue = (string) $value;
+                } else {
+                    $encoded = json_encode($value);
+                    $stringValue = $encoded !== false ? $encoded : '(unencodable value)';
+                }
+            } else {
+                $stringValue = (string) $value;
+            }
 
-            $replace['{' . $key . '}'] = $value;
+            $replace['{' . $key . '}'] = $stringValue;
         }
 
         return strtr($message, $replace);
