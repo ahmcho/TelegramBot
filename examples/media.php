@@ -478,7 +478,7 @@ function handleEditCaption(TelegramBot $bot, int $chatId): void
         sleep(1);
 
         // Edit the caption - auto-escaped!
-        $bot->media()->editMessageCaption([
+        $bot->messages()->editCaption([
             'chat_id' => $chatId,
             'message_id' => $messageId,
             'caption' => '✏️ Edited caption!' . "\n\nYou can edit captions of photos, videos, documents, etc."

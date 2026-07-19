@@ -104,7 +104,7 @@ $bot->commands()
         ]);
     }, 'View your cart')
 
-    ->register('checkout', function ($bot, $chatId, $args) use (&$carts, $products) {
+    ->register('checkout', $checkoutHandler = function ($bot, $chatId, $args) use (&$carts, $products) {
         $cart = $carts[$chatId] ?? [];
 
         if (empty($cart)) {
@@ -143,7 +143,7 @@ $bot->commands()
         unset($carts[$chatId]);
     }, 'Complete your order')
 
-    ->register('clear', function ($bot, $chatId, $args) use (&$carts) {
+    ->register('clear', $clearHandler = function ($bot, $chatId, $args) use (&$carts) {
         unset($carts[$chatId]);
         $bot->messages()->send([
             'chat_id' => $chatId,
@@ -198,14 +198,14 @@ while (true) {
 
                 // Checkout
                 elseif ($data === 'checkout') {
-                    $bot->commands()->execute('checkout', $chatId);
+                    $checkoutHandler($bot, $chatId, []);
 
                     $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                 }
 
                 // Clear cart
                 elseif ($data === 'clear_cart') {
-                    $bot->commands()->execute('clear', $chatId);
+                    $clearHandler($bot, $chatId, []);
 
                     $bot->chats()->answerCallbackQuery(['callback_query_id' => $query['id']]);
                 }
