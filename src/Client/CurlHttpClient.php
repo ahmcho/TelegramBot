@@ -6,6 +6,7 @@ namespace AhmCho\Telegram\Client;
 
 use AhmCho\Telegram\Config\BotConfig;
 use AhmCho\Telegram\Exception\HttpClientException;
+use AhmCho\Telegram\Exception\TelegramException;
 use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
@@ -240,7 +241,10 @@ final class CurlHttpClient implements HttpClientInterface
                 'data' => $data,
                 'error' => null
             ];
-        } catch (HttpClientException $e) {
+        } catch (TelegramException $e) {
+            // Catches both HttpClientException (transport/parsing failures) and
+            // ApiException (Telegram returned ok:false) so one bad request in a
+            // batch surfaces as a per-item failure instead of aborting the batch.
             return [
                 'success' => false,
                 'chat_id' => $chatId,
