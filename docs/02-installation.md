@@ -52,10 +52,10 @@ The project ships a `composer.json` with a PSR-4 mapping:
 
 If your project already runs `composer dump-autoload`, requiring
 `vendor/autoload.php` picks up the framework the same way any Composer
-package would. Development dependencies (`phpunit`, `phpstan`,
-`squizlabs/php_codesniffer`, `phpdocumentor/phpdocumentor`) are declared
-under `require-dev` for contributors working *on* the framework — they are
-not needed to *use* it.
+package would. Development dependencies (`phpunit`, `phpstan` with
+`phpstan-strict-rules`, `rector`, `squizlabs/php_codesniffer`,
+`phpdocumentor/phpdocumentor`) are declared under `require-dev` for
+contributors working *on* the framework — they are not needed to *use* it.
 
 ## 3. Get a bot token
 
