@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AhmCho\Telegram\Keyboard;
 
+use AhmCho\Telegram\Keyboard\Traits\JsonBuildTrait;
+
 /**
  * Reply Keyboard Builder
  *
@@ -11,6 +13,8 @@ namespace AhmCho\Telegram\Keyboard;
  */
 class ReplyKeyboardBuilder implements KeyboardBuilderInterface
 {
+    use JsonBuildTrait;
+
     /**
      * @var array<int, array<int, array<string, string>>>
      */
@@ -31,11 +35,6 @@ class ReplyKeyboardBuilder implements KeyboardBuilderInterface
         );
 
         return $this;
-    }
-
-    public function build(): string
-    {
-        return json_encode($this->toArray());
     }
 
     public function toArray(): array

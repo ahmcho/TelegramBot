@@ -14,14 +14,14 @@ use AhmCho\Telegram\Bulk\BulkSendException;
 readonly class ExceptionContext
 {
     private function __construct(
-        public readonly string $exceptionType,
-        public readonly string $exceptionMessage,
-        public readonly int $exceptionCode,
-        public readonly string $file,
-        public readonly int $line,
-        public readonly string $trace,
-        public readonly ?string $previousException = null,
-        public readonly ?array $additionalData = null
+        public string $exceptionType,
+        public string $exceptionMessage,
+        public int $exceptionCode,
+        public string $file,
+        public int $line,
+        public string $trace,
+        public ?string $previousException = null,
+        public ?array $additionalData = null
     ) {}
 
     /**

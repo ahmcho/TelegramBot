@@ -15,6 +15,8 @@ use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
  */
 trait MarkdownV2EscapeTrait
 {
+    private static ?MarkdownV2Formatter $markdownV2Formatter = null;
+
     /**
      * Auto-escape text and caption for MarkdownV2 format
      *
@@ -27,7 +29,7 @@ trait MarkdownV2EscapeTrait
             return $params;
         }
 
-        $formatter = new MarkdownV2Formatter();
+        $formatter = self::$markdownV2Formatter ??= new MarkdownV2Formatter();
 
         if (isset($params['text']) && is_string($params['text'])) {
             $params['text'] = $formatter->escape($params['text']);

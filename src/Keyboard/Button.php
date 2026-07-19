@@ -16,72 +16,37 @@ readonly class Button
      */
     private function __construct(
         public readonly string $text,
-        public readonly ?string $url,
-        public readonly ?string $callbackData,
-        public readonly ?string $switchInlineQuery,
-        public readonly ?string $switchInlineQueryCurrentChat,
-        public readonly array $metadata
+        public readonly ?string $url = null,
+        public readonly ?string $callbackData = null,
+        public readonly ?string $switchInlineQuery = null,
+        public readonly ?string $switchInlineQueryCurrentChat = null,
+        public readonly array $metadata = []
     ) {
     }
 
     public static function url(string $text, string $url): self
     {
-        return new self(
-            text: $text,
-            url: $url,
-            callbackData: null,
-            switchInlineQuery: null,
-            switchInlineQueryCurrentChat: null,
-            metadata: []
-        );
+        return new self(text: $text, url: $url);
     }
 
     public static function callback(string $text, string $data): self
     {
-        return new self(
-            text: $text,
-            url: null,
-            callbackData: $data,
-            switchInlineQuery: null,
-            switchInlineQueryCurrentChat: null,
-            metadata: []
-        );
+        return new self(text: $text, callbackData: $data);
     }
 
     public static function switchInline(string $text, string $query = ''): self
     {
-        return new self(
-            text: $text,
-            url: null,
-            callbackData: null,
-            switchInlineQuery: $query,
-            switchInlineQueryCurrentChat: null,
-            metadata: []
-        );
+        return new self(text: $text, switchInlineQuery: $query);
     }
 
     public static function switchInlineCurrent(string $text, string $query = ''): self
     {
-        return new self(
-            text: $text,
-            url: null,
-            callbackData: null,
-            switchInlineQuery: null,
-            switchInlineQueryCurrentChat: $query,
-            metadata: []
-        );
+        return new self(text: $text, switchInlineQueryCurrentChat: $query);
     }
 
     public static function text(string $text): self
     {
-        return new self(
-            text: $text,
-            url: null,
-            callbackData: null,
-            switchInlineQuery: null,
-            switchInlineQueryCurrentChat: null,
-            metadata: []
-        );
+        return new self(text: $text);
     }
 
     /**

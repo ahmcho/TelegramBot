@@ -415,11 +415,15 @@ final class MarkdownV2FormatterTest extends TestCase
     public function test_special_chars_are_correctly_defined(): void
     {
         $reflection = new \ReflectionClass(MarkdownV2Formatter::class);
-        $constant = $reflection->getConstant('SPECIAL_CHARS');
+        $constant = $reflection->getConstant('ESCAPE_MAP');
 
-        // Note: Backslash is NOT in SPECIAL_CHARS - it's handled separately
-        $expected = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+',
-            '-', '=', '|', '{', '}', '.', '!'];
+        // Backslash is included so it escapes itself, same as every other special char
+        $expected = [
+            '\\' => '\\\\', '_' => '\\_', '*' => '\\*', '[' => '\\[', ']' => '\\]',
+            '(' => '\\(', ')' => '\\)', '~' => '\\~', '`' => '\\`', '>' => '\\>',
+            '#' => '\\#', '+' => '\\+', '-' => '\\-', '=' => '\\=', '|' => '\\|',
+            '{' => '\\{', '}' => '\\}', '.' => '\\.', '!' => '\\!',
+        ];
 
         $this->assertSame($expected, $constant);
     }

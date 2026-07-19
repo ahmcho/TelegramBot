@@ -112,56 +112,32 @@ final class BotConfig
 
     public function withVerifySsl(bool $verify): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
-            $verify, $this->loggingEnabled, $this->logFilePath,
-            $this->logLevel, $this->logMaxBytes, $this->logTimezone
-        );
+        return $this->with(verifySsl: $verify);
     }
 
     public function withTimeout(int $timeout): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $timeout, $this->throwExceptions,
-            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
-            $this->logLevel, $this->logMaxBytes, $this->logTimezone
-        );
+        return $this->with(timeout: $timeout);
     }
 
     public function withThrowExceptions(bool $throw): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $this->timeout, $throw,
-            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
-            $this->logLevel, $this->logMaxBytes, $this->logTimezone
-        );
+        return $this->with(throwExceptions: $throw);
     }
 
     public function withLoggingEnabled(bool $enabled): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
-            $this->verifySsl, $enabled, $this->logFilePath,
-            $this->logLevel, $this->logMaxBytes, $this->logTimezone
-        );
+        return $this->with(loggingEnabled: $enabled);
     }
 
     public function withLogFilePath(string $path): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
-            $this->verifySsl, $this->loggingEnabled, $path,
-            $this->logLevel, $this->logMaxBytes, $this->logTimezone
-        );
+        return $this->with(logFilePath: $path);
     }
 
     public function withLogLevel(string $level): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
-            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
-            $level, $this->logMaxBytes, $this->logTimezone
-        );
+        return $this->with(logLevel: $level);
     }
 
     /**
@@ -169,11 +145,7 @@ final class BotConfig
      */
     public function withLogMaxBytes(int $maxBytes): self
     {
-        return new self(
-            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
-            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
-            $this->logLevel, $maxBytes, $this->logTimezone
-        );
+        return $this->with(logMaxBytes: $maxBytes);
     }
 
     /**
@@ -181,10 +153,35 @@ final class BotConfig
      */
     public function withLogTimezone(string $timezone): self
     {
+        return $this->with(logTimezone: $timezone);
+    }
+
+    /**
+     * Build a new instance, overriding only the given named fields.
+     */
+    private function with(
+        ?string $token = null,
+        ?string $apiUrl = null,
+        ?int $timeout = null,
+        ?bool $throwExceptions = null,
+        ?bool $verifySsl = null,
+        ?bool $loggingEnabled = null,
+        ?string $logFilePath = null,
+        ?string $logLevel = null,
+        ?int $logMaxBytes = null,
+        ?string $logTimezone = null
+    ): self {
         return new self(
-            $this->token, $this->apiUrl, $this->timeout, $this->throwExceptions,
-            $this->verifySsl, $this->loggingEnabled, $this->logFilePath,
-            $this->logLevel, $this->logMaxBytes, $timezone
+            $token ?? $this->token,
+            $apiUrl ?? $this->apiUrl,
+            $timeout ?? $this->timeout,
+            $throwExceptions ?? $this->throwExceptions,
+            $verifySsl ?? $this->verifySsl,
+            $loggingEnabled ?? $this->loggingEnabled,
+            $logFilePath ?? $this->logFilePath,
+            $logLevel ?? $this->logLevel,
+            $logMaxBytes ?? $this->logMaxBytes,
+            $logTimezone ?? $this->logTimezone
         );
     }
 }

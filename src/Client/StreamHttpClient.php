@@ -11,12 +11,14 @@ use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
 use AhmCho\Telegram\Client\Traits\MultipartRequestTrait;
+use AhmCho\Telegram\Client\Traits\TimeoutResolverTrait;
 
 final class StreamHttpClient implements HttpClientInterface
 {
     use LoggerHelperTrait;
     use ResponseParserTrait;
     use MultipartRequestTrait;
+    use TimeoutResolverTrait;
 
     private int $lastHttpCode = 0;
     private bool $parallelWarningLogged = false;
@@ -161,25 +163,4 @@ final class StreamHttpClient implements HttpClientInterface
             in_array('https', stream_get_wrappers(), true);
     }
 
-    /**
-     * Resolve the stream timeout for a request.
-     *
-     * Telegram's long-poll `timeout` param (used by getUpdates) tells the
-     * server how long it may hold the connection open waiting for updates.
-     * If the HTTP client timeout is not comfortably larger than that, the
-     * stream aborts right around when the long-poll response is due,
-     * surfacing as a spurious "HTTP request failed" error.
-     *
-     * @param array<string, mixed> $params
-     */
-    private function resolveTimeout(array $params): int
-    {
-        $configTimeout = $this->config->getTimeout();
-
-        if (!isset($params['timeout']) || !is_numeric($params['timeout'])) {
-            return $configTimeout;
-        }
-
-        return max($configTimeout, (int) $params['timeout'] + 10);
-    }
 }
