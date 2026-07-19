@@ -65,6 +65,10 @@ final class FileLogHandler
         }
 
         // All retries failed
+        if ($lastError === null) {
+            throw new \RuntimeException("Failed to write to log file after {$this->maxRetries} attempts");
+        }
+
         throw new \RuntimeException(
             "Failed to write to log file after {$this->maxRetries} attempts: {$lastError->getMessage()}",
             0,
@@ -144,7 +148,9 @@ final class FileLogHandler
             return 0;
         }
 
-        return filesize($this->logFilePath);
+        $size = filesize($this->logFilePath);
+
+        return $size !== false ? $size : 0;
     }
 
     /**

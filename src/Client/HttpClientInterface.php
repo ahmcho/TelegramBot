@@ -31,7 +31,7 @@ interface HttpClientInterface
      * @param string $url The base URL
      * @param array<array<string, mixed>> $requestsArray Array of request parameter arrays
      * @param array{max_concurrent?: int, delay_ms?: int} $options Options for batch execution
-     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array|null, error: string|null}>
+     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
      */
     public function requestMulti(
         HttpMethod $method,

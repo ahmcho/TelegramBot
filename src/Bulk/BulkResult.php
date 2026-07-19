@@ -14,7 +14,8 @@ use Countable;
 readonly class BulkResult implements Countable
 {
     /**
-     * @param array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array|null, error: string|null}> $results
+     * @param array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}> $results
+     * @param array<int, string> $errors
      */
     public function __construct(
         public int $total,
@@ -50,7 +51,7 @@ readonly class BulkResult implements Countable
     }
 
     /**
-     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array|null, error: string|null}>
+     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
      */
     public function getFailedResults(): array
     {
@@ -61,7 +62,7 @@ readonly class BulkResult implements Countable
     }
 
     /**
-     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array|null, error: string|null}>
+     * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
      */
     public function getSuccessfulResults(): array
     {
@@ -71,6 +72,9 @@ readonly class BulkResult implements Countable
         );
     }
 
+    /**
+     * @param array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}> $rawResults
+     */
     public static function fromRawResults(array $rawResults): self
     {
         $successful = 0;
@@ -82,7 +86,7 @@ readonly class BulkResult implements Countable
                 $successful++;
             } else {
                 $failed++;
-                $errors[] = $result['error'];
+                $errors[] = $result['error'] ?? 'Unknown error';
             }
         }
 

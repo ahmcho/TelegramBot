@@ -22,7 +22,7 @@ class PollsService
     /**
      * Send a poll to a chat
      *
-     * @param array{chat_id: int|string, question: string, options: array<string>, parse_mode?: string, is_closed?: bool, type?: 'regular'|'quiz', allows_multiple_answers?: bool, correct_option_id?: int, explanation?: string, explanation_parse_mode?: string, open_period?: int, close_date?: int, is_anonymous?: bool, message_thread_id?: int, reply_parameters?: array} $params
+     * @param array{chat_id: int|string, question: string, options: array<string>, parse_mode?: string, is_closed?: bool, type?: 'regular'|'quiz', allows_multiple_answers?: bool, correct_option_id?: int, explanation?: string, explanation_parse_mode?: string, open_period?: int, close_date?: int, is_anonymous?: bool, message_thread_id?: int, reply_parameters?: array<string, mixed>} $params
      * @return array<string, mixed>
      */
     public function send(array $params): array

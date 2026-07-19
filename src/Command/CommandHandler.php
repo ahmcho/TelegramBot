@@ -16,7 +16,7 @@ use AhmCho\Telegram\Enums\ParseMode;
 class CommandHandler
 {
     /**
-     * @var array<string, CommandCallback>
+     * @var array<string, callable>
      */
     private array $commands = [];
 
@@ -193,7 +193,7 @@ class CommandHandler
      */
     public function generateHelp(): string
     {
-        if (empty($this->descriptions)) {
+        if (count($this->descriptions) === 0) {
             return "No commands registered.";
         }
 

@@ -23,7 +23,7 @@ class GamesService
     /**
      * Send a game
      *
-     * @param array{chat_id: int, message_thread_id?: int, game_short_name: string, disable_notification?: bool, protect_content?: bool, message_effect_id?: string, reply_parameters?: array, reply_markup?: string} $params
+     * @param array{chat_id: int, message_thread_id?: int, game_short_name: string, disable_notification?: bool, protect_content?: bool, message_effect_id?: string, reply_parameters?: array<string, mixed>, reply_markup?: string} $params
      * @return array<string, mixed>
      */
     public function sendGame(array $params): array
