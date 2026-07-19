@@ -23,7 +23,6 @@ class InlineService
      * Answer an inline query
      *
      * @param array{inline_query_id: string, results: array<array<string, mixed>>, cache_time?: int, is_personal?: bool, next_offset?: string, switch_pm_text?: string, switch_pm_parameter?: string} $params
-     * @return mixed
      */
     public function answer(array $params): mixed
     {

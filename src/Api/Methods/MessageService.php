@@ -81,7 +81,6 @@ class MessageService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function delete(array $params): mixed
     {
@@ -116,7 +115,7 @@ class MessageService
     {
         // Apply escaping to each message in the bulk array
         $escapedMessagesArray = array_map(
-            fn($params) => $this->escapeForMarkdownV2($params),
+            fn($params): array => $this->escapeForMarkdownV2($params),
             $messagesArray
         );
 

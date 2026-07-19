@@ -57,7 +57,7 @@ readonly class BulkResult implements Countable
     {
         return array_filter(
             $this->results,
-            fn(array $result) => !$result['success']
+            fn(array $result): bool => !$result['success']
         );
     }
 
@@ -68,7 +68,7 @@ readonly class BulkResult implements Countable
     {
         return array_filter(
             $this->results,
-            fn(array $result) => $result['success']
+            fn(array $result): bool => $result['success']
         );
     }
 

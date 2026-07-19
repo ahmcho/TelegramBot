@@ -25,7 +25,7 @@ trait LoggerHelperTrait
         if ($this->logger !== null) {
             try {
                 $this->logger->log($level, $message, $context);
-            } catch (\Throwable $e) {
+            } catch (\Throwable) {
                 // Fail silently - never throw from logger
             }
         }
@@ -42,7 +42,7 @@ trait LoggerHelperTrait
         if ($this->logger !== null) {
             try {
                 $this->logger->logException($exception, $context);
-            } catch (\Throwable $e) {
+            } catch (\Throwable) {
                 // Fail silently - never throw from logger
             }
         }

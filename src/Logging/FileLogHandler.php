@@ -114,10 +114,8 @@ final class FileLogHandler
     {
         $directory = dirname($this->logFilePath);
 
-        if (!is_dir($directory) && $directory !== '' && $directory !== '.') {
-            if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
-                throw new \RuntimeException("Failed to create log directory: {$directory}");
-            }
+        if (!is_dir($directory) && $directory !== '' && $directory !== '.' && (!mkdir($directory, 0755, true) && !is_dir($directory))) {
+            throw new \RuntimeException("Failed to create log directory: {$directory}");
         }
     }
 

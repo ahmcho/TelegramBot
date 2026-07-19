@@ -20,7 +20,6 @@ class WebhookService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function set(array $params): mixed
     {
@@ -37,7 +36,6 @@ class WebhookService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function delete(array $params = []): mixed
     {

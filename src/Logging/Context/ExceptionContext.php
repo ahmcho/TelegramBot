@@ -50,7 +50,7 @@ readonly class ExceptionContext
         };
 
         return new self(
-            exceptionType: get_class($exception),
+            exceptionType: $exception::class,
             exceptionMessage: $exception->getMessage(),
             exceptionCode: $exception->getCode(),
             file: $exception->getFile(),
@@ -82,7 +82,7 @@ readonly class ExceptionContext
         }
 
         if ($this->additionalData !== null) {
-            $data = [...$data, ...$this->additionalData];
+            return [...$data, ...$this->additionalData];
         }
 
         return $data;
@@ -112,7 +112,7 @@ readonly class ExceptionContext
     {
         return sprintf(
             'Caused by: %s: %s in %s:%d',
-            get_class($exception),
+            $exception::class,
             $exception->getMessage(),
             $exception->getFile(),
             $exception->getLine()

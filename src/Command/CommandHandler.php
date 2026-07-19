@@ -35,7 +35,7 @@ class CommandHandler
      *
      * @var callable|null
      */
-    private $defaultCallback = null;
+    private $defaultCallback;
 
     public function __construct(
         private readonly TelegramBot $bot
@@ -133,7 +133,7 @@ class CommandHandler
         }
 
         $chatId = (int) $message['chat']['id'];
-        $parts = explode(' ', trim($text), 2);
+        $parts = explode(' ', trim((string) $text), 2);
         $command = $this->normalizeCommand($parts[0]);
         $args = isset($parts[1]) ? explode(' ', $parts[1]) : [];
 
@@ -164,7 +164,7 @@ class CommandHandler
                 $this->bot->getLogger()?->error(sprintf(
                     "Command '%s' threw %s: %s in %s:%d",
                     $command,
-                    get_class($e),
+                    $e::class,
                     $e->getMessage(),
                     $e->getFile(),
                     $e->getLine()
@@ -193,7 +193,7 @@ class CommandHandler
      */
     public function generateHelp(): string
     {
-        if (count($this->descriptions) === 0) {
+        if ($this->descriptions === []) {
             return "No commands registered.";
         }
 
@@ -210,7 +210,6 @@ class CommandHandler
      * Send help message to a chat
      *
      * @param int $chatId The chat ID to send help to
-     * @return void
      */
     public function sendHelp(int $chatId): void
     {
@@ -263,8 +262,6 @@ class CommandHandler
 
     /**
      * Clear all registered commands
-     *
-     * @return void
      */
     public function clear(): void
     {
