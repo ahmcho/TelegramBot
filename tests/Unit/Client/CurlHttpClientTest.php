@@ -239,6 +239,31 @@ final class CurlHttpClientTest extends TestCase
         $this->assertGreaterThan(0, $elapsed);
     }
 
+    public function test_processMultiResult_captures_api_exception_as_failed_item(): void
+    {
+        // Regression test: a Telegram "ok: false" response (e.g. invalid chat_id)
+        // for one item in a bulk batch must be captured as a per-item failure,
+        // not escape processMultiResult() and abort the whole batch. ApiException
+        // and HttpClientException are siblings (both extend TelegramException),
+        // so catching only HttpClientException here let ApiException through.
+        $client = new CurlHttpClient($this->config);
+        $method = new \ReflectionMethod($client, 'processMultiResult');
+
+        $apiErrorResponse = json_encode([
+            'ok' => false,
+            'error_code' => 400,
+            'description' => 'Bad Request: chat not found',
+        ]);
+
+        $result = $method->invoke($client, $apiErrorResponse, 400, '', 0, ['chat_id' => 999999999]);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(999999999, $result['chat_id']);
+        $this->assertNull($result['message_id']);
+        $this->assertNull($result['data']);
+        $this->assertSame('Bad Request: chat not found', $result['error']);
+    }
+
     public function test_request_handles_get_method(): void
     {
         $client = new CurlHttpClient($this->config);
