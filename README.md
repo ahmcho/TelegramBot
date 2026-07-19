@@ -41,7 +41,7 @@ A lightweight, dependency-free framework with clean service-oriented architectur
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tg-bots.git
+git clone https://github.com/ahmcho/TelegramBot.git tg-bots
 cd tg-bots
 
 # Copy environment file
@@ -100,6 +100,10 @@ end-to-end recipes — see **[docs/README.md](docs/README.md)**, starting with
 | `bulk-test.php` | Bulk messaging demonstration |
 | `webhook.php` | Webhook-based bot |
 | `setup-webhook.php` | CLI script to set/delete the webhook |
+| `logger-test.php` | PSR-3 logging integration |
+| `ecommerce.php` | Product catalog and ordering flow |
+| `multilanguage.php` | Language selection with reply/inline keyboards |
+| `support.php` | Support ticket bot |
 
 ```bash
 php examples/echo.php
@@ -114,6 +118,7 @@ php examples/retry-demo.php <chat_id>
 ```bash
 vendor/bin/phpunit       # run tests
 vendor/bin/phpstan       # static analysis
+vendor/bin/rector        # automated refactoring (add --dry-run to preview)
 vendor/bin/phpcs         # code style
 ```
 

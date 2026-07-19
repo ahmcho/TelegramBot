@@ -182,6 +182,8 @@ you built on top of it):
 ```bash
 vendor/bin/phpunit                    # all tests
 vendor/bin/phpunit tests/Unit/Api/    # a specific suite
+vendor/bin/phpstan analyse            # static analysis (level 8 + strict rules)
+vendor/bin/rector process --dry-run   # preview automated refactoring suggestions
 ```
 
 Tests are organized under `tests/Unit/` (mocked HTTP, the majority of the
