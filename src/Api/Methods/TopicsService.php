@@ -37,7 +37,6 @@ class TopicsService
      * Edit a forum topic
      *
      * @param array{chat_id: int|string, message_thread_id: int, name?: string, icon_custom_emoji_id?: string} $params
-     * @return mixed
      */
     public function edit(array $params): mixed
     {
@@ -51,7 +50,6 @@ class TopicsService
      * Close a forum topic
      *
      * @param array{chat_id: int|string, message_thread_id: int} $params
-     * @return mixed
      */
     public function close(array $params): mixed
     {
@@ -65,7 +63,6 @@ class TopicsService
      * Reopen a forum topic
      *
      * @param array{chat_id: int|string, message_thread_id: int} $params
-     * @return mixed
      */
     public function reopen(array $params): mixed
     {
@@ -79,7 +76,6 @@ class TopicsService
      * Delete a forum topic
      *
      * @param array{chat_id: int|string, message_thread_id: int} $params
-     * @return mixed
      */
     public function delete(array $params): mixed
     {
@@ -93,7 +89,6 @@ class TopicsService
      * Unpin all messages from a forum topic
      *
      * @param array{chat_id: int|string, message_thread_id: int} $params
-     * @return mixed
      */
     public function unpinAll(array $params): mixed
     {
@@ -107,7 +102,6 @@ class TopicsService
      * Edit the general forum topic
      *
      * @param array{chat_id: int|string, name: string} $params
-     * @return mixed
      */
     public function editGeneral(array $params): mixed
     {
@@ -121,7 +115,6 @@ class TopicsService
      * Close the general forum topic
      *
      * @param array{chat_id: int|string} $params
-     * @return mixed
      */
     public function closeGeneral(array $params): mixed
     {
@@ -135,7 +128,6 @@ class TopicsService
      * Reopen the general forum topic
      *
      * @param array{chat_id: int|string} $params
-     * @return mixed
      */
     public function reopenGeneral(array $params): mixed
     {
@@ -149,7 +141,6 @@ class TopicsService
      * Hide the general forum topic
      *
      * @param array{chat_id: int|string} $params
-     * @return mixed
      */
     public function hideGeneral(array $params): mixed
     {
@@ -163,7 +154,6 @@ class TopicsService
      * Unhide the general forum topic
      *
      * @param array{chat_id: int|string} $params
-     * @return mixed
      */
     public function unhideGeneral(array $params): mixed
     {

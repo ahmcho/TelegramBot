@@ -23,7 +23,7 @@ class InlineKeyboardBuilder implements KeyboardBuilderInterface
     public function addRow(Button ...$buttons): self
     {
         $this->rows[] = array_values(array_map(
-            fn(Button $button) => $button->toArray(),
+            fn(Button $button): array => $button->toArray(),
             $buttons
         ));
 

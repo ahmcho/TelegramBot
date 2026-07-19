@@ -45,8 +45,7 @@ final class ApiService
         }
 
         try {
-            $response = $this->httpClient->request(HttpMethod::POST, $url, $params);
-            return $response;
+            return $this->httpClient->request(HttpMethod::POST, $url, $params);
         } catch (\Throwable $e) {
             // Log API call failure at ERROR level
             if ($this->logger !== null) {

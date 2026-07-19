@@ -65,7 +65,6 @@ class InviteLinksService
      * Export an invite link as a file
      *
      * @param array{chat_id: int|string} $params
-     * @return mixed
      */
     public function export(array $params): mixed
     {

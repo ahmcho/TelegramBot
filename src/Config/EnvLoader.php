@@ -69,7 +69,7 @@ class EnvLoader
         }
 
         // Parse KEY=VALUE or KEY = VALUE or KEY="VALUE" or KEY='VALUE'
-        if (preg_match('/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/', $trimmed, $matches) !== 1) {
+        if (preg_match('/^([A-Za-z_]\w*)\s*=\s*(.*)$/', $trimmed, $matches) !== 1) {
             return;
         }
 

@@ -255,7 +255,7 @@ final class CurlHttpClientTest extends TestCase
             'description' => 'Bad Request: chat not found',
         ]);
 
-        $result = $method->invoke($client, $apiErrorResponse, 400, '', 0, ['chat_id' => 999999999]);
+        $result = $method->invoke($client, $apiErrorResponse, '', 0, ['chat_id' => 999999999]);
 
         $this->assertFalse($result['success']);
         $this->assertSame(999999999, $result['chat_id']);

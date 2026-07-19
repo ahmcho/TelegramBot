@@ -30,7 +30,7 @@ class ReplyKeyboardBuilder implements KeyboardBuilderInterface
     public function addRow(Button ...$buttons): self
     {
         $this->rows[] = array_values(array_map(
-            fn(Button $button) => ['text' => $button->text],
+            fn(Button $button): array => ['text' => $button->text],
             $buttons
         ));
 

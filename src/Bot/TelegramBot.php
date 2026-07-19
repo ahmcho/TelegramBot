@@ -266,7 +266,7 @@ final class TelegramBot
     public function sendMessageWithRetry(array $params, array $options = []): array
     {
         return $this->executeWithRetry(
-            fn() => $this->messages->send($params),
+            fn(): array => $this->messages->send($params),
             $options
         );
     }
@@ -285,7 +285,7 @@ final class TelegramBot
         array $retryOptions = []
     ): mixed {
         return $this->executeWithRetry(
-            fn() => $this->messages->sendBulk($messagesArray, $bulkOptions),
+            fn(): \AhmCho\Telegram\Bulk\BulkResult => $this->messages->sendBulk($messagesArray, $bulkOptions),
             $retryOptions
         );
     }

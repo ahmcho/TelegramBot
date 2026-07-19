@@ -179,7 +179,7 @@ final class CurlHttpClient implements HttpClientInterface
         $delayMs = $options['delay_ms'];
 
         $handleKeys = array_keys($handles);
-        if (count($handleKeys) === 0) {
+        if ($handleKeys === []) {
             return [];
         }
         $batchSize = max(1, min($maxConcurrent, count($handleKeys)));
@@ -204,7 +204,6 @@ final class CurlHttpClient implements HttpClientInterface
 
                 $results[$index] = $this->processMultiResult(
                     $response,
-                    $httpCode,
                     $error,
                     $errno,
                     $handleData['params']
@@ -225,7 +224,6 @@ final class CurlHttpClient implements HttpClientInterface
      */
     private function processMultiResult(
         ?string $response,
-        int $httpCode,
         string $error,
         int $errno,
         array $params

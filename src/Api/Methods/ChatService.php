@@ -20,7 +20,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function sendAction(array $params): mixed
     {
@@ -56,7 +55,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function getMemberCount(array $params): mixed
     {
@@ -65,7 +63,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function banMember(array $params): mixed
     {
@@ -74,7 +71,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function unbanMember(array $params): mixed
     {
@@ -83,7 +79,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function restrictMember(array $params): mixed
     {
@@ -92,7 +87,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function promoteMember(array $params): mixed
     {
@@ -101,7 +95,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function leave(array $params): mixed
     {
@@ -110,7 +103,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function pinMessage(array $params): mixed
     {
@@ -119,7 +111,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function unpinMessage(array $params): mixed
     {
@@ -128,7 +119,6 @@ class ChatService
 
     /**
      * @param array<string, mixed> $params
-     * @return mixed
      */
     public function unpinAllMessages(array $params): mixed
     {
@@ -139,7 +129,6 @@ class ChatService
      * Change the title of a chat
      *
      * @param array{chat_id: int|string, title: string} $params
-     * @return mixed
      */
     public function setChatTitle(array $params): mixed
     {
@@ -150,7 +139,6 @@ class ChatService
      * Change the description of a group, supergroup or channel
      *
      * @param array{chat_id: int|string, description?: string} $params
-     * @return mixed
      */
     public function setChatDescription(array $params): mixed
     {
@@ -161,7 +149,6 @@ class ChatService
      * Set a new profile photo for the chat
      *
      * @param array{chat_id: int|string, photo: mixed} $params
-     * @return mixed
      */
     public function setChatPhoto(array $params): mixed
     {
@@ -172,7 +159,6 @@ class ChatService
      * Delete the chat photo
      *
      * @param array{chat_id: int|string} $params
-     * @return mixed
      */
     public function deleteChatPhoto(array $params): mixed
     {
@@ -183,7 +169,6 @@ class ChatService
      * Set default chat permissions for all members
      *
      * @param array{chat_id: int|string, permissions: array<string, bool>} $params
-     * @return mixed
      */
     public function setChatPermissions(array $params): mixed
     {
@@ -222,7 +207,6 @@ class ChatService
      * Answer a callback query sent from an inline keyboard
      *
      * @param array{callback_query_id: string, text?: string, show_alert?: bool, url?: string, cache_time?: int} $params
-     * @return mixed
      */
     public function answerCallbackQuery(array $params): mixed
     {
