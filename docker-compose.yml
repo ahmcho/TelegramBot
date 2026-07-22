@@ -1,6 +1,11 @@
 services:
-  # Long-polling echo bot — runs by default with `docker compose up` so you
-  # can chat with the bot on Telegram immediately, no public URL required.
+  # This service runs one bot script from the examples folder with long
+  # polling. Docker Compose starts it by default with `docker compose up`.
+  # You do not need a public URL for this service.
+  #
+  # Set BOT_EXAMPLE to pick a different script before you run Docker
+  # Compose. Example: BOT_EXAMPLE=admin.php docker compose up
+  # If you do not set BOT_EXAMPLE, Docker Compose runs examples/echo.php.
   bot-dev:
     build:
       context: .
@@ -13,7 +18,7 @@ services:
       - .:/app
       - ./logs:/app/logs
     working_dir: /app
-    command: php examples/echo.php
+    command: php examples/${BOT_EXAMPLE:-echo.php}
 
   # Production webhook server. Requires a public HTTPS URL (reverse proxy /
   # tunnel) registered via $bot->webhooks()->set() before Telegram can reach
