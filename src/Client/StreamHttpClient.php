@@ -12,6 +12,8 @@ use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
 use AhmCho\Telegram\Client\Traits\MultipartRequestTrait;
 use AhmCho\Telegram\Client\Traits\TimeoutResolverTrait;
+use Override;
+use Throwable;
 
 final class StreamHttpClient implements HttpClientInterface
 {
@@ -40,6 +42,7 @@ final class StreamHttpClient implements HttpClientInterface
      *               - bool: deleteMessage, setWebhook, sendChatAction, etc.
      * @throws HttpClientException On HTTP errors
      */
+    #[Override]
     public function request(
         HttpMethod $method,
         string $url,
@@ -115,6 +118,7 @@ final class StreamHttpClient implements HttpClientInterface
      * @param array{max_concurrent?: int, delay_ms?: int} $options
      * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
      */
+    #[Override]
     public function requestMulti(
         HttpMethod $method,
         string $url,
@@ -145,7 +149,7 @@ final class StreamHttpClient implements HttpClientInterface
                     'data' => $data,
                     'error' => null,
                 ];
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $results[$index] = [
                     'success' => false,
                     'chat_id' => $chatId,
@@ -163,11 +167,13 @@ final class StreamHttpClient implements HttpClientInterface
         return $results;
     }
 
+    #[Override]
     public function getLastHttpCode(): int
     {
         return $this->lastHttpCode;
     }
 
+    #[Override]
     public static function isAvailable(): bool
     {
         return extension_loaded('openssl') &&

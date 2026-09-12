@@ -5,56 +5,67 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Logging;
 
 use AhmCho\Telegram\Logging\Context\ExceptionContext;
+use DateTimeImmutable;
+use Override;
+use Throwable;
 
 /**
  * PSR-3 compliant logger implementation
  */
-final class Logger implements LoggerInterface
+final readonly class Logger implements LoggerInterface
 {
     /**
      * @param FileLogHandler $handler The file handler for writing logs
      * @param LogLevel $minLevel Minimum log level to record
      * @param string $timezone IANA timezone name for log timestamps (default: UTC)
      */
-    public function __construct(private readonly FileLogHandler $handler, private readonly LogLevel $minLevel = LogLevel::INFO, private readonly string $timezone = 'UTC')
+    public function __construct(private FileLogHandler $handler, private LogLevel $minLevel = LogLevel::INFO, private string $timezone = 'UTC')
     {
     }
 
+    #[Override]
     public function emergency(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::EMERGENCY, $message, $context);
     }
 
+    #[Override]
     public function alert(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::ALERT, $message, $context);
     }
 
+    #[Override]
     public function critical(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::CRITICAL, $message, $context);
     }
 
+    #[Override]
     public function error(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::ERROR, $message, $context);
     }
 
+    #[Override]
     public function warning(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::WARNING, $message, $context);
     }
 
+    #[Override]
     public function notice(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::NOTICE, $message, $context);
     }
 
+    #[Override]
     public function info(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::INFO, $message, $context);
     }
 
+    #[Override]
     public function debug(string|\Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::DEBUG, $message, $context);
@@ -66,6 +77,7 @@ final class Logger implements LoggerInterface
      * @param mixed $level PSR-3 level string or LogLevel enum
      * @param array<string, mixed> $context Context data
      */
+    #[Override]
     public function log(mixed $level, string|\Stringable $message, array $context = []): void
     {
         // Convert PSR-3 level string to enum
@@ -94,7 +106,7 @@ final class Logger implements LoggerInterface
         // Write to file (never throw from logger)
         try {
             $this->handler->write($entry);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Fail-safe: if logger fails, fall back to error_log
             error_log("Logger write failed: {$e->getMessage()}");
             error_log("Original log entry: {$entry}");
@@ -104,10 +116,11 @@ final class Logger implements LoggerInterface
     /**
      * Log an exception with full context
      *
-     * @param \Throwable $exception The exception to log
+     * @param Throwable $exception The exception to log
      * @param array<string, mixed> $context Additional context data
      */
-    public function logException(\Throwable $exception, array $context = []): void
+    #[Override]
+    public function logException(Throwable $exception, array $context = []): void
     {
         $exceptionContext = ExceptionContext::fromException($exception);
         $mergedContext = [...$context, ...$exceptionContext->toArray()];
@@ -160,7 +173,7 @@ final class Logger implements LoggerInterface
      */
     private function formatEntry(LogLevel $level, string $message, string $context): string
     {
-        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone($this->timezone)))->format('Y-m-d H:i:s');
+        $timestamp = (new DateTimeImmutable('now', new \DateTimeZone($this->timezone)))->format('Y-m-d H:i:s');
         $context = $context !== '' ? "\nContext: {$context}" : '';
 
         return "[{$timestamp}] [{$level->value}] {$message}{$context}" . PHP_EOL;

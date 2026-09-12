@@ -7,6 +7,8 @@ namespace AhmCho\Telegram\Bot;
 use AhmCho\Telegram\Client\HttpClientFactory;
 use AhmCho\Telegram\Client\HttpClientInterface;
 use AhmCho\Telegram\Config\BotConfig;
+use AhmCho\Telegram\Config\EnvLoader;
+use SensitiveParameter;
 
 /**
  * Bot Factory
@@ -18,7 +20,7 @@ class BotFactory
     /**
      * Create a bot instance with default configuration
      */
-    public static function create(?string $token = null): TelegramBot
+    public static function create(#[SensitiveParameter] ?string $token = null): TelegramBot
     {
         return new TelegramBot($token);
     }
@@ -35,6 +37,7 @@ class BotFactory
      * Create a bot with custom HTTP client
      */
     public static function createWithHttpClient(
+        #[SensitiveParameter]
         ?string $token,
         HttpClientInterface $httpClient
     ): TelegramBot {
@@ -50,7 +53,7 @@ class BotFactory
      */
     private static function getTokenFromEnv(): string
     {
-        $loader = new \AhmCho\Telegram\Config\EnvLoader();
+        $loader = new EnvLoader();
         $loader->load();
 
         return $loader->require('TELEGRAM_BOT_TOKEN');

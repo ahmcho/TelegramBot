@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace AhmCho\Telegram\Config;
 
+use SensitiveParameter;
+
 /**
  * Bot Configuration Value Object
  *
  * Immutable configuration for Telegram bot
  */
-final class BotConfig
+final readonly class BotConfig
 {
     public function __construct(
-        private readonly string $token,
-        private readonly string $apiUrl = 'https://api.telegram.org/',
-        private readonly int $timeout = 30,
-        private readonly bool $throwExceptions = true,
-        private readonly bool $verifySsl = true,
-        private readonly bool $loggingEnabled = true,
-        private readonly string $logFilePath = 'bot.log',
-        private readonly string $logLevel = 'INFO',
-        private readonly int $logMaxBytes = 0,
-        private readonly string $logTimezone = 'UTC'
+        #[SensitiveParameter]
+        public string $token,
+        public string $apiUrl = 'https://api.telegram.org/',
+        public int $timeout = 30,
+        public bool $throwExceptions = true,
+        public bool $verifySsl = true,
+        public bool $loggingEnabled = true,
+        public string $logFilePath = 'bot.log',
+        public string $logLevel = 'INFO',
+        public int $logMaxBytes = 0,
+        public string $logTimezone = 'UTC'
     ) {
     }
 

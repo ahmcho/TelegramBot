@@ -6,6 +6,7 @@ namespace AhmCho\Telegram\Command;
 
 use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Enums\ParseMode;
+use Throwable;
 
 /**
  * Command Handler System
@@ -133,7 +134,7 @@ class CommandHandler
         }
 
         $chatId = (int) $message['chat']['id'];
-        $parts = explode(' ', trim((string) $text), 2);
+        $parts = explode(' ', mb_trim((string) $text), 2);
         $command = $this->normalizeCommand($parts[0]);
         $args = isset($parts[1]) ? explode(' ', $parts[1]) : [];
 
@@ -145,7 +146,7 @@ class CommandHandler
                     // Middleware returned false, stop execution
                     return true;
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Log and continue with other middleware
                 $this->bot->getLogger()?->error("Middleware '$name' error: {$e->getMessage()}");
             }
@@ -156,7 +157,7 @@ class CommandHandler
             try {
                 ($this->commands[$command])($this->bot, $chatId, $args);
                 return true;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->bot->messages()->send([
                     'chat_id' => $chatId,
                     'text' => 'An error occurred. Please try again.'
@@ -178,7 +179,7 @@ class CommandHandler
             try {
                 ($this->defaultCallback)($this->bot, $chatId, $command, $args);
                 return true;
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 $this->bot->getLogger()?->error("Default callback error: {$e->getMessage()}");
             }
         }
@@ -278,7 +279,7 @@ class CommandHandler
      */
     private function normalizeCommand(string $command): string
     {
-        return ltrim(strtolower($command), '/');
+        return mb_ltrim(mb_strtolower($command), '/');
     }
 
     /**
@@ -289,6 +290,6 @@ class CommandHandler
      */
     private function isCommand(string $text): bool
     {
-        return str_starts_with(trim($text), '/');
+        return str_starts_with(mb_trim($text), '/');
     }
 }

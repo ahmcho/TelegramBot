@@ -24,9 +24,7 @@ trait ResponseParserTrait
      */
     private function parseResponse(string $response): mixed
     {
-        $data = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!json_validate($response)) {
             $exception = new HttpClientException(
                 'Invalid JSON response: ' . json_last_error_msg(),
                 $this->lastHttpCode,
@@ -35,6 +33,8 @@ trait ResponseParserTrait
             $this->logExceptionIfEnabled($exception);
             throw $exception;
         }
+
+        $data = json_decode($response, true);
 
         if (!is_array($data)) {
             $exception = new HttpClientException(

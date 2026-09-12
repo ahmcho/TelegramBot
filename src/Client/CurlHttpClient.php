@@ -13,6 +13,9 @@ use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 use AhmCho\Telegram\Client\Traits\ResponseParserTrait;
 use AhmCho\Telegram\Client\Traits\MultipartRequestTrait;
 use AhmCho\Telegram\Client\Traits\TimeoutResolverTrait;
+use CurlHandle;
+use CurlMultiHandle;
+use Override;
 
 final class CurlHttpClient implements HttpClientInterface
 {
@@ -40,6 +43,7 @@ final class CurlHttpClient implements HttpClientInterface
      *               - bool: deleteMessage, setWebhook, sendChatAction, etc.
      * @throws HttpClientException On HTTP errors
      */
+    #[Override]
     public function request(
         HttpMethod $method,
         string $url,
@@ -79,6 +83,7 @@ final class CurlHttpClient implements HttpClientInterface
      * @param array{max_concurrent?: int, delay_ms?: int} $options
      * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
      */
+    #[Override]
     public function requestMulti(
         HttpMethod $method,
         string $url,
@@ -116,11 +121,13 @@ final class CurlHttpClient implements HttpClientInterface
         return $results;
     }
 
+    #[Override]
     public function getLastHttpCode(): int
     {
         return $this->lastHttpCode;
     }
 
+    #[Override]
     public static function isAvailable(): bool
     {
         return function_exists('curl_init') && function_exists('curl_exec');
@@ -133,7 +140,7 @@ final class CurlHttpClient implements HttpClientInterface
         HttpMethod $method,
         string $url,
         array $params
-    ): \CurlHandle {
+    ): CurlHandle {
         $ch = curl_init();
         if ($ch === false) {
             throw new HttpClientException('Failed to initialize cURL handle');
@@ -164,12 +171,12 @@ final class CurlHttpClient implements HttpClientInterface
     }
 
     /**
-     * @param array<int, array{handle: \CurlHandle, params: array<string, mixed>}> $handles
+     * @param array<int, array{handle: CurlHandle, params: array<string, mixed>}> $handles
      * @param array{max_concurrent: int, delay_ms: int} $options
      * @return array<int, array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}>
      */
     private function executeMultiHandles(
-        \CurlMultiHandle $mh,
+        CurlMultiHandle $mh,
         array $handles,
         array $options
     ): array {

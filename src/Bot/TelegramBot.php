@@ -16,6 +16,7 @@ use AhmCho\Telegram\Api\Methods\PollsService;
 use AhmCho\Telegram\Api\Methods\TopicsService;
 use AhmCho\Telegram\Api\Methods\WebhookService;
 use AhmCho\Telegram\Bulk\BulkOperationManager;
+use AhmCho\Telegram\Bulk\BulkResult;
 use AhmCho\Telegram\Client\HttpClientFactory;
 use AhmCho\Telegram\Client\HttpClientInterface;
 use AhmCho\Telegram\Command\CommandHandler;
@@ -24,9 +25,13 @@ use AhmCho\Telegram\Config\EnvLoader;
 use AhmCho\Telegram\Formatting\MarkdownV2Formatter;
 use AhmCho\Telegram\Formatting\TextFormatterInterface;
 use AhmCho\Telegram\Enums\ApiMethod;
+use AhmCho\Telegram\Exception\ApiException;
+use AhmCho\Telegram\Exception\HttpClientException;
 use AhmCho\Telegram\Logging\LoggerFactory;
 use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
+use RuntimeException;
+use SensitiveParameter;
 
 /**
  * Telegram Bot Facade
@@ -54,6 +59,7 @@ final class TelegramBot
     private string $inputSource = 'php://input';
 
     public function __construct(
+        #[SensitiveParameter]
         ?string $token = null,
         ?BotConfig $config = null,
         ?HttpClientInterface $httpClient = null
@@ -285,7 +291,7 @@ final class TelegramBot
         array $retryOptions = []
     ): mixed {
         return $this->executeWithRetry(
-            fn(): \AhmCho\Telegram\Bulk\BulkResult => $this->messages->sendBulk($messagesArray, $bulkOptions),
+            fn(): BulkResult => $this->messages->sendBulk($messagesArray, $bulkOptions),
             $retryOptions
         );
     }
@@ -323,7 +329,7 @@ final class TelegramBot
                 }
 
                 return $result;
-            } catch (\AhmCho\Telegram\Exception\ApiException $e) {
+            } catch (ApiException $e) {
                 $lastException = $e;
 
                 $this->logIfEnabled('warning', 'API request failed', [
@@ -363,7 +369,7 @@ final class TelegramBot
 
                 usleep($delayMs * 1000);
                 $delayMs = min($delayMs * 2, $maxDelayMs);
-            } catch (\AhmCho\Telegram\Exception\HttpClientException $e) {
+            } catch (HttpClientException $e) {
                 $lastException = $e;
 
                 // Network/transport failures are always transient — retry all of them
@@ -391,7 +397,7 @@ final class TelegramBot
         ]);
 
         if ($lastException === null) {
-            throw new \RuntimeException('Retry loop exited without capturing an exception');
+            throw new RuntimeException('Retry loop exited without capturing an exception');
         }
 
         throw $lastException;

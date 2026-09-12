@@ -17,15 +17,15 @@ use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
  *
  * Central orchestration for all Telegram API calls
  */
-final class ApiService
+final readonly class ApiService
 {
     use LoggerHelperTrait;
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
-        private readonly BotConfig $config,
-        private readonly BulkOperationManager $bulkManager,
-        private readonly ?LoggerInterface $logger = null
+        private HttpClientInterface $httpClient,
+        private BotConfig $config,
+        private BulkOperationManager $bulkManager,
+        private ?LoggerInterface $logger = null
     ) {}
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AhmCho\Telegram\Keyboard\Traits;
 
+use Override;
+
 /**
  * JSON Build Trait
  *
@@ -11,6 +13,7 @@ namespace AhmCho\Telegram\Keyboard\Traits;
  */
 trait JsonBuildTrait
 {
+    #[Override]
     public function build(): string
     {
         return json_encode($this->toArray(), JSON_THROW_ON_ERROR);

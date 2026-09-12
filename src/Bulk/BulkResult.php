@@ -45,6 +45,18 @@ readonly class BulkResult implements Countable
         return ($this->successful / $this->total) * 100;
     }
 
+    /**
+     * @return array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}|null
+     */
+    public function getFirstFailure(): ?array
+    {
+        return array_find(
+            $this->results,
+            fn(array $result): bool => !$result['success']
+        );
+    }
+
+    #[\Override]
     public function count(): int
     {
         return $this->total;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Keyboard;
 
 use AhmCho\Telegram\Keyboard\Traits\JsonBuildTrait;
+use Override;
 
 /**
  * Reply Keyboard Builder
@@ -27,6 +28,7 @@ class ReplyKeyboardBuilder implements KeyboardBuilderInterface
         $this->options = $options ?? new ReplyKeyboardOptions();
     }
 
+    #[Override]
     public function addRow(Button ...$buttons): self
     {
         $this->rows[] = array_values(array_map(
@@ -37,6 +39,7 @@ class ReplyKeyboardBuilder implements KeyboardBuilderInterface
         return $this;
     }
 
+    #[Override]
     public function toArray(): array
     {
         return [

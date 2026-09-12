@@ -12,14 +12,14 @@ use AhmCho\Telegram\Enums\HttpMethod;
 use AhmCho\Telegram\Logging\LoggerInterface;
 use AhmCho\Telegram\Logging\Traits\LoggerHelperTrait;
 
-final class BulkOperationManager
+final readonly class BulkOperationManager
 {
     use LoggerHelperTrait;
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
-        private readonly BotConfig $config,
-        private readonly ?LoggerInterface $logger = null
+        private HttpClientInterface $httpClient,
+        private BotConfig $config,
+        private ?LoggerInterface $logger = null
     ) {}
 
     /**

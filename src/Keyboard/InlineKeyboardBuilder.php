@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AhmCho\Telegram\Keyboard;
 
 use AhmCho\Telegram\Keyboard\Traits\JsonBuildTrait;
+use Override;
 
 /**
  * Inline Keyboard Builder
@@ -20,6 +21,7 @@ class InlineKeyboardBuilder implements KeyboardBuilderInterface
      */
     private array $rows = [];
 
+    #[Override]
     public function addRow(Button ...$buttons): self
     {
         $this->rows[] = array_values(array_map(
@@ -30,6 +32,7 @@ class InlineKeyboardBuilder implements KeyboardBuilderInterface
         return $this;
     }
 
+    #[Override]
     public function toArray(): array
     {
         return ['inline_keyboard' => $this->rows];
