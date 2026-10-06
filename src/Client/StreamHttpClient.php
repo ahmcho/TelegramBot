@@ -22,7 +22,7 @@ final class StreamHttpClient implements HttpClientInterface
     use MultipartRequestTrait;
     use TimeoutResolverTrait;
 
-    private int $lastHttpCode = 0;
+    public private(set) int $lastHttpCode = 0;
     private bool $parallelWarningLogged = false;
 
     public function __construct(

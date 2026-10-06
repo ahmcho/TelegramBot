@@ -46,7 +46,7 @@ trait ResponseParserTrait
             throw $exception;
         }
 
-        if (!($data['ok'] ?? false)) {
+        if (!((bool)($data['ok'] ?? false))) {
             $exception = new ApiException(
                 $data['description'] ?? 'Unknown Telegram API error',
                 $data['error_code'] ?? null,

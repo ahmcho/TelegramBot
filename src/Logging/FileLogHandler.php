@@ -9,7 +9,7 @@ namespace AhmCho\Telegram\Logging;
  */
 final class FileLogHandler
 {
-    private readonly string $logFilePath;
+    public private(set) string $logFilePath;
     private int $maxRetries = 3;
     private int $retryDelayMs = 100;
 
@@ -21,7 +21,7 @@ final class FileLogHandler
     public function __construct(
         string $logFilePath,
         bool $createDirectory = true,
-        private readonly int $maxBytes = 0
+        public private(set) int $maxBytes = 0
     ) {
         if ($logFilePath === '' || $logFilePath === '0') {
             throw new \InvalidArgumentException("Log file path cannot be empty");

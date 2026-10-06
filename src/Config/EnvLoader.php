@@ -102,20 +102,12 @@ class EnvLoader
         return rtrim($value);
     }
 
-    private function findEnvFile(): string|null
+    private function findEnvFile(): ?string
     {
-        $paths = [
+        return array_find([
             getcwd() . '/.env',
-            dirname(__DIR__) . '/.env',
+            __DIR__ . '/../.env',
             __DIR__ . '/../../.env',
-        ];
-
-        foreach ($paths as $path) {
-            if (file_exists($path)) {
-                return $path;
-            }
-        }
-
-        return null;
+        ], static fn(string $path): bool => file_exists($path));
     }
 }

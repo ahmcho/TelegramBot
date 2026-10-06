@@ -536,4 +536,11 @@ final class CurlHttpClientTest extends TestCase
         $result = $method->invoke($client, $stringResponse);
         $this->assertIsString($result);
     }
+
+    public function test_lastHttpCode_asymmetric_visibility_property(): void
+    {
+        $client = new CurlHttpClient($this->config);
+        $this->assertSame(0, $client->lastHttpCode);
+        $this->assertSame($client->getLastHttpCode(), $client->lastHttpCode);
+    }
 }

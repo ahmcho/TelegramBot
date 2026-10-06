@@ -6,6 +6,7 @@ namespace AhmCho\Telegram\Command;
 
 use AhmCho\Telegram\Bot\TelegramBot;
 use AhmCho\Telegram\Enums\ParseMode;
+use Closure;
 use Throwable;
 
 /**
@@ -33,14 +34,13 @@ class CommandHandler
 
     /**
      * Default callback for unknown commands
-     *
-     * @var callable|null
      */
-    private $defaultCallback;
+    private ?Closure $defaultCallback = null;
 
     public function __construct(
         private readonly TelegramBot $bot
-    ) {}
+    ) {
+    }
 
     /**
      * Register a command handler
@@ -73,13 +73,13 @@ class CommandHandler
     public function registerCommands(array $commands): self
     {
         foreach ($commands as $command => $handler) {
-            if (is_array($handler)) {
+            if (is_array($handler) && isset($handler['callback']) && is_callable($handler['callback'])) {
                 $this->register(
                     $command,
                     $handler['callback'],
                     $handler['description'] ?? ''
                 );
-            } else {
+            } elseif (is_callable($handler)) {
                 $this->register($command, $handler);
             }
         }
@@ -95,7 +95,7 @@ class CommandHandler
      */
     public function setDefault(callable $callback): self
     {
-        $this->defaultCallback = $callback;
+        $this->defaultCallback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
         return $this;
     }
 
@@ -222,13 +222,20 @@ class CommandHandler
     }
 
     /**
+     * @var array<string> List of registered command names
+     */
+    public array $registeredCommands {
+        get => array_keys($this->commands);
+    }
+
+    /**
      * Get all registered commands
      *
      * @return array<string> List of command names
      */
     public function getRegisteredCommands(): array
     {
-        return array_keys($this->commands);
+        return $this->registeredCommands;
     }
 
     /**

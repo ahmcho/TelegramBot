@@ -128,6 +128,25 @@ final class TelegramBotTest extends TestCase
         $this->assertInstanceOf(\AhmCho\Telegram\Api\ApiService::class, $bot->api());
     }
 
+    public function test_service_properties_accessible_directly(): void
+    {
+        $bot = new TelegramBot('test_token');
+
+        $this->assertSame($bot->messages(), $bot->messages);
+        $this->assertSame($bot->media(), $bot->media);
+        $this->assertSame($bot->chats(), $bot->chats);
+        $this->assertSame($bot->webhooks(), $bot->webhooks);
+        $this->assertSame($bot->polls(), $bot->polls);
+        $this->assertSame($bot->inline(), $bot->inline);
+        $this->assertSame($bot->topics(), $bot->topics);
+        $this->assertSame($bot->inviteLinks(), $bot->inviteLinks);
+        $this->assertSame($bot->games(), $bot->games);
+        $this->assertSame($bot->payments(), $bot->payments);
+        $this->assertSame($bot->formatter(), $bot->formatter);
+        $this->assertSame($bot->commands(), $bot->commands);
+        $this->assertSame($bot->api(), $bot->apiService);
+    }
+
     public function test_sendMessage_convenience_method(): void
     {
         $config = new BotConfig('test_token');

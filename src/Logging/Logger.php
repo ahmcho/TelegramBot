@@ -173,7 +173,7 @@ final readonly class Logger implements LoggerInterface
      */
     private function formatEntry(LogLevel $level, string $message, string $context): string
     {
-        $timestamp = (new DateTimeImmutable('now', new \DateTimeZone($this->timezone)))->format('Y-m-d H:i:s');
+        $timestamp = new DateTimeImmutable('now', new \DateTimeZone($this->timezone))->format('Y-m-d H:i:s');
         $context = $context !== '' ? "\nContext: {$context}" : '';
 
         return "[{$timestamp}] [{$level->value}] {$message}{$context}" . PHP_EOL;

@@ -15,12 +15,12 @@ readonly class Button
      * @param array<string, mixed> $metadata
      */
     private function __construct(
-        public readonly string $text,
-        public readonly ?string $url = null,
-        public readonly ?string $callbackData = null,
-        public readonly ?string $switchInlineQuery = null,
-        public readonly ?string $switchInlineQueryCurrentChat = null,
-        public readonly array $metadata = []
+        public string $text,
+        public ?string $url = null,
+        public ?string $callbackData = null,
+        public ?string $switchInlineQuery = null,
+        public ?string $switchInlineQueryCurrentChat = null,
+        public array $metadata = []
     ) {
     }
 

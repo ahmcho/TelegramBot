@@ -42,20 +42,20 @@ final class TelegramBot
 {
     use LoggerHelperTrait;
 
-    private readonly ApiService $apiService;
-    private readonly MessageService $messages;
-    private readonly MediaService $media;
-    private readonly ChatService $chats;
-    private readonly WebhookService $webhooks;
-    private readonly PollsService $polls;
-    private readonly InlineService $inline;
-    private readonly TopicsService $topics;
-    private readonly InviteLinksService $inviteLinks;
-    private readonly GamesService $games;
-    private readonly PaymentsService $payments;
-    private readonly MarkdownV2Formatter $formatter;
-    private readonly ?LoggerInterface $logger;
-    private readonly CommandHandler $commands;
+    public private(set) ApiService $apiService;
+    public private(set) MessageService $messages;
+    public private(set) MediaService $media;
+    public private(set) ChatService $chats;
+    public private(set) WebhookService $webhooks;
+    public private(set) PollsService $polls;
+    public private(set) InlineService $inline;
+    public private(set) TopicsService $topics;
+    public private(set) InviteLinksService $inviteLinks;
+    public private(set) GamesService $games;
+    public private(set) PaymentsService $payments;
+    public private(set) MarkdownV2Formatter $formatter;
+    public private(set) ?LoggerInterface $logger;
+    public private(set) CommandHandler $commands;
     private string $inputSource = 'php://input';
 
     public function __construct(

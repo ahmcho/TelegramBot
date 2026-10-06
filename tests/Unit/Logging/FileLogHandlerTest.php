@@ -294,4 +294,14 @@ final class FileLogHandlerTest extends TestCase
 
         $this->assertFileDoesNotExist($rotatedPath);
     }
+
+    public function test_asymmetric_visibility_properties(): void
+    {
+        $handler = new FileLogHandler($this->testLogFile, false, 2048);
+
+        $this->assertSame($this->testLogFile, $handler->logFilePath);
+        $this->assertSame(2048, $handler->maxBytes);
+        $this->assertSame($handler->getLogFilePath(), $handler->logFilePath);
+        $this->assertSame($handler->getMaxBytes(), $handler->maxBytes);
+    }
 }

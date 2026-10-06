@@ -59,7 +59,7 @@ readonly class BulkResult implements Countable
     #[\Override]
     public function count(): int
     {
-        return $this->total;
+        return max(0, $this->total);
     }
 
     /**

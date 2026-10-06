@@ -16,7 +16,7 @@ use AhmCho\Telegram\Enums\HttpMethod;
  */
 class MockHttpClient implements HttpClientInterface
 {
-    private int $lastHttpCode = 200;
+    public private(set) int $lastHttpCode = 200;
 
     /**
      * @var array<array{response: mixed, exception: \Exception|null, http_code: int}>

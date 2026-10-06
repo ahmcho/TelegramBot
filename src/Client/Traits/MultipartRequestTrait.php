@@ -19,13 +19,7 @@ trait MultipartRequestTrait
      */
     private function hasFileUpload(array $params): bool
     {
-        foreach ($params as $value) {
-            if ($value instanceof \CURLFile) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($params, static fn(mixed $value): bool => $value instanceof \CURLFile);
     }
 
     /**

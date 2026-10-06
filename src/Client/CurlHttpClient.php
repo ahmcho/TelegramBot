@@ -24,7 +24,7 @@ final class CurlHttpClient implements HttpClientInterface
     use MultipartRequestTrait;
     use TimeoutResolverTrait;
 
-    private int $lastHttpCode = 0;
+    public private(set) int $lastHttpCode = 0;
 
     public function __construct(
         private readonly BotConfig $config,
@@ -52,7 +52,7 @@ final class CurlHttpClient implements HttpClientInterface
         $ch = $this->createCurlHandle($method, $url, $params);
 
         $response = curl_exec($ch);
-        $this->lastHttpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
         $errno = curl_errno($ch);
 
@@ -165,6 +165,7 @@ final class CurlHttpClient implements HttpClientInterface
             $options[CURLOPT_POSTFIELDS] = $params;
         }
 
+        // @phpstan-ignore-next-line
         curl_setopt_array($ch, $options);
 
         return $ch;
@@ -205,7 +206,7 @@ final class CurlHttpClient implements HttpClientInterface
                 $ch = $handleData['handle'];
 
                 $response = curl_multi_getcontent($ch);
-                $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $error = curl_error($ch);
                 $errno = curl_errno($ch);
 

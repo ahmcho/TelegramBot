@@ -115,7 +115,7 @@ class MessageService
     {
         // Apply escaping to each message in the bulk array
         $escapedMessagesArray = array_map(
-            fn($params): array => $this->escapeForMarkdownV2($params),
+            $this->escapeForMarkdownV2(...),
             $messagesArray
         );
 

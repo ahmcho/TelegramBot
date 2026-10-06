@@ -558,4 +558,11 @@ final class StreamHttpClientTest extends TestCase
             'photo' => new \CURLFile(__DIR__ . '/does-not-exist-' . uniqid() . '.jpg'),
         ]);
     }
+
+    public function test_lastHttpCode_asymmetric_visibility_property(): void
+    {
+        $client = new StreamHttpClient($this->config);
+        $this->assertSame(0, $client->lastHttpCode);
+        $this->assertSame($client->getLastHttpCode(), $client->lastHttpCode);
+    }
 }

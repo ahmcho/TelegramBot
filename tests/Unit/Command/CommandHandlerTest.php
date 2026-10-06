@@ -253,6 +253,15 @@ class CommandHandlerTest extends TestCase
         $this->assertCount(0, $this->commandHandler->getRegisteredCommands());
     }
 
+    public function testRegisteredCommandsPropertyHook(): void
+    {
+        $this->commandHandler
+            ->register('start', function () {})
+            ->register('help', function () {});
+
+        $this->assertSame(['start', 'help'], $this->commandHandler->registeredCommands);
+    }
+
     public function testClearAlsoClearsMiddleware(): void
     {
         $middlewareFired = false;

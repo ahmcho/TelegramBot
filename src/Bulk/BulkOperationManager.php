@@ -109,7 +109,7 @@ final readonly class BulkOperationManager
         ]);
 
         $requestsArray = array_map(
-            fn($chatId) => [...$commonParams, 'chat_id' => $chatId],
+            fn($chatId): array => [...$commonParams, 'chat_id' => $chatId],
             $chatIds
         );
 

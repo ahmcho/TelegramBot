@@ -43,6 +43,11 @@ interface HttpClientInterface
     /**
      * Get the last HTTP status code
      */
+    public int $lastHttpCode { get; }
+
+    /**
+     * Get the last HTTP status code
+     */
     public function getLastHttpCode(): int;
 
     /**
