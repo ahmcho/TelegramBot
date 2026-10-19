@@ -36,7 +36,7 @@ Client Layer (HttpClientInterface)
 Infrastructure
   - BotConfig (immutable)
   - EnvLoader (.env)
-  - Enums (ApiMethod, HttpMethod, ParseMode, ChatAction, LogLevel)
+  - Enums (ApiMethod, HttpMethod, ParseMode, ChatAction)
   - Exception Hierarchy
   - Logging System (PSR-3)
 ```
@@ -89,7 +89,8 @@ tg-bots/
 │   │   ├── HttpClientInterface.php
 │   │   └── Traits/
 │   │       ├── ResponseParserTrait.php
-│   │       └── MultipartRequestTrait.php
+│   │       ├── MultipartRequestTrait.php
+│   │       └── TimeoutResolverTrait.php
 │   ├── Command/
 │   │   └── CommandHandler.php
 │   ├── Config/
@@ -99,8 +100,7 @@ tg-bots/
 │   │   ├── ApiMethod.php
 │   │   ├── HttpMethod.php
 │   │   ├── ParseMode.php
-│   │   ├── ChatAction.php
-│   │   └── LogLevel.php
+│   │   └── ChatAction.php
 │   ├── Exception/
 │   │   ├── TelegramException.php
 │   │   ├── ApiException.php
@@ -114,7 +114,9 @@ tg-bots/
 │   │   ├── InlineKeyboardBuilder.php
 │   │   ├── ReplyKeyboardBuilder.php
 │   │   ├── ReplyKeyboardOptions.php
-│   │   └── KeyboardBuilderInterface.php
+│   │   ├── KeyboardBuilderInterface.php
+│   │   └── Traits/
+│   │       └── JsonBuildTrait.php
 │   ├── Logging/
 │   │   ├── Logger.php
 │   │   ├── NullLogger.php
