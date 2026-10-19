@@ -11,7 +11,7 @@ declare(strict_types=1);
  * Modern features showcased:
  * - Service-oriented API ($bot->media(), $bot->messages())
  * - Auto-escaping for captions with MarkdownV2
- * - PHP 8.1+ features (strict types, proper typing)
+ * - PHP 8.4+ features (strict types, proper typing)
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;

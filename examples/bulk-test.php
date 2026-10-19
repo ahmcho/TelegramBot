@@ -12,7 +12,7 @@ declare(strict_types=1);
  * - Service-oriented API ($bot->messages())
  * - New bulk operations with auto-escaping for MarkdownV2
  * - BulkResult object for detailed results
- * - PHP 8.1+ features (strict types, proper typing)
+ * - PHP 8.4+ features (strict types, proper typing)
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;

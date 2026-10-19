@@ -12,7 +12,7 @@ declare(strict_types=1);
  * - Service-oriented API ($bot->messages(), $bot->formatter())
  * - Auto-escaping for MarkdownV2 with special characters
  * - Command router architecture (kept - it's good!)
- * - PHP 8.1+ features (strict types, proper typing)
+ * - PHP 8.4+ features (strict types, proper typing)
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * Modern features showcased:
  * - Service-oriented API with $bot->messages()
  * - sendRaw() method to preserve Markdown formatting from user input
- * - PHP 8.1+ features (strict types, proper typing)
+ * - PHP 8.4+ features (strict types, proper typing)
  */
 
 use AhmCho\Telegram\Bot\TelegramBot;
