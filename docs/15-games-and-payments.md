@@ -115,8 +115,8 @@ value (see [The Bot Facade](05-the-bot-facade.md)), calling it today means
 either:
 
 - Adding the enum case and a `PaymentsService::answerPreCheckoutQuery()`
-  method yourself, following the pattern in CLAUDE.md's "How to Extend
-  Safely" section — this is the recommended path since it keeps the call
+  method yourself, following the pattern in the "How to Extend
+  Safely" section of `.claude/docs/extending.md` — this is the recommended path since it keeps the call
   consistent with the rest of the framework (logging, exception handling,
   bulk-manager access all come for free), or
 - Calling the HTTP client directly, bypassing `ApiService`:

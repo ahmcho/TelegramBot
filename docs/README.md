@@ -1,7 +1,7 @@
 # AhmCho\Telegram Documentation
 
 Welcome to the official documentation for **AhmCho\Telegram** — a modern,
-dependency-free PHP 8.1+ framework for building Telegram bots with a clean,
+dependency-free PHP 8.4+ framework for building Telegram bots with a clean,
 service-oriented interface.
 
 This documentation is written for developers who have **never seen this

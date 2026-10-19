@@ -2,11 +2,11 @@
 
 # 🤖 AhmCho\Telegram
 
-**Modern PHP 8.1+ Telegram Bot Framework**
+**Modern PHP 8.4+ Telegram Bot Framework**
 
 A lightweight, dependency-free framework with clean service-oriented architecture
 
-[![PHP Version](https://img.shields.io/badge/php-8.1%2B-blue.svg)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/php-8.4%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)]()
 [![Type Safe](https://img.shields.io/badge/types-strict-red.svg)]()
@@ -18,7 +18,7 @@ A lightweight, dependency-free framework with clean service-oriented architectur
 ## ✨ Features
 
 - **🎯 Zero Dependencies** - Pure PHP, no external libraries required
-- **🚀 Modern PHP** - Built for PHP 8.1+ with 8.3+ features throughout
+- **🚀 Modern PHP** - Built for PHP 8.4+ with modern language features throughout
 - **🏗️ Service-Oriented** - Clean separation with dedicated services
 - **🔒 Type Safe** - Strict types, readonly properties, enums
 - **⚡ Auto-Escaping** - MarkdownV2 special characters handled automatically
@@ -32,7 +32,7 @@ A lightweight, dependency-free framework with clean service-oriented architectur
 
 ## 📋 Requirements
 
-- **PHP 8.1 or higher** (8.3+ recommended)
+- **PHP 8.4 or higher**
 - **Extensions:** `curl`, `json`, `mbstring`, `openssl`, `fileinfo`
 
 ---
