@@ -1,6 +1,6 @@
 {
     "name": "ahmcho/telegram",
-    "description": "Modern PHP 8.4+ Telegram Bot Framework with zero dependencies, service-oriented architecture, and production-ready features",
+    "description": "Modern PHP 8.5+ Telegram Bot Framework with zero dependencies, service-oriented architecture, and production-ready features",
     "type": "library",
     "keywords": [
         "telegram",
@@ -27,7 +27,7 @@
         }
     ],
     "require": {
-        "php": ">=8.4"
+        "php": ">=8.5"
     },
     "require-dev": {
         "phpdocumentor/phpdocumentor": "^3.4",
@@ -72,7 +72,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.4.99"
+            "php": "8.5.99"
         },
         "optimize-autoloader": true,
         "sort-packages": true,

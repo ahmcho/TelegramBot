@@ -222,4 +222,30 @@ final class BulkResultTest extends TestCase
 
         $this->assertInstanceOf(\Countable::class, $result);
     }
+
+    public function test_first_and_last_helpers_with_data(): void
+    {
+        $results = [
+            ['success' => false, 'chat_id' => 10, 'message_id' => null, 'data' => null, 'error' => 'First error'],
+            ['success' => true, 'chat_id' => 20, 'message_id' => 200, 'data' => [], 'error' => null],
+            ['success' => false, 'chat_id' => 30, 'message_id' => null, 'data' => null, 'error' => 'Last error'],
+        ];
+
+        $result = BulkResult::fromRawResults($results);
+
+        $this->assertSame(10, $result->getFirstResult()['chat_id'] ?? null);
+        $this->assertSame(30, $result->getLastResult()['chat_id'] ?? null);
+        $this->assertSame('First error', $result->getFirstError());
+        $this->assertSame('Last error', $result->getLastError());
+    }
+
+    public function test_first_and_last_helpers_when_empty(): void
+    {
+        $result = BulkResult::empty();
+
+        $this->assertNull($result->getFirstResult());
+        $this->assertNull($result->getLastResult());
+        $this->assertNull($result->getFirstError());
+        $this->assertNull($result->getLastError());
+    }
 }

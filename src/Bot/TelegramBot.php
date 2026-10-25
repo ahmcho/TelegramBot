@@ -79,7 +79,9 @@ final class TelegramBot
 
         // Log bot initialization
         $this->logIfEnabled('info', 'TelegramBot initialized', [
-            'token_hash' => substr(md5($config->getToken()), 0, 8),
+            'token_hash' => $config->getToken()
+                |> md5(...)
+                |> (fn(string $h): string => substr($h, 0, 8)),
             'logging_enabled' => $config->isLoggingEnabled(),
             'log_level' => $config->getLogLevel(),
             'timeout' => $config->getTimeout(),

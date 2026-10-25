@@ -85,6 +85,9 @@ final class MarkdownV2Formatter implements TextFormatterInterface
     #[Override]
     public function hashtag(string $tag): string
     {
-        return '#' . $this->escape(ltrim($tag, '#'));
+        return $tag
+            |> (fn(string $t): string => ltrim($t, '#'))
+            |> $this->escape(...)
+            |> (fn(string $e): string => '#' . $e);
     }
 }

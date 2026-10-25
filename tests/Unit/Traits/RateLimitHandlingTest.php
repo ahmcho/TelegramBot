@@ -102,14 +102,14 @@ final class RateLimitHandlingTest extends TestCase
                     'error_code' => 429,
                     'parameters' => ['retry_after' => 30]
                 ],
-                'expected_delay' => 30000
+                'expectedDelay' => 30000
             ],
             'without_retry_after' => [
                 'response' => [
                     'ok' => false,
                     'error_code' => 429
                 ],
-                'expected_delay' => 1000
+                'expectedDelay' => 1000
             ],
             'with_description_only' => [
                 'response' => [
@@ -117,7 +117,7 @@ final class RateLimitHandlingTest extends TestCase
                     'error_code' => 429,
                     'description' => 'Flood control exceeded'
                 ],
-                'expected_delay' => 1000
+                'expectedDelay' => 1000
             ]
         ];
     }

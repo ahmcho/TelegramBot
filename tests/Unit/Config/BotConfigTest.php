@@ -135,7 +135,7 @@ final class BotConfigTest extends TestCase
         // but we can verify behavior remains consistent)
 
         $originalTimeout = $config->getTimeout();
-        $config->withTimeout(100);
+        (void) $config->withTimeout(100);
         $this->assertSame($originalTimeout, $config->getTimeout());
     }
 
@@ -377,5 +377,40 @@ final class BotConfigTest extends TestCase
         $this->assertSame('Europe/Paris', $config->withThrowExceptions(false)->getLogTimezone());
         $this->assertSame('Europe/Paris', $config->withVerifySsl(false)->getLogTimezone());
         $this->assertSame('Europe/Paris', $config->withLogMaxBytes(512)->getLogTimezone());
+    }
+
+    public function test_get_uri_returns_rfc3986_uri(): void
+    {
+        $config = new BotConfig('token123', 'https://api.telegram.org/');
+        $uri = $config->getUri();
+
+        $this->assertInstanceOf(\Uri\Rfc3986\Uri::class, $uri);
+        $this->assertSame('https', $uri->getScheme());
+        $this->assertSame('api.telegram.org', $uri->getHost());
+        $this->assertSame('/bottoken123/', $uri->getPath());
+    }
+
+    public function test_with_methods_have_nodiscard_attribute(): void
+    {
+        $reflection = new \ReflectionClass(BotConfig::class);
+        $withMethods = [
+            'withVerifySsl',
+            'withTimeout',
+            'withThrowExceptions',
+            'withLoggingEnabled',
+            'withLogFilePath',
+            'withLogLevel',
+            'withLogMaxBytes',
+            'withLogTimezone',
+        ];
+
+        foreach ($withMethods as $methodName) {
+            $method = $reflection->getMethod($methodName);
+            $attributes = $method->getAttributes(\NoDiscard::class);
+            $this->assertNotEmpty(
+                $attributes,
+                "Method {$methodName} should have #[NoDiscard] attribute"
+            );
+        }
     }
 }

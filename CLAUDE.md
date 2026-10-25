@@ -2,7 +2,7 @@
 
 ## What is This Framework?
 
-Modern, dependency-free PHP 8.4+ Telegram Bot Framework with a clean, service-oriented interface. Zero external dependencies required.
+Modern, dependency-free PHP 8.5+ Telegram Bot Framework with a clean, service-oriented interface. Zero external dependencies required.
 
 Namespace root: `AhmCho\Telegram`
 
@@ -57,4 +57,4 @@ See [.claude/docs/architecture.md](.claude/docs/architecture.md) for the full tr
 
 **Last Updated:** 2026-07-02
 **Framework Version:** 1.1
-**PHP Version:** 8.4+
+**PHP Version:** 8.5+

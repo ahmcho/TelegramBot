@@ -56,6 +56,42 @@ readonly class BulkResult implements Countable
         );
     }
 
+    /**
+     * Get the first result in the bulk operation (PHP 8.5+)
+     *
+     * @return array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}|null
+     */
+    public function getFirstResult(): ?array
+    {
+        return array_first($this->results);
+    }
+
+    /**
+     * Get the last result in the bulk operation (PHP 8.5+)
+     *
+     * @return array{success: bool, chat_id: mixed, message_id: mixed|null, data: array<string, mixed>|null, error: string|null}|null
+     */
+    public function getLastResult(): ?array
+    {
+        return array_last($this->results);
+    }
+
+    /**
+     * Get the first error message, or null if no errors (PHP 8.5+)
+     */
+    public function getFirstError(): ?string
+    {
+        return array_first($this->errors);
+    }
+
+    /**
+     * Get the last error message, or null if no errors (PHP 8.5+)
+     */
+    public function getLastError(): ?string
+    {
+        return array_last($this->errors);
+    }
+
     #[\Override]
     public function count(): int
     {

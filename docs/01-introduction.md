@@ -4,7 +4,7 @@
 
 ## What is AhmCho\Telegram?
 
-AhmCho\Telegram is a PHP 8.4+ framework for building Telegram bots. It wraps
+AhmCho\Telegram is a PHP 8.5+ framework for building Telegram bots. It wraps
 the [Telegram Bot API](https://core.telegram.org/bots/api) in a clean,
 object-oriented, service-oriented interface, so you write:
 
@@ -19,7 +19,7 @@ instead of hand-rolling `curl_init()` calls and JSON encoding for every
 single API method.
 
 It has **zero external dependencies** — no Composer packages to pull in, no
-vendor lock-in. It runs anywhere PHP 8.4+ with either the `curl` or
+vendor lock-in. It runs anywhere PHP 8.5+ with either the `curl` or
 `openssl` extension runs.
 
 ## Why does this exist?
@@ -85,8 +85,8 @@ help you navigate it:
 
 ## Requirements
 
-- PHP 8.4 or newer (the codebase uses constructor property promotion,
-  readonly properties, enums, and first-class callable syntax throughout)
+- PHP 8.5 or newer (the codebase uses constructor property promotion,
+  readonly properties, enums, the pipe operator `|>`, clone-with syntax, and `#[NoDiscard]`)
 - One of: the `curl` extension (preferred) or the `openssl` extension
   (fallback, used automatically if `curl` isn't available)
 - `json` and `mbstring` extensions (standard in virtually every PHP install)

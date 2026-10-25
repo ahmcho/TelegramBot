@@ -195,4 +195,37 @@ final class ReplyKeyboardOptionsTest extends TestCase
         $this->assertTrue($adminKeyboard->resizeKeyboard);
         $this->assertTrue($adminKeyboard->isPersistent);
     }
+
+    public function test_with_methods_return_new_instances_using_clone(): void
+    {
+        $options = new ReplyKeyboardOptions();
+
+        $withResize = $options->withResizeKeyboard(true);
+        $this->assertNotSame($options, $withResize);
+        $this->assertFalse($options->resizeKeyboard);
+        $this->assertTrue($withResize->resizeKeyboard);
+
+        $withOneTime = $withResize->withOneTimeKeyboard(true);
+        $this->assertNotSame($withResize, $withOneTime);
+        $this->assertTrue($withOneTime->resizeKeyboard);
+        $this->assertTrue($withOneTime->oneTimeKeyboard);
+
+        $withSelective = $withOneTime->withSelective(true);
+        $this->assertTrue($withSelective->selective);
+
+        $withPersistent = $withSelective->withIsPersistent(true);
+        $this->assertTrue($withPersistent->isPersistent);
+    }
+
+    public function test_with_methods_have_nodiscard_attribute(): void
+    {
+        $reflection = new \ReflectionClass(ReplyKeyboardOptions::class);
+        $methods = ['withResizeKeyboard', 'withOneTimeKeyboard', 'withSelective', 'withIsPersistent'];
+
+        foreach ($methods as $methodName) {
+            $method = $reflection->getMethod($methodName);
+            $attributes = $method->getAttributes(\NoDiscard::class);
+            $this->assertNotEmpty($attributes, "Method {$methodName} should have #[NoDiscard] attribute");
+        }
+    }
 }

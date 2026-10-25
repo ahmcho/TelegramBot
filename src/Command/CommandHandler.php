@@ -134,7 +134,9 @@ class CommandHandler
         }
 
         $chatId = (int) $message['chat']['id'];
-        $parts = explode(' ', mb_trim((string) $text), 2);
+        $parts = (string) $text
+            |> mb_trim(...)
+            |> (fn(string $t): array => explode(' ', $t, 2));
         $command = $this->normalizeCommand($parts[0]);
         $args = isset($parts[1]) ? explode(' ', $parts[1]) : [];
 
@@ -286,7 +288,9 @@ class CommandHandler
      */
     private function normalizeCommand(string $command): string
     {
-        return mb_ltrim(mb_strtolower($command), '/');
+        return $command
+            |> mb_strtolower(...)
+            |> (fn(string $cmd): string => mb_ltrim($cmd, '/'));
     }
 
     /**
@@ -297,6 +301,8 @@ class CommandHandler
      */
     private function isCommand(string $text): bool
     {
-        return str_starts_with(mb_trim($text), '/');
+        return $text
+            |> mb_trim(...)
+            |> (fn(string $t): bool => str_starts_with($t, '/'));
     }
 }

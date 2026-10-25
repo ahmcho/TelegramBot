@@ -97,9 +97,8 @@ class EnvLoader
         // Unquoted values: strip inline comment (whitespace followed by #)
         // e.g. "abc123 # my token" → "abc123"
         // "#FF0000" is left alone because there is no whitespace before the #
-        $value = (string) preg_replace('/\s+#.*$/', '', $value);
-
-        return rtrim($value);
+        return (string) preg_replace('/\s+#.*$/', '', $value)
+            |> rtrim(...);
     }
 
     private function findEnvFile(): ?string

@@ -70,6 +70,8 @@ final class HtmlFormatter implements TextFormatterInterface
     #[Override]
     public function hashtag(string $tag): string
     {
-        return '#' . ltrim($tag, '#');
+        return $tag
+            |> (fn(string $t): string => ltrim($t, '#'))
+            |> (fn(string $t): string => '#' . $t);
     }
 }

@@ -218,7 +218,7 @@ final class CurlHttpClient implements HttpClientInterface
                 );
             }
 
-            if ($delayMs > 0 && $batch !== end($batches)) {
+            if ($delayMs > 0 && $batch !== array_last($batches)) {
                 usleep($delayMs * 1000);
             }
         }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace AhmCho\Telegram\Config;
 
+use NoDiscard;
 use SensitiveParameter;
+use Uri\Rfc3986\Uri;
 
 /**
  * Bot Configuration Value Object
@@ -40,7 +42,17 @@ final readonly class BotConfig
 
     public function getFullApiUrl(): string
     {
-        return rtrim($this->apiUrl, '/') . '/bot' . $this->token . '/';
+        return $this->apiUrl
+            |> (fn(string $url): string => rtrim($url, '/'))
+            |> (fn(string $url): string => $url . '/bot' . $this->token . '/');
+    }
+
+    /**
+     * Get the full API URL parsed as an RFC 3986 URI instance
+     */
+    public function getUri(): ?Uri
+    {
+        return Uri::parse($this->getFullApiUrl());
     }
 
     public function getTimeout(): int
@@ -113,78 +125,57 @@ final readonly class BotConfig
         ];
     }
 
+    #[NoDiscard]
     public function withVerifySsl(bool $verify): self
     {
-        return $this->with(verifySsl: $verify);
+        return clone($this, ['verifySsl' => $verify]);
     }
 
+    #[NoDiscard]
     public function withTimeout(int $timeout): self
     {
-        return $this->with(timeout: $timeout);
+        return clone($this, ['timeout' => $timeout]);
     }
 
+    #[NoDiscard]
     public function withThrowExceptions(bool $throw): self
     {
-        return $this->with(throwExceptions: $throw);
+        return clone($this, ['throwExceptions' => $throw]);
     }
 
+    #[NoDiscard]
     public function withLoggingEnabled(bool $enabled): self
     {
-        return $this->with(loggingEnabled: $enabled);
+        return clone($this, ['loggingEnabled' => $enabled]);
     }
 
+    #[NoDiscard]
     public function withLogFilePath(string $path): self
     {
-        return $this->with(logFilePath: $path);
+        return clone($this, ['logFilePath' => $path]);
     }
 
+    #[NoDiscard]
     public function withLogLevel(string $level): self
     {
-        return $this->with(logLevel: $level);
+        return clone($this, ['logLevel' => $level]);
     }
 
     /**
      * Create a new config with a log rotation threshold (0 = disabled)
      */
+    #[NoDiscard]
     public function withLogMaxBytes(int $maxBytes): self
     {
-        return $this->with(logMaxBytes: $maxBytes);
+        return clone($this, ['logMaxBytes' => $maxBytes]);
     }
 
     /**
      * Create a new config with a different log timestamp timezone
      */
+    #[NoDiscard]
     public function withLogTimezone(string $timezone): self
     {
-        return $this->with(logTimezone: $timezone);
-    }
-
-    /**
-     * Build a new instance, overriding only the given named fields.
-     */
-    private function with(
-        ?string $token = null,
-        ?string $apiUrl = null,
-        ?int $timeout = null,
-        ?bool $throwExceptions = null,
-        ?bool $verifySsl = null,
-        ?bool $loggingEnabled = null,
-        ?string $logFilePath = null,
-        ?string $logLevel = null,
-        ?int $logMaxBytes = null,
-        ?string $logTimezone = null
-    ): self {
-        return new self(
-            $token ?? $this->token,
-            $apiUrl ?? $this->apiUrl,
-            $timeout ?? $this->timeout,
-            $throwExceptions ?? $this->throwExceptions,
-            $verifySsl ?? $this->verifySsl,
-            $loggingEnabled ?? $this->loggingEnabled,
-            $logFilePath ?? $this->logFilePath,
-            $logLevel ?? $this->logLevel,
-            $logMaxBytes ?? $this->logMaxBytes,
-            $logTimezone ?? $this->logTimezone
-        );
+        return clone($this, ['logTimezone' => $timezone]);
     }
 }
